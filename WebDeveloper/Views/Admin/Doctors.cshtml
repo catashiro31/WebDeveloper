@@ -1,0 +1,350 @@
+@{
+    ViewData["Title"] = "Danh sách bác sĩ";
+    Layout = "_AdminLayout";
+}
+
+<style>
+.view-toggle-container { display: flex; background: #f1f5f9; padding: 4px; border-radius: 14px; width: fit-content; margin-bottom: 32px; }
+.view-toggle-btn { padding: 10px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: #64748b; background: transparent; }
+.view-toggle-btn.active { background: white; color: #6366f1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+.doc-card { background: white; border-radius: 24px; padding: 24px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s; display: flex; gap: 24px; margin-bottom: 20px; }
+.doc-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08); border-color: #e2e8f0; }
+.doc-avatar { width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 900; color: #64748b; flex-shrink: 0; border: 2px solid #f1f5f9; line-height: 1; }
+.chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; font-size: 12px; font-weight: 500; color: #64748b; margin-right: 8px; margin-top: 4px; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; overflow-y: auto; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background: white; border-radius: 24px; transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 90vh; overflow-y: auto; }
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+</style>
+
+<div class="reveal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+        <div>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Danh sách bác sĩ</h2>
+            <p style="margin: 4px 0 0; font-size: 15px; color: #64748b;">Phê duyệt hồ sơ chuyên môn và quản lý đội ngũ bác sĩ hệ thống.</p>
+        </div>
+    </div>
+
+    <div class="view-toggle-container">
+        <button id="btnViewAll" class="view-toggle-btn active" onclick="setViewMode('all')">Tất cả bác sĩ</button>
+        <button id="btnViewPending" class="view-toggle-btn" onclick="setViewMode('pending')">Đang chờ duyệt</button>
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 100px;">
+        <div class="skeleton" style="height: 300px; border-radius: 24px;"></div>
+    </div>
+
+    <div id="emptyState" style="display: none; text-align: center; padding: 100px; background: white; border-radius: 32px; border: 1px solid #f1f5f9;">
+        <div style="font-size: 48px; margin-bottom: 16px;">📂</div>
+        <div style="color: #64748b; font-weight: 700;">Danh sách hiện đang trống</div>
+    </div>
+
+    <div id="doctorsContainer" class="reveal" style="display: none;"></div>
+
+    <div id="pagination" style="display: none; justify-content: center; gap: 12px; margin-top: 32px;">
+        <button id="btnPrev" onclick="setPage(currentPage - 1)" style="background: none; border: none; color: #6366f1; font-weight: 800; cursor: pointer;">← Trước</button>
+        <span id="pageInfo" style="font-weight: 800; color: #0f172a;">Trang 1 / 1</span>
+        <button id="btnNext" onclick="setPage(currentPage + 1)" style="background: none; border: none; color: #6366f1; font-weight: 800; cursor: pointer;">Sau →</button>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="detailModal" class="modal-overlay" onclick="closeDetailModal()">
+    <div class="modal-content" style="max-width: 800px; width: 100%; padding: 40px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 32px;">
+            <h3 style="margin: 0; font-size: 24px; font-weight: 800;">Chi tiết hồ sơ bác sĩ</h3>
+            <button onclick="closeDetailModal()" style="border: none; background: none; font-size: 24px; cursor: pointer; color: #64748b;">×</button>
+        </div>
+        <div id="detailLoading" style="display: none; text-align: center; padding: 60px;">Đang tải...</div>
+        <div id="detailContent" style="display: none;">
+            <div style="display: grid; grid-template-columns: auto 1fr 1fr; gap: 32px;">
+                <div id="modalAvatar" style="width: 120px; height: 120px; border-radius: 50%; background: #f1f5f9; overflow: hidden; border: 3px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 40px; color: #64748b;"></div>
+                <div>
+                    <p style="margin: 8px 0; font-size: 15px;"><b style="display:inline-block; width: 110px;">Họ tên:</b> <span id="modalName"></span></p>
+                    <p style="margin: 8px 0; font-size: 15px;"><b style="display:inline-block; width: 110px;">Học vị:</b> <span id="modalDegree"></span></p>
+                    <p style="margin: 8px 0; font-size: 15px;"><b style="display:inline-block; width: 110px;">Kinh nghiệm:</b> <span id="modalExp"></span> năm</p>
+                    <p style="margin: 8px 0; font-size: 15px;"><b style="display:inline-block; width: 110px;">Chuyên khoa:</b> <span id="modalSpec"></span></p>
+                    <div style="margin: 8px 0; font-size: 15px;">
+                        <b>Cơ sở y tế:</b>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                            <span id="modalFacility" style="font-weight: 600;"></span>
+                            <span id="modalFacilityBadge" style="font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px;"></span>
+                        </div>
+                        <div id="modalFacilityAddrWrap" style="font-size: 13px; color: #64748b; margin-top: 4px; font-weight: 500; display: flex; align-items: flex-start; gap: 4px;">
+                            <span>📍</span><span id="modalFacilityAddr"></span>
+                        </div>
+                    </div>
+                    <div id="modalFacilityLicenseWrap" style="margin: 8px 0; font-size: 13px; display: none;">
+                        <a id="modalFacilityLicense" href="#" target="_blank" style="color: #0ea47a; font-weight: 600; display: flex; align-items: center; gap: 4px; text-decoration: none;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                            Xem Giấy phép hoạt động cơ sở
+                        </a>
+                    </div>
+                    <p style="margin: 8px 0; font-size: 15px;"><b style="display:inline-block; width: 110px;">Giá khám:</b> <span id="modalPrice"></span> VNĐ</p>
+                    <div style="margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9;">
+                        <b style="display: block; margin-bottom: 8px;">Giới thiệu chuyên môn:</b>
+                        <p id="modalBio" style="margin: 0; font-size: 14px; line-height: 1.6; color: #475569; white-space: pre-wrap;"></p>
+                    </div>
+                </div>
+                <div>
+                    <div id="modalCertWrap" style="margin-bottom: 20px; display: none;">
+                        <b>Chứng chỉ hành nghề:</b>
+                        <a id="modalCertLink" href="#" target="_blank"><img id="modalCertImg" src="" style="width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid #f1f5f9;" /></a>
+                    </div>
+                    <div id="modalIdWrap" style="display: none;">
+                        <b>CCCD/Hộ chiếu:</b>
+                        <a id="modalIdLink" href="#" target="_blank"><img id="modalIdImg" src="" style="width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid #f1f5f9;" /></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div id="modalActionButtons" style="display: none; gap: 16px; margin-top: 40px; border-top: 1px solid #f1f5f9; padding-top: 32px; justify-content: flex-end;">
+                <button id="modalApproveBtn" style="background: #1063ff; color: white; border: none; padding: 12px 32px; border-radius: 16px; font-weight: 700; font-size: 15px; cursor: pointer;">Phê duyệt hồ sơ</button>
+                <button id="modalRejectBtn" style="background: #fee2e2; color: #ef4444; border: none; padding: 12px 32px; border-radius: 16px; font-weight: 700; font-size: 15px; cursor: pointer;">Từ chối</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" class="modal-overlay" onclick="closeRejectModal()">
+    <div class="modal-content" style="max-width: 480px; width: 100%; padding: 32px;" onclick="event.stopPropagation()">
+        <h3 style="margin: 0 0 16px; font-size: 20px; font-weight: 800;">Lý do từ chối</h3>
+        <textarea id="rejectReason" placeholder="Nhập lý do gửi bác sĩ..." style="width: 100%; min-height: 120px; padding: 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; outline: none; margin-bottom: 24px; box-sizing: border-box; font-family: inherit;"></textarea>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeRejectModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; font-weight: 700; cursor: pointer;">Quay lại</button>
+            <button onclick="submitReject()" id="submitRejectBtn" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; cursor: pointer;">Gửi từ chối</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        let viewMode = 'all';
+        let currentPage = 0;
+        let totalPages = 1;
+        let currentDoctorId = null;
+
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('btnViewAll').className = `view-toggle-btn ${mode === 'all' ? 'active' : ''}`;
+            document.getElementById('btnViewPending').className = `view-toggle-btn ${mode === 'pending' ? 'active' : ''}`;
+            currentPage = 0;
+            fetchData();
+        }
+
+        function setPage(page) {
+            if (page < 0 || page >= totalPages) return;
+            currentPage = page;
+            fetchData();
+        }
+
+        function getStatusBadge(status) {
+            const styles = {
+                'APPROVED': { label: 'Đã duyệt', color: '#10b981', bg: '#ecfdf5' },
+                'PENDING': { label: 'Chờ duyệt', color: '#f59e0b', bg: '#fffbeb' },
+                'REJECTED': { label: 'Từ chối', color: '#ef4444', bg: '#fef2f2' }
+            };
+            return styles[status] || { label: status, color: '#64748b', bg: '#f8fafc' };
+        }
+
+        function fetchData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('doctorsContainer').style.display = 'none';
+            document.getElementById('pagination').style.display = 'none';
+
+            let url = viewMode === 'pending' ? '/api/v1/admin/doctors/pending' : `/api/v1/admin/doctors?page=${currentPage}&size=10`;
+
+            fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                
+                let docs = [];
+                if (viewMode === 'pending') {
+                    docs = Array.isArray(data) ? data : [];
+                    totalPages = 1;
+                } else {
+                    docs = data.content || [];
+                    totalPages = data.totalPages || 1;
+                }
+
+                if (docs.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                let html = '';
+                docs.forEach(doc => {
+                    const avatar = doc.user?.avatarUrl || doc.avatarUrl;
+                    const name = doc.user?.fullName || doc.fullName || '';
+                    const avatarHtml = avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.parentElement.innerText='${name.charAt(0)}'"/>` : name.charAt(0);
+                    const email = doc.user?.email || '';
+                    const spec = doc.specialty?.specialtyName || doc.specialtyName || '';
+                    const badge = getStatusBadge(doc.verificationStatus);
+
+                    html += `
+                        <div class="doc-card">
+                            <div class="doc-avatar">${avatarHtml}</div>
+                            <div style="flex: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <div>
+                                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">BS. ${name}</h3>
+                                        <div style="margin-top: 4px;">
+                                            <span class="chip">📧 ${email}</span>
+                                            <span class="chip">🏥 ${spec}</span>
+                                            <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: ${badge.bg}; color: ${badge.color}; display: inline-block; margin-top: 4px;">${badge.label}</span>
+                                        </div>
+                                    </div>
+                                    <button onclick="viewDetail(${doc.doctorId || doc.id})" style="background: #f1f5f9; color: #1e293b; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap;">Xem hồ sơ</button>
+                                </div>
+                                ${doc.verificationStatus === 'PENDING' ? `
+                                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                                    <button onclick="approveDoctor(${doc.doctorId || doc.id})" style="background: #1063ff; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Phê duyệt ngay</button>
+                                    <button onclick="openRejectModal(${doc.doctorId || doc.id})" style="background: #fee2e2; color: #ef4444; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Từ chối</button>
+                                </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('doctorsContainer').innerHTML = html;
+                document.getElementById('doctorsContainer').style.display = 'block';
+
+                if (viewMode === 'all' && totalPages > 1) {
+                    document.getElementById('pagination').style.display = 'flex';
+                    document.getElementById('pageInfo').innerText = `Trang ${currentPage + 1} / ${totalPages}`;
+                    document.getElementById('btnPrev').disabled = currentPage === 0;
+                    document.getElementById('btnNext').disabled = currentPage >= totalPages - 1;
+                }
+            })
+            .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
+        }
+
+        window.viewDetail = function(id) {
+            document.getElementById('detailModal').classList.add('active');
+            document.getElementById('detailLoading').style.display = 'block';
+            document.getElementById('detailContent').style.display = 'none';
+
+            fetch(`/api/v1/admin/doctors/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('detailLoading').style.display = 'none';
+                document.getElementById('detailContent').style.display = 'block';
+
+                const avatar = data.user?.avatarUrl || data.avatarUrl;
+                const name = data.user?.fullName || data.fullName || '';
+                document.getElementById('modalAvatar').innerHTML = avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.parentElement.innerText='${name.charAt(0)}'"/>` : name.charAt(0);
+                
+                document.getElementById('modalName').innerText = name;
+                document.getElementById('modalDegree').innerText = data.degree || '';
+                document.getElementById('modalExp').innerText = data.experienceYears || 0;
+                document.getElementById('modalSpec').innerText = data.specialty?.specialtyName || data.specialtyName || '';
+                
+                document.getElementById('modalFacility').innerText = data.facility?.facilityName || data.facilityName || '';
+                const facVerified = data.facility?.isVerified || data.facilityVerified;
+                const badge = document.getElementById('modalFacilityBadge');
+                badge.innerText = facVerified ? 'Đã xác minh' : 'Chờ xác minh';
+                badge.style.background = facVerified ? '#ecfdf5' : '#fffbeb';
+                badge.style.color = facVerified ? '#059669' : '#b45309';
+                badge.style.border = `1px solid ${facVerified ? '#a7f3d0' : '#fde68a'}`;
+
+                const addr = data.facility?.address || data.facilityAddress;
+                if (addr) {
+                    const prov = data.facility?.province || data.facilityProvince;
+                    document.getElementById('modalFacilityAddr').innerText = addr + (prov ? `, ${prov}` : '');
+                    document.getElementById('modalFacilityAddrWrap').style.display = 'flex';
+                } else {
+                    document.getElementById('modalFacilityAddrWrap').style.display = 'none';
+                }
+
+                const licenseUrl = data.facility?.licenseUrl || data.facilityLicenseUrl;
+                if (licenseUrl) {
+                    document.getElementById('modalFacilityLicense').href = licenseUrl;
+                    document.getElementById('modalFacilityLicenseWrap').style.display = 'block';
+                } else {
+                    document.getElementById('modalFacilityLicenseWrap').style.display = 'none';
+                }
+
+                document.getElementById('modalPrice').innerText = (data.price || 0).toLocaleString();
+                document.getElementById('modalBio').innerText = data.bio || '';
+
+                if (data.certificateUrl) {
+                    document.getElementById('modalCertImg').src = data.certificateUrl;
+                    document.getElementById('modalCertLink').href = data.certificateUrl;
+                    document.getElementById('modalCertWrap').style.display = 'block';
+                } else document.getElementById('modalCertWrap').style.display = 'none';
+
+                if (data.idCardUrl) {
+                    document.getElementById('modalIdImg').src = data.idCardUrl;
+                    document.getElementById('modalIdLink').href = data.idCardUrl;
+                    document.getElementById('modalIdWrap').style.display = 'block';
+                } else document.getElementById('modalIdWrap').style.display = 'none';
+
+                const actions = document.getElementById('modalActionButtons');
+                if (data.verificationStatus === 'PENDING') {
+                    actions.style.display = 'flex';
+                    document.getElementById('modalApproveBtn').onclick = () => { closeDetailModal(); approveDoctor(id); };
+                    document.getElementById('modalRejectBtn').onclick = () => { closeDetailModal(); openRejectModal(id); };
+                } else {
+                    actions.style.display = 'none';
+                }
+            })
+            .catch(() => {
+                closeDetailModal();
+                Toastify({ text: "Lỗi tải chi tiết", style: {background: "#ef4444"} }).showToast();
+            });
+        };
+
+        window.closeDetailModal = () => document.getElementById('detailModal').classList.remove('active');
+
+        window.approveDoctor = function(id) {
+            if (!confirm("Phê duyệt bác sĩ này?")) return;
+            fetch(`/api/v1/admin/doctors/${id}/approve`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Phê duyệt thành công", style: {background: "#10b981"} }).showToast();
+                    fetchData();
+                } else Toastify({ text: await res.text() || "Lỗi phê duyệt", style: {background: "#ef4444"} }).showToast();
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
+        };
+
+        window.openRejectModal = function(id) {
+            currentDoctorId = id;
+            document.getElementById('rejectReason').value = '';
+            document.getElementById('rejectModal').classList.add('active');
+        };
+
+        window.closeRejectModal = () => document.getElementById('rejectModal').classList.remove('active');
+
+        window.submitReject = function() {
+            const reason = document.getElementById('rejectReason').value.trim();
+            if (!reason) { Toastify({ text: "Vui lòng nhập lý do", style: {background: "#f59e0b"} }).showToast(); return; }
+
+            const btn = document.getElementById('submitRejectBtn');
+            btn.disabled = true; btn.innerText = 'Đang gửi...';
+
+            fetch(`/api/v1/admin/doctors/${currentDoctorId}/reject?reason=${encodeURIComponent(reason)}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Đã từ chối", style: {background: "#10b981"} }).showToast();
+                    closeRejectModal();
+                    fetchData();
+                } else Toastify({ text: await res.text() || "Lỗi từ chối", style: {background: "#ef4444"} }).showToast();
+            })
+            .finally(() => { btn.disabled = false; btn.innerText = 'Gửi từ chối'; });
+        };
+
+        fetchData();
+    </script>
+}

@@ -1,0 +1,70 @@
+<style>
+/* Footer CSS ported from React Footer.jsx */
+.footer { background-color: #ffffff; padding: 60px 80px 0 80px; border-top: none; }
+.footer-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 40px; padding-bottom: 40px; }
+.footer-left { flex: 2; max-width: 420px; }
+.footer-logo { width: 180px; margin-bottom: 20px; }
+.footer-desc { font-size: 14px; color: #6b7280; line-height: 1.8; margin: 0; }
+.footer-middle { flex: 1; min-width: 140px; }
+.footer-middle h3, .footer-right h3 { font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 20px 0; }
+.footer-middle ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 14px; }
+.footer-nav-link { text-decoration: none; font-size: 14px; color: #6b7280; transition: color 0.2s; display: inline-block; }
+.footer-nav-link:hover { color: #5147d6; }
+/* active state */
+.footer-nav-link.active { color: #6b7280; position: relative; }
+.footer-nav-link.active::after { content: ""; display: block; width: 28px; height: 2px; background-color: #5147d6; margin-top: 4px; border-radius: 2px; }
+.footer-right { flex: 1; min-width: 180px; }
+.footer-right ul { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; }
+.footer-right ul li { font-size: 14px; color: #6b7280; }
+.footer-bottom { border-top: 1px solid #e5e7eb; text-align: center; }
+.footer-bottom p { font-size: 14px !important; color: #6b7280 !important; margin-top: 15px !important; padding-bottom: 20px; }
+
+@@media (max-width: 768px) {
+  .footer { padding: 40px 24px 0 24px; }
+  .footer-top { flex-direction: column; gap: 32px; }
+  .footer-left { max-width: 100%; }
+}
+</style>
+
+<div class="footer">
+    <div class="footer-top">
+        <div class="footer-left">
+            <a href="/" style="display: flex; align-items: center; gap: 12px; text-decoration: none; margin-bottom: 20px;">
+                <div style="width: 38px; height: 38px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(99,102,241,0.3);">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                    </svg>
+                </div>
+                <span style="font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em;">DocBooking</span>
+            </a>
+            <p class="footer-desc">
+                Người bạn đồng hành đáng tin cậy trong chăm sóc sức khỏe của bạn. 
+                Đặt lịch hẹn khám bác sĩ, quản lý lịch trình và tiếp cận các dịch vụ y tế một cách dễ dàng. 
+                Được thiết kế để hoạt động hiệu quả, DocBooking đơn giản hóa việc quản lý chăm sóc sức khỏe 
+                với giao diện thân thiện với người dùng. Luôn kết nối với các bác sĩ hàng đầu và đảm bảo được chăm sóc y tế kịp thời.
+            </p>
+        </div>
+
+        <div class="footer-middle">
+            <h3>Công ty</h3>
+            <ul>
+                <li><a href="/" class="footer-nav-link @(Context.Request.Path == "/" ? "active" : "")">Trang chủ</a></li>
+                <li><a href="/Portal/Doctors" class="footer-nav-link @(Context.Request.Path.StartsWithSegments("/Portal/Doctors") ? "active" : "")">Tất cả bác sĩ</a></li>
+                <li><a href="/Home/About" class="footer-nav-link @(Context.Request.Path.StartsWithSegments("/Home/About") ? "active" : "")">Về chúng tôi</a></li>
+                <li><a href="/Home/Contact" class="footer-nav-link @(Context.Request.Path.StartsWithSegments("/Home/Contact") ? "active" : "")">Liên hệ</a></li>
+            </ul>
+        </div>
+
+        <div class="footer-right">
+            <h3>Liên hệ với chúng tôi</h3>
+            <ul>
+                <li>023456789</li>
+                <li>docbooking@gmail.com</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="footer-bottom">
+    <p>Copyright 2026 DocBooking - All Right Reserved.</p>
+</div>

@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "Liên hệ";
+}
+
+<style>
+    @@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Playfair+Display:wght@700&display=swap');
+    .ct-img-anim { opacity: 0; animation: fadeSlideIn 1s ease 0.2s forwards; }
+    @@keyframes fadeSlideIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+    .ct-card:hover { box-shadow: 0 6px 20px rgba(95,109,252,0.1) !important; }
+    .ct-btn:hover { background: linear-gradient(135deg, #5f6dfc, #a78bfa) !important; border-color: transparent !important; color: white !important; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(95,109,252,0.28) !important; }
+</style>
+
+<!-- Contact Us Heading -->
+<div style="padding-top: 96px; text-align: center; margin: 0 0 36px; font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 700; color: #5a6072; position: relative;">
+    Liên hệ với chúng tôi
+    <div style="width: 40px; height: 3px; background: linear-gradient(90deg, #5f6dfc, #a78bfa); border-radius: 2px; margin: 8px auto 0;"></div>
+</div>
+
+<!-- Layout -->
+<div style="display: flex; justify-content: center; align-items: center; gap: 70px; max-width: 1000px; margin: 0 auto 100px; padding: 0 30px; flex-wrap: wrap;">
+
+    <!-- Left - Image -->
+    <div>
+        <img src="https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=600&q=80"
+             alt="contact"
+             class="ct-img-anim"
+             style="width: 350px; height: 450px; object-fit: cover; border-radius: 18px; box-shadow: 0 16px 48px rgba(95,109,252,0.15);" />
+    </div>
+
+    <!-- Right Panel -->
+    <div style="max-width: 360px; display: flex; flex-direction: column; gap: 12px;">
+
+        <!-- Our Office label -->
+        <div style="position: relative;">
+            <span style="font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: #5a6072;">
+                Văn phòng của chúng tôi
+            </span>
+            <div style="width: 32px; height: 3px; background: linear-gradient(90deg, #5f6dfc, #a78bfa); border-radius: 2px; margin-top: 6px;"></div>
+        </div>
+
+        <!-- Address -->
+        <div class="ct-card" style="background: #ffffff; border: 1.5px solid #e8eaf0; border-radius: 12px; padding: 14px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); transition: box-shadow 0.25s ease;">
+            <p style="margin: 3px 0; color: #44484e; font-size: 16px; font-weight: 400; line-height: 1.65;">Tầng 12, Tòa nhà Bitexco</p>
+            <p style="margin: 3px 0; color: #44484e; font-size: 16px; font-weight: 400; line-height: 1.65;">Quận 1, TP. Hồ Chí Minh, Việt Nam</p>
+        </div>
+
+        <!-- Phone / Email -->
+        <div class="ct-card" style="background: #ffffff; border: 1.5px solid #e8eaf0; border-radius: 12px; padding: 14px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); transition: box-shadow 0.25s ease;">
+            <p style="margin: 3px 0; color: #44484e; font-size: 16px; font-weight: 400; line-height: 1.65;">Điện thoại: +84 28 3823 4567</p>
+            <p style="margin: 3px 0; color: #44484e; font-size: 16px; font-weight: 400; line-height: 1.65;">Email: docbooking@gmail.com</p>
+        </div>
+
+        <!-- Careers -->
+        <div class="ct-card" style="background: #ffffff; border: 1.5px solid #e8eaf0; border-radius: 12px; padding: 14px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); transition: box-shadow 0.25s ease;">
+            <p style="margin: 3px 0; font-weight: 700; font-size: 13px; color: #5f6dfc; line-height: 1.65;">Cơ hội nghề nghiệp tại DocBooking</p>
+        </div>
+
+        <div class="ct-card" style="background: #ffffff; border: 1.5px solid #e8eaf0; border-radius: 12px; padding: 14px 18px; box-shadow: 0 2px 10px rgba(0,0,0,0.04); transition: box-shadow 0.25s ease;">
+            <p style="margin: 3px 0; color: #44484e; font-size: 16px; font-weight: 400; line-height: 1.65;">Tìm hiểu thêm về các đội nhóm và cơ hội việc làm của chúng tôi.</p>
+        </div>
+
+        <button class="ct-btn" style="margin-top: 4px; padding: 9px 24px; border-radius: 30px; border: 2px solid #5f6dfc; background: white; color: #5f6dfc; cursor: pointer; font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 13px; transition: all 0.28s ease; width: fit-content;">
+            Khám phá cơ hội việc làm
+        </button>
+    </div>
+</div>

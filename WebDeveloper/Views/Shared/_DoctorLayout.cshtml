@@ -1,0 +1,206 @@
+@{
+    Layout = null;
+    var userJson = Context.Request.Cookies["user_info"];
+    var userName = "Bác sĩ";
+    var userEmail = "";
+    var userAvatar = "";
+    var role = "";
+
+    if (!string.IsNullOrEmpty(userJson))
+    {
+        try
+        {
+            var userObj = System.Text.Json.JsonDocument.Parse(Uri.UnescapeDataString(userJson)).RootElement;
+            if (userObj.TryGetProperty("fullName", out var fn)) userName = fn.GetString();
+            if (userObj.TryGetProperty("email", out var em)) userEmail = em.GetString();
+            if (userObj.TryGetProperty("avatarUrl", out var av)) userAvatar = av.GetString();
+            if (userObj.TryGetProperty("role", out var r)) role = r.GetString();
+        }
+        catch { }
+    }
+
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString()?.ToLower();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DocBooking Doctor</title>
+    <script src="https://unpkg.com/@@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f5f7fb; margin: 0; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .reveal { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @@keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-link {
+            display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: 10px;
+            text-decoration: none; font-size: 15px; transition: all 0.2s; color: #374151; font-weight: 400;
+        }
+        .nav-link:hover { background: #f1f5f9; }
+        .nav-link.active { background: #5f6dfc; color: white; font-weight: 500; }
+        .sub-nav-link {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px;
+            color: #374151; text-decoration: none; font-size: 15px; transition: all 0.2s;
+        }
+        .sub-nav-link:hover { background: #f1f5f9; }
+        .sub-nav-link.active { background: #5f6dfc; color: white; font-weight: 500; }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <!-- Header -->
+    <header style="background: white; padding: 16px 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <a href="/" style="text-decoration: none;">
+                <h1 style="margin: 0; font-size: 24px; background: linear-gradient(135deg, #5f6dfc, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">DocBooking</h1>
+            </a>
+            <span style="padding: 4px 12px; background: #dbeafe; color: #2563eb; border-radius: 20px; font-size: 13px; font-weight: 500;">Bác sĩ</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px;">
+                <span style="font-weight: 500;">BS. @userName</span>
+                <button onclick="logout()" style="padding: 6px 12px; border-radius: 6px; border: none; background: #ef4444; color: white; cursor: pointer; font-size: 13px;">Đăng xuất</button>
+            </div>
+        </div>
+    </header>
+
+    <div style="display: flex; max-width: 1400px; margin: 0 auto; padding: 30px 40px; gap: 30px;">
+        <!-- Sidebar -->
+        <aside style="width: 280px; background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); height: fit-content; flex-shrink: 0; position: sticky; top: 100px;">
+            <div style="margin-bottom: 24px; text-align: center;">
+                <div id="doctorAvatar" style="width: 100px; height: 100px; border-radius: 50%; background: @(!string.IsNullOrEmpty(userAvatar) ? $"url('{userAvatar}') center/cover" : "linear-gradient(135deg, #5f6dfc, #a78bfa)"); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; font-size: 36px; color: white;">
+                    @if (string.IsNullOrEmpty(userAvatar)) { @(string.IsNullOrEmpty(userName) ? "👨‍⚕️" : userName.Substring(0, 1).ToUpper()) }
+                </div>
+                <h3 id="doctorName" style="margin: 0 0 4px; font-size: 18px;">BS. @userName</h3>
+                <p id="doctorSpecialty" style="margin: 0 0 8px; color: #64748b; font-size: 14px; font-weight: 500;">Đang tải...</p>
+                <p id="doctorFacility" style="margin: 0; color: #9ca3af; font-size: 13px;"></p>
+                <div id="verificationBadge" style="display: none; margin-top: 12px; padding: 8px 12px; background: #fef3c7; border-radius: 8px; font-size: 13px; color: #92400e;">
+                    ⏳ Đang chờ phê duyệt hồ sơ
+                </div>
+            </div>
+
+            <nav id="mainNav" style="display: none; flex-direction: column; gap: 8px;">
+                <a href="/Doctor/Appointments" class="nav-link @(currentAction == "appointments" || currentAction == "index" ? "active" : "")">
+                    <span style="display: flex; align-items: center; gap: 12px;"><span>📅</span><span>Lịch hẹn</span></span>
+                </a>
+                <a href="/Doctor/Schedules" class="nav-link @(currentAction == "schedules" ? "active" : "")">
+                    <span style="display: flex; align-items: center; gap: 12px;"><span>🗓️</span><span>Lịch làm việc</span></span>
+                </a>
+                <a href="/Doctor/Overdue" class="nav-link @(currentAction == "overdue" ? "active" : "")">
+                    <span style="display: flex; align-items: center; gap: 12px;"><span>⚠️</span><span>Quá hạn</span></span>
+                    <span id="overdueBadge" style="display: none; padding: 2px 8px; border-radius: 10px; background: #ef4444; color: white; font-size: 12px; font-weight: 600;">0</span>
+                </a>
+                <a href="/Doctor/Reviews" class="nav-link @(currentAction == "reviews" ? "active" : "")">
+                    <span style="display: flex; align-items: center; gap: 12px;"><span>⭐</span><span>Đánh giá</span></span>
+                </a>
+            </nav>
+
+            <div id="unverifiedMsg" style="display: none; padding: 16px; background: #f8fafc; border-radius: 12px; border: 1px dashed #cbd5e1; text-align: center;">
+                <p style="font-size: 13px; color: #64748b; margin: 0 0 10px;">Tính năng quản lý sẽ mở khi hồ sơ được phê duyệt.</p>
+                <a href="/Doctor/Profile" style="display: inline-block; padding: 8px 16px; border-radius: 8px; background: #5f6dfc; color: white; font-size: 13px; font-weight: 500; text-decoration: none;">Hoàn thiện hồ sơ</a>
+            </div>
+
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;" />
+
+            <nav style="display: flex; flex-direction: column; gap: 8px;">
+                <a href="/Doctor/Profile" class="sub-nav-link @(currentAction == "profile" ? "active" : "")"><span>👩‍⚕️</span><span>Hồ sơ chuyên môn</span></a>
+                <a href="/Doctor/Personal" class="sub-nav-link @(currentAction == "personal" ? "active" : "")"><span>👤</span><span>Thông tin cá nhân</span></a>
+                <a href="/Doctor/ChangePassword" class="sub-nav-link @(currentAction == "changepassword" ? "active" : "")"><span>🔐</span><span>Đổi mật khẩu</span></a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="reveal" style="flex: 1;">
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); min-height: 500px;" id="mainContentArea">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = '/Auth/Login';
+        }
+
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        
+        let user = null;
+        try { user = JSON.parse(userStr); } catch(e) {}
+
+        if (token) {
+            // Fetch Doctor Profile to get status and specialized info
+            fetch('/api/v1/doctor/profile', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(profile => {
+                const status = profile.verificationStatus || (user ? user.verificationStatus : 'PENDING');
+                const isApproved = status === 'APPROVED';
+                
+                document.getElementById('doctorSpecialty').innerText = profile.specialty?.specialtyName || profile.specialtyName || 'Chuyên khoa';
+                if (profile.facility?.facilityName || profile.facilityName) {
+                    document.getElementById('doctorFacility').innerText = `📍 ${profile.facility?.facilityName || profile.facilityName}`;
+                }
+
+                if (status === 'PENDING') {
+                    document.getElementById('verificationBadge').style.display = 'block';
+                }
+
+                const currentPath = window.location.pathname.toLowerCase();
+                const isProfilePage = currentPath.includes('/doctor/profile') || currentPath.includes('/doctor/personal') || currentPath.includes('/doctor/changepassword');
+
+                if (isApproved) {
+                    document.getElementById('mainNav').style.display = 'flex';
+                    fetchOverdueCount();
+                } else {
+                    document.getElementById('unverifiedMsg').style.display = 'block';
+                    
+                    if (!isProfilePage) {
+                        let icon = '✨'; let title = 'Chào mừng bạn đến với DocBooking!'; let desc = 'Để bắt đầu nhận lịch hẹn, bạn cần hoàn thiện hồ sơ.'; let btn = 'Bắt đầu hoàn thiện'; let showBtn = true;
+                        if (status === 'PENDING') {
+                            icon = '⏳'; title = 'Hồ sơ đang được duyệt'; desc = 'Vui lòng quay lại sau khi nhận được thông báo phê duyệt.'; showBtn = false;
+                        } else if (status === 'REJECTED') {
+                            icon = '❌'; title = 'Hồ sơ bị từ chối'; desc = 'Hồ sơ không đủ điều kiện. Vui lòng cập nhật lại thông tin.'; btn = 'Cập nhật lại hồ sơ';
+                        }
+                        
+                        document.getElementById('mainContentArea').innerHTML = `
+                            <div style="display: flex; flex-direction: column; items-align: center; justify-content: center; text-align: center; padding: 40px; min-height: 400px;">
+                                <div style="font-size: 64px; margin-bottom: 20px;">${icon}</div>
+                                <h2 style="font-size: 24px; font-weight: 700; color: #1f2937; margin-bottom: 12px;">${title}</h2>
+                                <p style="color: #6b7280; max-width: 400px; margin: 0 auto 24px; line-height: 1.6;">${desc}</p>
+                                ${showBtn ? `<a href="/Doctor/Profile" style="display: inline-block; padding: 12px 32px; border-radius: 12px; background: #5f6dfc; color: white; font-weight: 600; text-decoration: none; box-shadow: 0 4px 14px rgba(95,109,252,0.3);">${btn}</a>` : ''}
+                            </div>
+                        `;
+                    }
+                }
+            })
+            .catch(e => console.log("Profile error:", e));
+        }
+
+        function fetchOverdueCount() {
+            fetch('/api/v1/doctor/appointments/overdue', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                const count = Array.isArray(data) ? data.length : 0;
+                if (count > 0) {
+                    const badge = document.getElementById('overdueBadge');
+                    badge.innerText = count;
+                    badge.style.display = 'inline-block';
+                    // Check if current action is overdue to color it
+                    if (window.location.pathname.toLowerCase().includes('overdue')) {
+                        badge.style.background = 'white';
+                        badge.style.color = '#5f6dfc';
+                    }
+                }
+            });
+        }
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

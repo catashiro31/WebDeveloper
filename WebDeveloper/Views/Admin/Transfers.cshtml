@@ -1,0 +1,203 @@
+@{
+    ViewData["Title"] = "Duyệt chuyển công tác";
+    Layout = "_AdminLayout";
+}
+
+<style>
+.tab-btn { padding: 8px 16px; border-radius: 6px; border: none; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b; }
+.tab-btn.active { background: #fff; color: #0ea47a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th { padding: 12px; color: #64748b; font-weight: 600; text-align: left; border-bottom: 1px solid #e2e8f0; }
+td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1100; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background: #fff; padding: 32px; border-radius: 16px; width: 100%; max-width: 500px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); transform: translateY(20px); transition: all 0.3s; }
+.modal-overlay.active .modal-content { transform: translateY(0); }
+</style>
+
+<div class="reveal" style="background: #fff; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0;">Duyệt chuyển công tác</h2>
+        <div style="display: flex; background: #f1f5f9; padding: 4px; border-radius: 8px;">
+            <button class="tab-btn active" onclick="setStatus('PENDING')" id="tab_PENDING">Chờ duyệt</button>
+            <button class="tab-btn" onclick="setStatus('APPROVED')" id="tab_APPROVED">Đã duyệt</button>
+            <button class="tab-btn" onclick="setStatus('REJECTED')" id="tab_REJECTED">Từ chối</button>
+        </div>
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 40px; color: #64748b;">Đang tải...</div>
+    <div id="empty" style="display: none; text-align: center; padding: 40px; color: #64748b;">Không có yêu cầu nào.</div>
+    
+    <div id="tableContainer" style="display: none; overflow-x: auto;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Bác sĩ</th>
+                    <th>Cơ sở cũ</th>
+                    <th>Cơ sở mới</th>
+                    <th>Lý do</th>
+                    <th>Ngày gửi</th>
+                    <th id="colAction">Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <div id="pagination" style="display: none; justify-content: center; gap: 8px; margin-top: 20px;"></div>
+</div>
+
+<div id="processModal" class="modal-overlay">
+    <div class="modal-content">
+        <h3 style="margin: 0 0 16px; font-size: 18px; font-weight: 800;">Xử lý yêu cầu chuyển công tác</h3>
+        <div style="margin-bottom: 20px; font-size: 14px; line-height: 1.6;">
+            <p><strong>Bác sĩ:</strong> <span id="modalDocName"></span></p>
+            <p><strong>Cơ sở mới:</strong> <span id="modalNewFac"></span></p>
+            <p><strong>Địa chỉ:</strong> <span id="modalAddress"></span></p>
+        </div>
+        
+        <label style="display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px; text-transform: uppercase;">Ghi chú / Lý do từ chối (nếu có)</label>
+        <textarea id="adminNote" style="width: 100%; padding: 12px; border-radius: 8px; border: 1.5px solid #e2e8f0; min-height: 100px; font-size: 14px; outline: none; background: #f8fafc; margin-bottom: 24px; box-sizing: border-box; font-family: inherit;" placeholder="..."></textarea>
+
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeModal()" style="flex: 1; padding: 12px; border-radius: 10px; background: #f1f5f9; border: none; font-weight: 700; cursor: pointer;">Đóng</button>
+            <button id="btnReject" onclick="processReq('reject')" style="flex: 1; padding: 12px; border-radius: 10px; background: #fef2f2; color: #dc2626; border: none; font-weight: 700; cursor: pointer;">Từ chối</button>
+            <button id="btnApprove" onclick="processReq('approve')" style="flex: 1; padding: 12px; border-radius: 10px; background: #0ea47a; color: #fff; border: none; font-weight: 700; cursor: pointer;">Duyệt</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        let currentStatus = 'PENDING';
+        let currentPage = 0;
+        let selectedId = null;
+
+        function setStatus(status) {
+            currentStatus = status;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById(`tab_${status}`).classList.add('active');
+            document.getElementById('colAction').style.display = status === 'PENDING' ? 'table-cell' : 'none';
+            currentPage = 0;
+            fetchData();
+        }
+
+        function setPage(p) {
+            currentPage = p;
+            fetchData();
+        }
+
+        function fetchData() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('empty').style.display = 'none';
+            document.getElementById('tableContainer').style.display = 'none';
+            document.getElementById('pagination').style.display = 'none';
+
+            fetch(`/api/v1/admin/transfers?status=${currentStatus}&page=${currentPage}&size=10`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                const list = data.content || [];
+                const totalPages = data.totalPages || 0;
+
+                if (list.length === 0) {
+                    document.getElementById('empty').style.display = 'block';
+                    return;
+                }
+
+                let html = '';
+                list.forEach(req => {
+                    const docName = req.doctor?.user?.fullName || req.doctorName || '';
+                    const oldFac = req.doctor?.facility?.facilityName || req.oldFacilityName || '';
+                    const newFac = req.targetFacility?.facilityName || req.targetFacilityName || '';
+                    const reason = req.reason || '';
+                    const date = new Date(req.createdAt).toLocaleDateString('vi-VN');
+                    
+                    html += `<tr>
+                        <td style="font-weight: 600;">${docName}</td>
+                        <td>${oldFac}</td>
+                        <td style="color: #0ea47a; font-weight: 600;">${newFac}</td>
+                        <td style="max-width: 200px;">${reason}</td>
+                        <td>${date}</td>
+                        ${currentStatus === 'PENDING' ? `
+                        <td>
+                            <button onclick='openModal(${JSON.stringify(req).replace(/'/g, "&apos;")})' style="border: none; background: #e8faf3; color: #0ea47a; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer;">Xử lý</button>
+                        </td>` : ''}
+                    </tr>`;
+                });
+
+                document.getElementById('tableBody').innerHTML = html;
+                document.getElementById('tableContainer').style.display = 'block';
+
+                if (totalPages > 1) {
+                    let phtml = '';
+                    for (let i = 0; i < totalPages; i++) {
+                        const bg = currentPage === i ? '#0ea47a' : '#fff';
+                        const col = currentPage === i ? '#fff' : '#1e293b';
+                        phtml += `<button onclick="setPage(${i})" style="padding: 6px 12px; border-radius: 4px; border: 1px solid #e2e8f0; background: ${bg}; color: ${col}; cursor: pointer;">${i + 1}</button>`;
+                    }
+                    document.getElementById('pagination').innerHTML = phtml;
+                    document.getElementById('pagination').style.display = 'flex';
+                }
+            })
+            .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
+        }
+
+        window.openModal = function(req) {
+            selectedId = req.id || req.transferId;
+            document.getElementById('modalDocName').innerText = req.doctor?.user?.fullName || req.doctorName || '';
+            document.getElementById('modalNewFac').innerText = req.targetFacility?.facilityName || req.targetFacilityName || '';
+            
+            const addr = req.targetFacility?.address || req.targetFacilityAddress || '';
+            const prov = req.targetFacility?.province || req.targetFacilityProvince || '';
+            document.getElementById('modalAddress').innerText = addr + (prov ? `, ${prov}` : '');
+            
+            document.getElementById('adminNote').value = '';
+            document.getElementById('processModal').classList.add('active');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('processModal').classList.remove('active');
+            selectedId = null;
+        };
+
+        window.processReq = function(action) {
+            const adminNote = document.getElementById('adminNote').value.trim();
+            if (action === 'reject' && !adminNote) {
+                Toastify({ text: "Vui lòng nhập lý do từ chối", style: {background: "#f59e0b"} }).showToast();
+                return;
+            }
+
+            document.getElementById('btnReject').disabled = true;
+            document.getElementById('btnApprove').disabled = true;
+
+            fetch(`/api/v1/admin/transfers/${selectedId}/${action}`, {
+                method: 'PUT',
+                headers: { 
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ adminNote })
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: action === 'approve' ? "Đã duyệt" : "Đã từ chối", style: {background: "#10b981"} }).showToast();
+                    closeModal();
+                    fetchData();
+                } else {
+                    Toastify({ text: await res.text() || "Lỗi xử lý", style: {background: "#ef4444"} }).showToast();
+                }
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast())
+            .finally(() => {
+                document.getElementById('btnReject').disabled = false;
+                document.getElementById('btnApprove').disabled = false;
+            });
+        };
+
+        fetchData();
+    </script>
+}

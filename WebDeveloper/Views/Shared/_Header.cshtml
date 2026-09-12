@@ -1,0 +1,391 @@
+@using System.Security.Claims
+@{
+    var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+    var userRole = User.FindFirst(ClaimTypes.Role)?.Value ?? "";
+    var userName = User.FindFirst(ClaimTypes.Name)?.Value ?? "Người dùng";
+    var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "";
+    var avatarUrl = User.FindFirst("AvatarUrl")?.Value;
+    var initial = string.IsNullOrEmpty(userName) ? "?" : userName.Substring(0, 1).ToUpper();
+
+    var roleLabel = userRole switch
+    {
+        "PATIENT" => "Bệnh nhân",
+        "DOCTOR" => "Bác sĩ",
+        "ADMIN" => "Quản trị viên",
+        _ => userRole
+    };
+}
+
+<style>
+/* Header CSS ported from React css string */
+.hdr {
+  background: transparent;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100%;
+  z-index: 1000;
+  font-family: var(--font-inter);
+  transition: all 0.3s ease;
+  height: 80px;
+  display: flex;
+  align-items: center;
+}
+
+.hdr.scrolled {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  height: 72px;
+  border-bottom: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.hdr-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 40px;
+}
+
+/* ===== Logo ===== */
+.hdr-logo {
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; text-decoration: none; flex-shrink: 0;
+}
+.hdr-logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 12px; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3); transition: transform 0.3s ease;
+}
+.hdr-logo:hover .hdr-logo-icon { transform: rotate(-5deg) scale(1.05); }
+.hdr-logo-text { font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; }
+
+/* ===== Nav links ===== */
+.hdr-nav-wrap { display: flex; align-items: center; flex: 1; }
+.hdr-nav { display: flex; list-style: none; gap: 8px; margin: 0 auto; padding: 0; }
+.hdr-nav a {
+  text-decoration: none; font-size: 14px; font-weight: 600; color: #475569;
+  padding: 10px 18px; border-radius: 12px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hdr-nav a:hover { color: #6366f1; background: rgba(99, 102, 241, 0.05); }
+
+/* ===== Auth buttons ===== */
+.hdr-auth { display: flex; gap: 12px; align-items: center; }
+.hdr-btn-login {
+  padding: 10px 20px; border-radius: 12px; background: transparent;
+  color: #475569; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s; text-decoration: none; font-family: inherit;
+}
+.hdr-btn-login:hover { color: #6366f1; background: rgba(99, 102, 241, 0.05); }
+
+.hdr-btn-register {
+  padding: 10px 24px; border: none; border-radius: 12px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff; font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: all 0.3s ease; text-decoration: none; font-family: inherit;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.25);
+}
+.hdr-btn-register:hover { box-shadow: 0 8px 20px rgba(99,102,241,0.4); transform: translateY(-2px); }
+
+/* ===== User menu ===== */
+.hdr-user { position: relative; }
+.hdr-user-btn {
+  display: flex; align-items: center; gap: 10px;
+  padding: 6px 12px 6px 6px; border: 1.5px solid #e5e7eb;
+  border-radius: 30px; background: #fff; cursor: pointer;
+  transition: all 0.2s; font-family: inherit;
+}
+.hdr-user-btn:hover { border-color: #c7d2fe; box-shadow: 0 2px 8px rgba(99,102,241,0.1); }
+
+.hdr-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+  flex-shrink: 0; overflow: hidden;
+}
+.hdr-avatar-gradient { background: linear-gradient(135deg, #6366f1, #8b5cf6); }
+.hdr-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.hdr-user-info { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.2; }
+.hdr-user-name {
+  font-size: 13px; font-weight: 600; color: #1f2937;
+  max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.hdr-user-role { font-size: 11px; color: #9ca3af; font-weight: 500; }
+.hdr-chevron { color: #9ca3af; transition: transform 0.2s; }
+.hdr-chevron.open { transform: rotate(180deg); }
+
+/* ===== Dropdown ===== */
+.hdr-dropdown {
+  position: absolute; top: calc(100% + 8px); right: 0;
+  width: 280px; background: #fff; border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid #f0f0f5;
+  overflow: hidden; z-index: 300; animation: hdrDropIn 0.2s ease;
+  display: none; /* managed by JS */
+}
+.hdr-dropdown.show { display: block; }
+
+@@keyframes hdrDropIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.hdr-dd-header { padding: 16px; background: #fafbfe; border-bottom: 1px solid #f0f0f5; display: flex; align-items: center; gap: 12px; }
+.hdr-dd-avatar {
+  width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center;
+  justify-content: center; font-size: 16px; font-weight: 700; color: #fff;
+  flex-shrink: 0; overflow: hidden;
+}
+.hdr-dd-name { font-size: 14px; font-weight: 600; color: #1f2937; }
+.hdr-dd-email { font-size: 12px; color: #9ca3af; margin-top: 2px; word-break: break-all; }
+.hdr-dd-section { padding: 6px 8px; }
+.hdr-dd-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase; padding: 6px 8px 4px; }
+
+.hdr-dd-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 10px 12px; border: none; background: none; border-radius: 10px;
+  font-size: 13px; font-weight: 500; color: #374151; cursor: pointer;
+  transition: all 0.15s; text-decoration: none; font-family: inherit; text-align: left; box-sizing: border-box;
+}
+.hdr-dd-item:hover { background: #f5f3ff; color: #6366f1; }
+.hdr-dd-item-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; }
+.hdr-dd-divider { height: 1px; background: #f0f0f5; margin: 2px 8px; }
+.hdr-dd-item.logout { color: #ef4444; }
+.hdr-dd-item.logout:hover { background: #fef2f2; color: #dc2626; }
+
+/* Mobile toggles handled below */
+.hdr-mobile-toggle { display: none; background: none; border: none; cursor: pointer; padding: 4px; }
+.hdr-hamburger { display: flex; flex-direction: column; gap: 5px; }
+.hdr-hamburger span { display: block; width: 22px; height: 2px; background: #374151; border-radius: 2px; transition: 0.3s; }
+.hdr-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.hdr-hamburger.open span:nth-child(2) { opacity: 0; }
+.hdr-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.hdr-overlay { display: none; }
+
+@@media (max-width: 900px) {
+  .hdr-container { padding: 0 20px; }
+  .hdr-mobile-toggle { display: block; z-index: 202; }
+  .hdr-overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; opacity: 0; visibility: hidden; transition: 0.3s; }
+  .hdr-overlay.show { opacity: 1; visibility: visible; }
+  .hdr-nav-wrap {
+    position: fixed; top: 0; right: -300px; width: 280px; height: 100vh;
+    background: #fff; z-index: 201; padding: 72px 20px 24px;
+    display: flex; flex-direction: column; gap: 12px;
+    transition: right 0.3s; overflow-y: auto;
+  }
+  .hdr-nav-wrap.show { right: 0; }
+  .hdr-nav { flex-direction: column; gap: 4px; margin: 0; }
+  .hdr-nav a { font-size: 15px; padding: 12px 14px; }
+  .hdr-auth { flex-direction: column; gap: 8px; width: 100%; }
+  .hdr-btn-login, .hdr-btn-register { width: 100%; text-align: center; }
+  .hdr-user { width: 100%; }
+  .hdr-user-btn { width: 100%; justify-content: center; }
+  .hdr-dropdown { width: 100%; left: 0; right: 0; }
+}
+</style>
+
+<header class="hdr" id="mainHeader">
+  <div class="hdr-container">
+    
+    <!-- Logo -->
+    <a href="/" class="hdr-logo">
+      <div class="hdr-logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+        </svg>
+      </div>
+      <span class="hdr-logo-text">DocBooking</span>
+    </a>
+
+    <!-- Mobile toggle -->
+    <button class="hdr-mobile-toggle" id="mobileToggleBtn">
+      <div class="hdr-hamburger" id="hamburgerIcon">
+        <span></span><span></span><span></span>
+      </div>
+    </button>
+    <div class="hdr-overlay" id="mobileOverlay"></div>
+
+    <div class="hdr-nav-wrap" id="navWrap">
+      <ul class="hdr-nav">
+        <li><a href="/">Trang chủ</a></li>
+        <li><a href="/Portal/Doctors">Bác sĩ</a></li>
+        <li><a href="/Home/About">Về chúng tôi</a></li>
+        <li><a href="/Home/Contact">Liên hệ</a></li>
+      </ul>
+
+      @if (isAuthenticated)
+      {
+        <div class="hdr-user">
+          <button class="hdr-user-btn" id="userDdBtn">
+            <div class="hdr-avatar @(string.IsNullOrEmpty(avatarUrl) ? "hdr-avatar-gradient" : "")">
+              @if (!string.IsNullOrEmpty(avatarUrl))
+              {
+                <img src="@avatarUrl" alt="Avatar" />
+              }
+              else
+              {
+                @initial
+              }
+            </div>
+            <div class="hdr-user-info">
+              <span class="hdr-user-name">@userName</span>
+              <span class="hdr-user-role">@roleLabel</span>
+            </div>
+            <svg class="hdr-chevron" id="ddChevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          <div class="hdr-dropdown" id="userDropdown">
+            <div class="hdr-dd-header">
+              <div class="hdr-dd-avatar @(string.IsNullOrEmpty(avatarUrl) ? "hdr-avatar-gradient" : "")">
+                @if (!string.IsNullOrEmpty(avatarUrl))
+                {
+                  <img src="@avatarUrl" alt="" style="width: 100%; height: 100%; object-fit: cover" />
+                }
+                else
+                {
+                  @initial
+                }
+              </div>
+              <div>
+                <div class="hdr-dd-name">@userName</div>
+                <div class="hdr-dd-email">@userEmail</div>
+              </div>
+            </div>
+
+            @if (userRole != "ADMIN")
+            {
+              <div class="hdr-dd-section">
+                <div class="hdr-dd-label">@(userRole == "DOCTOR" ? "Quản lý" : "Dịch vụ")</div>
+                @if (userRole == "PATIENT")
+                {
+                  <a href="/Patient/Appointments" class="hdr-dd-item"><div class="hdr-dd-item-icon" style="background: #eef2ff">📅</div>Lịch hẹn của tôi</a>
+                  <a href="/Patient/History" class="hdr-dd-item"><div class="hdr-dd-item-icon" style="background: #f0fdf4">📋</div>Lịch sử khám bệnh</a>
+                  <a href="/Patient/Relatives" class="hdr-dd-item"><div class="hdr-dd-item-icon" style="background: #fff7ed">👨‍👩‍👧</div>Hồ sơ người thân</a>
+                }
+                else if (userRole == "DOCTOR")
+                {
+                  <a href="/Doctor/Appointments" class="hdr-dd-item"><div class="hdr-dd-item-icon" style="background: #eef2ff">📅</div>Lịch hẹn bệnh nhân</a>
+                  <a href="/Doctor/Schedule" class="hdr-dd-item"><div class="hdr-dd-item-icon" style="background: #f0fdf4">🗓️</div>Lịch làm việc</a>
+                  <a href="/Doctor/Profile" class="hdr-dd-item"><div class="hdr-dd-item-icon" style="background: #f5f3ff">👤</div>Hồ sơ bác sĩ</a>
+                }
+              </div>
+            }
+
+            @if (userRole == "ADMIN")
+            {
+              <div class="hdr-dd-section">
+                <div class="hdr-dd-label">Quản trị</div>
+                <a href="/Admin/Dashboard" class="hdr-dd-item">
+                  <div class="hdr-dd-item-icon" style="background: #eef2ff">📊</div>
+                  Bảng điều khiển
+                </a>
+              </div>
+            }
+
+            <div class="hdr-dd-divider"></div>
+
+            <div class="hdr-dd-section">
+              <div class="hdr-dd-label">Tài khoản</div>
+              <a href="/User/Profile" class="hdr-dd-item">
+                <div class="hdr-dd-item-icon" style="background: #f0f9ff">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+                  </svg>
+                </div>
+                Thông tin cá nhân
+              </a>
+              <a href="/User/ChangePassword" class="hdr-dd-item">
+                <div class="hdr-dd-item-icon" style="background: #fef3c7">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </div>
+                Đổi mật khẩu
+              </a>
+            </div>
+
+            <div class="hdr-dd-divider"></div>
+
+            <div class="hdr-dd-section" style="padding-bottom: 8px;">
+                <button type="button" onclick="logoutApp()" class="hdr-dd-item logout" style="width: 100%; border: none; background: none; text-align: left; cursor: pointer;">
+                  <div class="hdr-dd-item-icon" style="background: #fef2f2">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" />
+                    </svg>
+                  </div>
+                  Đăng xuất
+                </button>
+            </div>
+          </div>
+        </div>
+      }
+      else
+      {
+        <div class="hdr-auth">
+          <a href="/Auth/Login" class="hdr-btn-login">Đăng nhập</a>
+          <a href="/Auth/Register" class="hdr-btn-register">Tạo tài khoản</a>
+        </div>
+      }
+    </div>
+  </div>
+</header>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Scroll Effect
+    const header = document.getElementById('mainHeader');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 20) header.classList.add('scrolled');
+      else header.classList.remove('scrolled');
+    });
+
+    // Dropdown Toggle
+    const userBtn = document.getElementById('userDdBtn');
+    const dropdown = document.getElementById('userDropdown');
+    const chevron = document.getElementById('ddChevron');
+    
+    if (userBtn) {
+      userBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.toggle('show');
+        chevron.classList.toggle('open');
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!userBtn.contains(e.target) && !dropdown.contains(e.target)) {
+          dropdown.classList.remove('show');
+          chevron.classList.remove('open');
+        }
+      });
+    }
+
+    // Mobile Menu Toggle
+    const mobileBtn = document.getElementById('mobileToggleBtn');
+    const overlay = document.getElementById('mobileOverlay');
+    const navWrap = document.getElementById('navWrap');
+    const hamburger = document.getElementById('hamburgerIcon');
+
+    if (mobileBtn) {
+      function toggleMobile() {
+        overlay.classList.toggle('show');
+        navWrap.classList.toggle('show');
+        hamburger.classList.toggle('open');
+      }
+      mobileBtn.addEventListener('click', toggleMobile);
+      overlay.addEventListener('click', toggleMobile);
+    }
+  });
+
+  function logoutApp() {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+      window.location.href = '/Auth/Login';
+  }
+</script>

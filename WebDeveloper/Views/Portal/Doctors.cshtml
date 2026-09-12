@@ -1,0 +1,659 @@
+@{
+    ViewData["Title"] = "Đội ngũ bác sĩ";
+}
+
+<style>
+.page { min-height: 100vh; background: #f8fafc; font-family: 'Inter', -apple-system, sans-serif; padding-top: 96px; }
+
+/* ===== HERO ===== */
+.hero-wrapper { max-width: 1280px; margin: 0 auto; padding: 24px 40px; }
+.hero {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 32px;
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  padding: 60px 80px; border-radius: 32px; color: #fff;
+  box-shadow: 0 20px 50px rgba(99,102,241,0.2);
+  position: relative; overflow: hidden;
+}
+.hero::after {
+  content: ''; position: absolute; top: -50%; right: -10%;
+  width: 400px; height: 400px; background: rgba(255,255,255,0.08);
+  border-radius: 50%; pointer-events: none;
+}
+.hero-text-wrap { position: relative; z-index: 1; flex: 1; }
+.hero-title { font-size: 36px; font-weight: 800; margin: 0 0 12px; letter-spacing: -0.03em; line-height: 1.1; }
+.hero-desc { font-size: 16px; color: rgba(255,255,255,0.85); margin: 0; max-width: 440px; line-height: 1.6; }
+
+.search-wrap { position: relative; z-index: 1; width: 400px; max-width: 100%; }
+.search-input { 
+  width: 100%; border: none; border-radius: 18px; 
+  padding: 16px 24px 16px 56px; font-size: 16px; outline: none; 
+  color: #0f172a; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit; box-sizing: border-box;
+}
+.search-input:focus { box-shadow: 0 15px 40px rgba(0,0,0,0.15); transform: translateY(-3px); }
+.search-icon { 
+  position: absolute; left: 22px; top: 50%; transform: translateY(-50%); 
+  color: #94a3b8; width: 22px; height: 22px; 
+}
+
+/* ===== MAIN CONTENT ===== */
+.main { max-width: 1280px; margin: 40px auto 100px; padding: 0 40px; display: flex; gap: 40px; align-items: flex-start; }
+.sidebar { 
+  width: 280px; flex-shrink: 0; background: #fff; padding: 32px; 
+  border-radius: 28px; border: 1px solid #e2e8f0; 
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); position: sticky; top: 100px; 
+}
+.sidebar-group { margin-bottom: 36px; }
+.sidebar-group:last-child { margin-bottom: 0; }
+.sidebar h3 { 
+  margin: 0 0 16px; font-size: 11px; color: #94a3b8; font-weight: 800; 
+  text-transform: uppercase; letter-spacing: 1.5px; display: flex; align-items: center; gap: 8px;
+}
+.filter-select {
+  width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+  font-size: 14px; color: #1e293b; background: #fff; outline: none; margin-bottom: 20px;
+  appearance: none; background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 14px; box-sizing: border-box;
+}
+.filter-select:focus { border-color: #6366f1; }
+
+.spec-list { 
+  display: flex; flex-direction: column; gap: 4px; 
+  transition: all 0.3s ease;
+}
+.spec-list.expanded {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-right: -8px;
+}
+.spec-list.expanded::-webkit-scrollbar { width: 5px; }
+.spec-list.expanded::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+.spec-list.expanded::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.spec-list.expanded::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+.spec-item { 
+  padding: 10px 14px; border-radius: 12px; border: none; background: transparent; 
+  cursor: pointer; font-size: 13.5px; transition: all 0.2s; text-align: left; 
+  color: #475569; font-weight: 600; font-family: inherit; width: 100%; box-sizing: border-box;
+}
+.spec-item:hover { background: #f8fafc; color: #6366f1; }
+.spec-item.active { background: #eef2ff; color: #6366f1; }
+
+.grid-doctors { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 32px; }
+.empty { 
+  grid-column: 1 / -1; text-align: center; padding: 100px 40px; color: #64748b; 
+  background: #fff; border-radius: 28px; border: 2px dashed #e2e8f0;
+}
+
+.pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 60px; grid-column: 1 / -1; }
+.pagination button { 
+  display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 18px; 
+  border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-weight: 700; font-size: 14px;
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit;
+}
+.pagination button:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(99,102,241,0.15); }
+.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+.pagination button.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border-color: transparent; box-shadow: 0 10px 20px rgba(99,102,241,0.3); }
+ 
+ /* ===== PRICE SLIDER ===== */
+ .price-slider-wrap { padding: 10px 4px 20px; }
+ .slider-labels { display: flex; justify-content: space-between; margin-bottom: 24px; }
+ .slider-label { font-size: 13px; font-weight: 700; color: #1e293b; background: #f1f5f9; padding: 4px 10px; border-radius: 8px; }
+ .range-container { position: relative; height: 6px; background: #e2e8f0; border-radius: 3px; }
+ .range-track { 
+   position: absolute; height: 100%; background: #6366f1; border-radius: 3px; 
+   left: var(--min); right: var(--max);
+ }
+ .range-input {
+   position: absolute; width: 100%; top: -6px; left: 0; background: none; 
+   pointer-events: none; -webkit-appearance: none; appearance: none;
+ }
+ .range-input::-webkit-slider-thumb {
+   height: 20px; width: 20px; border-radius: 50%; background: #fff; border: 2px solid #6366f1;
+   pointer-events: auto; -webkit-appearance: none; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+   transition: all 0.2s;
+ }
+ .range-input::-webkit-slider-thumb:hover { transform: scale(1.15); box-shadow: 0 6px 15px rgba(99,102,241,0.3); }
+
+ .fac-search-input {
+   width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+   font-size: 13px; margin-bottom: 12px; outline: none; transition: all 0.2s; box-sizing: border-box;
+ }
+ .fac-search-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
+
+@@media (max-width: 768px) {
+  .hero-wrapper { padding: 0 16px; }
+  .hero { padding: 32px 24px; border-radius: 24px; flex-direction: column; gap: 20px; }
+  .hero-title { font-size: 24px; text-align: center; }
+  .hero-desc { text-align: center; }
+  .search-wrap { width: 100%; }
+  .main { flex-direction: column; gap: 24px; padding: 0 20px; }
+  .sidebar { width: 100%; position: static; padding: 24px; box-sizing: border-box; }
+  .grid-doctors { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+}
+
+/* Card Styling Ported */
+.doc-card { 
+  background: #fff; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 24px; 
+  overflow: hidden; 
+  cursor: pointer; 
+  display: flex; 
+  flex-direction: column; 
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
+  text-decoration: none; color: inherit;
+}
+.doc-card:hover { 
+  transform: translateY(-8px); 
+  box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.15); 
+  border-color: #6366f1; 
+}
+.avatar-wrap { 
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  height: 200px; 
+  overflow: hidden; 
+  position: relative;
+}
+.avatar { 
+  height: 100%; 
+  width: 100%; 
+  object-fit: cover; 
+  object-position: top; 
+  transition: transform 0.5s ease; 
+}
+.doc-card:hover .avatar { transform: scale(1.08); }
+
+.initials-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+}
+
+.card-body { padding: 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; border-top: 1px solid #f1f5f9; }
+.avail-badge { display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.doc-name { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -0.01em; }
+.doc-spec { margin: 0; font-size: 14px; color: #64748b; display: flex; align-items: center; gap: 8px; font-weight: 500; }
+.meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.meta-badge { 
+  font-size: 13px; padding: 6px 12px; background: #f8fafc; border: 1px solid #f1f5f9; 
+  border-radius: 12px; color: #334155; font-weight: 700; display: flex; align-items: center; gap: 6px; 
+  transition: all 0.2s;
+}
+.doc-card:hover .meta-badge { background: #fff; border-color: #e2e8f0; }
+.meta-badge svg { width: 14px; height: 14px; }
+.badge-star { color: #f59e0b; }
+.badge-exp { color: #6366f1; }
+.badge-fee { color: #10b981; }
+.book-btn { 
+  margin-top: 12px; padding: 12px 0; 
+  background: #f8fafc; color: #6366f1; 
+  border: none; border-radius: 14px; 
+  font-size: 14px; font-weight: 800; 
+  cursor: pointer; width: 100%; 
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+  font-family: inherit;
+}
+.doc-card:hover .book-btn { background: #6366f1; color: #fff; box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
+</style>
+
+<div class="page">
+    <div class="hero-wrapper">
+        <div class="hero">
+            <div class="hero-text-wrap">
+                <h1 class="hero-title">Đội ngũ bác sĩ</h1>
+                <p class="hero-desc">Tìm kiếm và đặt lịch khám với các chuyên gia y tế hàng đầu Việt Nam.</p>
+            </div>
+            <div class="search-wrap">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <input type="text" id="searchInput" class="search-input" placeholder="Tên bác sĩ, triệu chứng..." />
+            </div>
+        </div>
+    </div>
+
+    <div class="main">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-group">
+                <h3>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Vị trí (Tỉnh/Thành)
+                </h3>
+                <select id="provinceSelect" class="filter-select">
+                    <option value="">Tất cả tỉnh thành</option>
+                </select>
+            </div>
+
+            <div class="sidebar-group">
+                <h3>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Chuyên khoa
+                </h3>
+                <div id="specList" class="spec-list"></div>
+                <button id="specToggleBtn" class="spec-item" style="color: #6366f1; text-align: center; font-size: 12px; margin-top: 4px; display: none;"></button>
+            </div>
+
+            <div class="sidebar-group">
+                <h3>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M4 21V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v17"/></svg>
+                    Cơ sở y tế
+                </h3>
+                <input type="text" id="facSearchInput" class="fac-search-input" placeholder="Tìm tên cơ sở..." />
+                <div id="facList" class="spec-list"></div>
+                <button id="facToggleBtn" class="spec-item" style="color: #6366f1; text-align: center; font-size: 12px; margin-top: 4px; display: none;"></button>
+            </div>
+
+            <div class="sidebar-group">
+                <h3>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                    Giá khám
+                </h3>
+                <div class="price-slider-wrap">
+                    <div class="slider-labels">
+                        <span id="minPriceLbl" class="slider-label">0k</span>
+                        <span id="maxPriceLbl" class="slider-label">2tr</span>
+                    </div>
+                    <div class="range-container">
+                        <div id="rangeTrack" class="range-track" style="--min: 0%; --max: 0%;"></div>
+                        <input type="range" id="minPrice" min="0" max="2000000" step="50000" value="0" class="range-input" />
+                        <input type="range" id="maxPrice" min="0" max="2000000" step="50000" value="2000000" class="range-input" />
+                    </div>
+                    <p style="font-size: 11px; color: #94a3b8; margin-top: 12px; text-align: center; font-weight: 500;">Khoảng giá tối ưu cho bạn</p>
+                </div>
+            </div>
+        </aside>
+
+        <!-- DOCTORS GRID -->
+        <section class="grid-doctors" id="doctorsGrid" style="width: 100%;">
+            <!-- Doctors will be rendered here -->
+        </section>
+        
+        <!-- PAGINATION -->
+        <div class="pagination" id="pagination" style="display: none;"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // State variables
+        let state = {
+            search: '',
+            specId: null,
+            facilityId: null,
+            province: '',
+            minPrice: 0,
+            maxPrice: 2000000,
+            page: 0,
+            size: 12,
+            totalPages: 0,
+            facSearch: ''
+        };
+
+        let debounceTimer;
+        let allSpecialties = [];
+        let allFacilities = [];
+        let isSpecExpanded = false;
+        let isFacExpanded = false;
+
+        // Parse URL params on load
+        const urlParams = new URLSearchParams(window.location.search);
+        if(urlParams.has('keyword')) state.search = urlParams.get('keyword');
+        if(urlParams.has('specId')) state.specId = parseInt(urlParams.get('specId'));
+        if(urlParams.has('facilityId')) state.facilityId = parseInt(urlParams.get('facilityId'));
+        if(urlParams.has('province')) state.province = urlParams.get('province');
+        if(urlParams.has('minPrice')) state.minPrice = parseInt(urlParams.get('minPrice'));
+        if(urlParams.has('maxPrice')) state.maxPrice = parseInt(urlParams.get('maxPrice'));
+
+        // Elements
+        const elSearch = document.getElementById('searchInput');
+        const elProvince = document.getElementById('provinceSelect');
+        const elSpecList = document.getElementById('specList');
+        const elSpecToggle = document.getElementById('specToggleBtn');
+        const elFacSearch = document.getElementById('facSearchInput');
+        const elFacList = document.getElementById('facList');
+        const elFacToggle = document.getElementById('facToggleBtn');
+        const elMinPrice = document.getElementById('minPrice');
+        const elMaxPrice = document.getElementById('maxPrice');
+        const elMinLbl = document.getElementById('minPriceLbl');
+        const elMaxLbl = document.getElementById('maxPriceLbl');
+        const elTrack = document.getElementById('rangeTrack');
+        const elGrid = document.getElementById('doctorsGrid');
+        const elPagi = document.getElementById('pagination');
+
+        // Init values
+        elSearch.value = state.search;
+        elMinPrice.value = state.minPrice;
+        elMaxPrice.value = state.maxPrice;
+
+        function updateURL() {
+            const params = new URLSearchParams();
+            if(state.search) params.set('keyword', state.search);
+            if(state.specId) params.set('specId', state.specId);
+            if(state.facilityId) params.set('facilityId', state.facilityId);
+            if(state.province) params.set('province', state.province);
+            if(state.minPrice > 0) params.set('minPrice', state.minPrice);
+            if(state.maxPrice < 2000000) params.set('maxPrice', state.maxPrice);
+            
+            const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+            window.history.replaceState({}, '', newUrl);
+        }
+
+        async function initData() {
+            try {
+                const [specsRes, facsRes] = await Promise.all([
+                    fetch('/api/v1/portal/specialties'),
+                    fetch('/api/v1/portal/facilities')
+                ]);
+                allSpecialties = await specsRes.json();
+                allFacilities = await facsRes.json();
+
+                // Populate Provinces
+                const provinces = [...new Set(allFacilities.map(f => f.province).filter(Boolean))].sort();
+                provinces.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p;
+                    opt.textContent = p;
+                    elProvince.appendChild(opt);
+                });
+                elProvince.value = state.province;
+
+                renderSpecialties();
+                renderFacilities();
+                fetchDoctors();
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        function renderSpecialties() {
+            elSpecList.innerHTML = `<button class="spec-item ${!state.specId ? 'active' : ''}" onclick="setSpec(null)">Tất cả</button>`;
+            const toShow = isSpecExpanded ? allSpecialties : allSpecialties.slice(0, 6);
+            
+            toShow.forEach(s => {
+                const id = s.id || s.specialtyId;
+                const name = s.name || s.specialtyName;
+                elSpecList.innerHTML += `<button class="spec-item ${state.specId === id ? 'active' : ''}" onclick="setSpec(${id})">${name}</button>`;
+            });
+
+            if(isSpecExpanded) elSpecList.classList.add('expanded');
+            else elSpecList.classList.remove('expanded');
+
+            if (allSpecialties.length > 6) {
+                elSpecToggle.style.display = 'block';
+                elSpecToggle.innerText = isSpecExpanded ? 'Thu gọn ↑' : `Xem thêm ${allSpecialties.length - 6} chuyên khoa ↓`;
+            } else {
+                elSpecToggle.style.display = 'none';
+            }
+        }
+
+        function renderFacilities() {
+            let filtered = allFacilities;
+            if(state.province) filtered = filtered.filter(f => f.province === state.province);
+            if(state.facSearch) filtered = filtered.filter(f => (f.name || f.facilityName).toLowerCase().includes(state.facSearch.toLowerCase()));
+
+            elFacList.innerHTML = `<button class="spec-item ${!state.facilityId ? 'active' : ''}" onclick="setFac(null)">Tất cả</button>`;
+            
+            if(filtered.length === 0) {
+                elFacList.innerHTML += `<p style="font-size: 12px; color: #94a3b8; padding: 8px 12px;">Không có cơ sở nào</p>`;
+            } else {
+                const toShow = isFacExpanded ? filtered : filtered.slice(0, 6);
+                toShow.forEach(f => {
+                    const id = f.id || f.facilityId;
+                    const name = f.name || f.facilityName;
+                    elFacList.innerHTML += `<button class="spec-item ${state.facilityId === id ? 'active' : ''}" onclick="setFac(${id})">${name}</button>`;
+                });
+            }
+
+            if(isFacExpanded) elFacList.classList.add('expanded');
+            else elFacList.classList.remove('expanded');
+
+            if (filtered.length > 6) {
+                elFacToggle.style.display = 'block';
+                elFacToggle.innerText = isFacExpanded ? 'Thu gọn ↑' : `Xem thêm ${filtered.length - 6} cơ sở ↓`;
+            } else {
+                elFacToggle.style.display = 'none';
+            }
+        }
+
+        window.setSpec = (id) => {
+            state.specId = state.specId === id ? null : id;
+            state.page = 0;
+            renderSpecialties();
+            triggerFetch();
+        };
+
+        window.setFac = (id) => {
+            state.facilityId = state.facilityId === id ? null : id;
+            state.page = 0;
+            renderFacilities();
+            triggerFetch();
+        };
+
+        elSpecToggle.onclick = () => { isSpecExpanded = !isSpecExpanded; renderSpecialties(); };
+        elFacToggle.onclick = () => { isFacExpanded = !isFacExpanded; renderFacilities(); };
+
+        elSearch.oninput = (e) => {
+            state.search = e.target.value;
+            state.page = 0;
+            debounceFetch();
+        };
+
+        elFacSearch.oninput = (e) => {
+            state.facSearch = e.target.value;
+            renderFacilities();
+        };
+
+        elProvince.onchange = (e) => {
+            state.province = e.target.value;
+            state.facilityId = null; // reset facility
+            state.page = 0;
+            renderFacilities();
+            triggerFetch();
+        };
+
+        function formatPrice(p) {
+            if (p >= 1000000) return (p/1000000).toFixed(1) + 'tr';
+            return (p/1000).toFixed(0) + 'k';
+        }
+
+        function updateSliderUI() {
+            elMinLbl.innerText = formatPrice(state.minPrice);
+            elMaxLbl.innerText = formatPrice(state.maxPrice);
+            elTrack.style.setProperty('--min', `${(state.minPrice / 2000000) * 100}%`);
+            elTrack.style.setProperty('--max', `${100 - (state.maxPrice / 2000000) * 100}%`);
+        }
+
+        const handlePriceChange = (e) => {
+            let val = parseInt(e.target.value);
+            if (e.target.id === 'minPrice') {
+                state.minPrice = Math.min(val, state.maxPrice - 50000);
+                elMinPrice.value = state.minPrice;
+            } else {
+                state.maxPrice = Math.max(val, state.minPrice + 50000);
+                elMaxPrice.value = state.maxPrice;
+            }
+            state.page = 0;
+            updateSliderUI();
+            debounceFetch();
+        };
+
+        elMinPrice.oninput = handlePriceChange;
+        elMaxPrice.oninput = handlePriceChange;
+
+        function getInitials(name) {
+            if (!name) return "DR";
+            const parts = name.split(" ");
+            if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            return name.slice(0, 2).toUpperCase();
+        }
+
+        function debounceFetch() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(triggerFetch, 500);
+        }
+
+        function triggerFetch() {
+            updateURL();
+            fetchDoctors();
+        }
+
+        async function fetchDoctors() {
+            // Loading state
+            elGrid.innerHTML = Array(6).fill(`<div style="background: #eee; border-radius: 24px; height: 300px; animation: pulse 1.5s infinite;"></div>`).join('');
+            elPagi.style.display = 'none';
+
+            let query = `?page=${state.page}&size=${state.size}`;
+            if(state.search) query += `&keyword=${encodeURIComponent(state.search)}`;
+            if(state.specId) query += `&specId=${state.specId}`;
+            if(state.facilityId) query += `&facilityId=${state.facilityId}`;
+            if(state.province) query += `&province=${encodeURIComponent(state.province)}`;
+            if(state.minPrice > 0) query += `&minPrice=${state.minPrice}`;
+            if(state.maxPrice < 2000000) query += `&maxPrice=${state.maxPrice}`;
+
+            try {
+                const res = await fetch(`/api/v1/portal/doctors${query}`);
+                const data = await res.json();
+                
+                const docs = data.content || data || [];
+                state.totalPages = data.totalPages || 1;
+
+                if (docs.length === 0) {
+                    elGrid.innerHTML = `
+                        <div class="empty">
+                            <h3>Không tìm thấy bác sĩ nào</h3>
+                            <p>Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm của bạn.</p>
+                            <button onclick="clearFilters()" style="margin-top: 20px; padding: 10px 20px; border-radius: 12px; border: none; background: #6366f1; color: #fff; font-weight: 600; cursor: pointer;">Xóa tất cả bộ lọc</button>
+                        </div>
+                    `;
+                } else {
+                    elGrid.innerHTML = docs.map(doc => {
+                        const name = doc.doctorName || doc.name || doc.fullName || "Bác sĩ";
+                        const photo = doc.photo || doc.avatarUrl || doc.imageUrl;
+                        const rating = doc.ratingAverage != null ? doc.ratingAverage : (doc.rating || 5.0);
+                        const exp = doc.experience || doc.experienceYears || 0;
+                        const fee = doc.fee || doc.price || doc.consultationFee || 0;
+                        const isPlaceholder = !photo || photo.includes("placeholder") || photo.includes("dicebear");
+                        
+                        let avatarHtml = isPlaceholder ? 
+                            `<div class="initials-avatar">${getInitials(name)}</div>` : 
+                            `<img src="${photo}" alt="${name}" class="avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'initials-avatar\\'>${getInitials(name)}</div>';" />`;
+
+                        return `
+                        <a href="/Portal/DoctorDetail?id=${doc.doctorId || doc.id}" class="doc-card" style="grid-column: span 1;">
+                            <div class="avatar-wrap">
+                                ${avatarHtml}
+                            </div>
+                            <div class="card-body">
+                                <div class="avail-badge">
+                                    <span class="dot" style="background: ${doc.available !== false ? '#22c55e' : '#94a3b8'}"></span>
+                                    <span style="color: ${doc.available !== false ? '#16a34a' : '#64748b'}; font-size: 13px; font-weight: 700;">
+                                        ${doc.available !== false ? 'Đang hoạt động' : 'Tạm nghỉ'}
+                                    </span>
+                                </div>
+                                <h3 class="doc-name">${name}</h3>
+                                <p class="doc-spec">${doc.specialtyName || doc.specialty || doc.specialization}</p>
+                                
+                                <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #64748b; margin-top: 4px; font-weight: 500;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M4 21V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v17"/></svg>
+                                    <span>${doc.facilityName || doc.facility || 'Phòng khám riêng'}</span>
+                                    ${doc.province ? `<span style="color: #94a3b8;">• ${doc.province}</span>` : ''}
+                                </div>
+
+                                <div class="meta-row">
+                                    <span class="meta-badge">
+                                        <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                                        ${Number(rating).toFixed(1)}
+                                    </span>
+                                    <span class="meta-badge">
+                                        <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                        ${exp} năm
+                                    </span>
+                                    <span class="meta-badge">
+                                        <svg class="badge-fee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                        ${fee.toLocaleString()}đ
+                                    </span>
+                                </div>
+                                <button class="book-btn">Đặt lịch hẹn</button>
+                            </div>
+                        </a>
+                        `;
+                    }).join('');
+
+                    renderPagination();
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        window.clearFilters = () => {
+            state.specId = null;
+            state.facilityId = null;
+            state.search = '';
+            state.province = '';
+            state.minPrice = 0;
+            state.maxPrice = 2000000;
+            
+            elSearch.value = '';
+            elProvince.value = '';
+            elMinPrice.value = 0;
+            elMaxPrice.value = 2000000;
+            
+            updateSliderUI();
+            renderSpecialties();
+            renderFacilities();
+            triggerFetch();
+        };
+
+        function renderPagination() {
+            if (state.totalPages <= 1) {
+                elPagi.style.display = 'none';
+                return;
+            }
+            
+            elPagi.style.display = 'flex';
+            let start = Math.max(0, state.page - 2);
+            let end = Math.min(state.totalPages - 1, start + 4);
+            start = Math.max(0, end - 4);
+            
+            let html = `<button ${state.page === 0 ? 'disabled' : ''} onclick="setPage(${state.page - 1})">←</button>`;
+            for(let i = start; i <= end; i++) {
+                html += `<button class="${state.page === i ? 'active' : ''}" onclick="setPage(${i})">${i + 1}</button>`;
+            }
+            html += `<button ${state.page === state.totalPages - 1 ? 'disabled' : ''} onclick="setPage(${state.page + 1})">→</button>`;
+            
+            elPagi.innerHTML = html;
+        }
+
+        window.setPage = (p) => {
+            state.page = p;
+            triggerFetch();
+        };
+
+        // Add pulse animation
+        const style = document.createElement('style');
+        style.innerHTML = `@@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }`;
+        document.head.appendChild(style);
+
+        updateSliderUI();
+        initData();
+    </script>
+}

@@ -1,0 +1,229 @@
+@{
+    ViewData["Title"] = "Lịch làm việc";
+    Layout = "_DoctorLayout";
+}
+
+<style>
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+    background: white; border-radius: 24px; width: 100%; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    max-height: 90vh; overflow-y: auto; transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+.slot-btn {
+    padding: 10px; border-radius: 8px; border: 1px solid #d1d5db; background: white; color: #374151;
+    cursor: pointer; font-weight: 400; transition: all 0.2s;
+}
+.slot-btn.selected {
+    border: 2px solid #5f6dfc; background: #eef2ff; color: #5f6dfc; font-weight: 500;
+}
+</style>
+
+<div class="reveal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <div>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Lịch làm việc</h2>
+            <p style="margin: 4px 0 0; font-size: 14px; color: #64748b;">Quản lý các ca khám bệnh trong ngày</p>
+        </div>
+        <button onclick="openModal()" style="padding: 10px 20px; border-radius: 12px; border: none; background: #5f6dfc; color: white; cursor: pointer; font-weight: 600; font-size: 14px; box-shadow: 0 4px 12px rgba(95,109,252,0.2); transition: all 0.2s;" onmouseenter="this.style.background='#4f46e5'" onmouseleave="this.style.background='#5f6dfc'">
+            + Thêm lịch làm việc
+        </button>
+    </div>
+
+    <div id="schedulesContainer" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="scheduleModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" style="max-width: 500px; padding: 32px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 style="margin: 0; font-size: 20px; font-weight: 700; color: #0f172a;">Tạo lịch làm việc</h3>
+            <button onclick="closeModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 20px; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; font-size: 14px; color: #374151;">Chọn ngày</label>
+            <input type="date" id="selectedDate" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: inherit; font-size: 14px; outline: none;" onfocus="this.style.borderColor='#5f6dfc'" onblur="this.style.borderColor='#cbd5e1'" />
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <label style="font-weight: 600; font-size: 14px; color: #374151;">Chọn khung giờ</label>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" onclick="selectAllSlots()" style="padding: 4px 12px; border-radius: 6px; border: 1px solid #5f6dfc; background: white; color: #5f6dfc; cursor: pointer; font-size: 12px;">Chọn tất cả</button>
+                    <button type="button" onclick="clearAllSlots()" style="padding: 4px 12px; border-radius: 6px; border: 1px solid #6b7280; background: white; color: #6b7280; cursor: pointer; font-size: 12px;">Bỏ chọn</button>
+                </div>
+            </div>
+            <div id="slotsContainer" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+                <!-- Slots will be rendered here -->
+            </div>
+        </div>
+
+        <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">Đã chọn: <span id="selectedCount" style="font-weight: 700; color: #0f172a;">0</span> khung giờ</p>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="button" onclick="closeModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Hủy</button>
+            <button type="button" id="submitBtn" onclick="createSchedules()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #5f6dfc; color: white; cursor: pointer; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 12px rgba(95,109,252,0.2);" onmouseenter="this.style.background='#4f46e5'" onmouseleave="this.style.background='#5f6dfc'">Tạo lịch</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/Auth/Login';
+
+        const TIME_SLOTS = ['SLOT_09_00', 'SLOT_10_00', 'SLOT_11_00', 'SLOT_14_00', 'SLOT_15_00', 'SLOT_16_00', 'SLOT_17_00'];
+        let selectedSlots = [];
+
+        function formatTimeSlot(slot) {
+            return slot.replace('SLOT_', '').replace('_', ':');
+        }
+
+        function renderSlots() {
+            const container = document.getElementById('slotsContainer');
+            container.innerHTML = TIME_SLOTS.map(slot => `
+                <button type="button" class="slot-btn ${selectedSlots.includes(slot) ? 'selected' : ''}" onclick="toggleSlot('${slot}')">
+                    ${formatTimeSlot(slot)}
+                </button>
+            `).join('');
+            document.getElementById('selectedCount').innerText = selectedSlots.length;
+        }
+
+        window.toggleSlot = function(slot) {
+            if (selectedSlots.includes(slot)) {
+                selectedSlots = selectedSlots.filter(s => s !== slot);
+            } else {
+                selectedSlots.push(slot);
+            }
+            renderSlots();
+        };
+
+        window.selectAllSlots = function() { selectedSlots = [...TIME_SLOTS]; renderSlots(); };
+        window.clearAllSlots = function() { selectedSlots = []; renderSlots(); };
+
+        window.openModal = function() {
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const yyyy = tomorrow.getFullYear();
+            const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
+            const dd = String(tomorrow.getDate()).padStart(2, '0');
+            
+            const dateInput = document.getElementById('selectedDate');
+            dateInput.min = `${yyyy}-${mm}-${dd}`;
+            dateInput.value = `${yyyy}-${mm}-${dd}`;
+            
+            selectedSlots = [];
+            renderSlots();
+            document.getElementById('scheduleModal').classList.add('active');
+        };
+
+        window.closeModal = () => document.getElementById('scheduleModal').classList.remove('active');
+
+        function fetchSchedules() {
+            const container = document.getElementById('schedulesContainer');
+            fetch('/api/v1/doctor/schedules', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                if (!Array.isArray(data)) data = [];
+                
+                const grouped = data.filter(s => s.slotStatus !== 'CLOSED').reduce((acc, sch) => {
+                    if (!acc[sch.dateWorking]) acc[sch.dateWorking] = [];
+                    acc[sch.dateWorking].push(sch);
+                    return acc;
+                }, {});
+
+                if (Object.keys(grouped).length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px; color: #6b7280; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;">
+                            <p style="font-size: 18px; margin-bottom: 10px;">Chưa có lịch làm việc nào</p>
+                            <p style="font-size: 14px;">Tạo lịch làm việc để bệnh nhân có thể đặt khám</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '';
+                Object.keys(grouped).sort().forEach(date => {
+                    const d = new Date(date);
+                    const dateStr = d.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                    
+                    let slotsHtml = grouped[date].sort((a,b) => a.timeSlot.localeCompare(b.timeSlot)).map(slot => `
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: ${slot.slotStatus === 'BOOKED' ? '#fee2e2' : '#dcfce7'}; border: 1px solid ${slot.slotStatus === 'BOOKED' ? '#fecaca' : '#bbf7d0'};">
+                            <span style="font-weight: 500; color: ${slot.slotStatus === 'BOOKED' ? '#dc2626' : '#16a34a'}">${formatTimeSlot(slot.timeSlot)}</span>
+                            ${slot.slotStatus === 'BOOKED' 
+                                ? `<span style="font-size: 12px; color: #dc2626;">Đã đặt</span>` 
+                                : `<button onclick="deleteSchedule(${slot.scheduleId})" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 2px; font-size: 14px;" title="Xóa">✕</button>`}
+                        </div>
+                    `).join('');
+
+                    html += `
+                        <div style="background: white; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #f1f5f9;">
+                            <div style="font-weight: 600; font-size: 16px; margin-bottom: 16px; color: #0f172a;">📅 ${dateStr}</div>
+                            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                                ${slotsHtml}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            })
+            .catch(() => {
+                container.innerHTML = `<div style="color: #dc2626; text-align: center; padding: 40px; background: #fef2f2; border-radius: 16px;">Không thể tải lịch làm việc</div>`;
+            });
+        }
+
+        window.createSchedules = function() {
+            const date = document.getElementById('selectedDate').value;
+            if (!date || selectedSlots.length === 0) {
+                Toastify({ text: "Vui lòng chọn ngày và ít nhất 1 khung giờ", style: { background: "#f59e0b" } }).showToast();
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = 'Đang tạo...'; btn.style.background = '#cbd5e1';
+
+            fetch('/api/v1/doctor/schedules', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: date, slotIds: selectedSlots })
+            })
+            .then(async res => {
+                if (res.ok) {
+                    closeModal();
+                    fetchSchedules();
+                    Toastify({ text: "Tạo lịch thành công", style: { background: "#10b981" } }).showToast();
+                } else {
+                    const msg = await res.text();
+                    Toastify({ text: msg || "Không thể tạo lịch làm việc", style: { background: "#ef4444" } }).showToast();
+                }
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast())
+            .finally(() => {
+                btn.disabled = false; btn.innerText = 'Tạo lịch'; btn.style.background = '#5f6dfc';
+            });
+        };
+
+        window.deleteSchedule = function(id) {
+            if (!confirm("Xóa lịch làm việc này?")) return;
+            fetch(`/api/v1/doctor/schedules/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) fetchSchedules();
+                else Toastify({ text: await res.text() || "Không thể xóa lịch (có thể đã có người đặt)", style: { background: "#ef4444" } }).showToast();
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast());
+        };
+
+        fetchSchedules();
+    </script>
+}

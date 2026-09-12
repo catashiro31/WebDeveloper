@@ -1,0 +1,144 @@
+@{
+    Layout = null;
+    var userJson = Context.Request.Cookies["user_info"];
+    var userName = "Bệnh nhân";
+    var userEmail = "";
+    var userAvatar = "";
+
+    if (!string.IsNullOrEmpty(userJson))
+    {
+        try
+        {
+            var userObj = System.Text.Json.JsonDocument.Parse(Uri.UnescapeDataString(userJson)).RootElement;
+            if (userObj.TryGetProperty("fullName", out var fn)) userName = fn.GetString();
+            if (userObj.TryGetProperty("email", out var em)) userEmail = em.GetString();
+            if (userObj.TryGetProperty("avatarUrl", out var av)) userAvatar = av.GetString();
+        }
+        catch { }
+    }
+
+    var currentAction = ViewContext.RouteData.Values["Action"]?.ToString()?.ToLower();
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - DocBooking</title>
+    <script src="https://unpkg.com/@@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; }
+        .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+        .premium-card { background: white; border-radius: 24px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); border: 1px solid rgba(226, 232, 240, 0.8); }
+        .reveal { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .reveal-delayed { animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards; opacity: 0; }
+        @@keyframes reveal {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .nav-btn {
+            display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px;
+            border: none; background: transparent; color: #475569; cursor: pointer;
+            font-size: 14px; font-weight: 600; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: left; text-decoration: none; width: 100%; box-sizing: border-box;
+        }
+        .nav-btn:hover { background: #f1f5f9; }
+        .nav-btn.active {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: white; font-weight: 700;
+            box-shadow: 0 8px 15px rgba(99, 102, 241, 0.25);
+        }
+    </style>
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <!-- Header -->
+    <header class="glass" style="position: sticky; top: 0; z-index: 100; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <a href="/" style="text-decoration: none;">
+                <h1 style="margin: 0; font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.03em;">
+                    DocBooking
+                </h1>
+            </a>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <a href="/Portal/Doctors" style="color: #6366f1; text-decoration: none; font-weight: 600; font-size: 14px;">
+                🏥 Tìm bác sĩ
+            </a>
+            <div style="display: flex; align-items: center; gap: 12px; padding: 6px 16px; background: rgba(99, 102, 241, 0.05); border-radius: 12px; border: 1px solid rgba(99, 102, 241, 0.1);">
+                <span style="font-weight: 600; font-size: 14px; color: #1e293b;">@userName</span>
+                <button onclick="logout()" style="padding: 6px 12px; border-radius: 8px; border: none; background: #ef4444; color: white; cursor: pointer; font-size: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);">
+                    Đăng xuất
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <div style="display: flex; max-width: 1440px; margin: 0 auto; padding: 32px 40px; gap: 32px;">
+        <!-- Sidebar -->
+        <aside class="reveal" style="width: 280px; flex-shrink: 0;">
+            <div class="premium-card" style="padding: 24px; position: sticky; top: 100px;">
+                <div style="margin-bottom: 28px; text-align: center;">
+                    <div style="width: 72px; height: 72px; border-radius: 24px; background: @(!string.IsNullOrEmpty(userAvatar) ? $"url('{userAvatar}') center/cover" : "linear-gradient(135deg, #6366f1, #8b5cf6)"); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; color: white; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); overflow: hidden;">
+                        @if (string.IsNullOrEmpty(userAvatar))
+                        {
+                            @(string.IsNullOrEmpty(userName) ? "👤" : userName.Substring(0, 1).ToUpper())
+                        }
+                    </div>
+                    <h3 style="margin: 0 0 4px; font-size: 18px; font-weight: 800;">@userName</h3>
+                    <p style="margin: 0; color: #64748b; font-size: 13px; font-weight: 500;">@userEmail</p>
+                </div>
+
+                <nav style="display: flex; flex-direction: column; gap: 8px;">
+                    <a href="/Patient/Appointments" class="nav-btn @(currentAction == "appointments" || currentAction == "index" ? "active" : "")">
+                        <span style="font-size: 18px;">📅</span>
+                        <span>Lịch hẹn</span>
+                    </a>
+                    <a href="/Patient/History" class="nav-btn @(currentAction == "history" ? "active" : "")">
+                        <span style="font-size: 18px;">📋</span>
+                        <span>Lịch sử khám</span>
+                    </a>
+                    <a href="/Patient/Relatives" class="nav-btn @(currentAction == "relatives" ? "active" : "")">
+                        <span style="font-size: 18px;">👨‍👩‍👧‍👦</span>
+                        <span>Hồ sơ người thân</span>
+                    </a>
+                </nav>
+
+                <div style="margin: 24px 0; height: 1px; background: #f1f5f9;"></div>
+
+                <nav style="display: flex; flex-direction: column; gap: 8px;">
+                    <a href="/Patient/Profile" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #64748b; text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s;">
+                        <span>⚙️</span>
+                        <span>Cài đặt tài khoản</span>
+                    </a>
+                    <a href="/Patient/ChangePassword" style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; color: #64748b; text-decoration: none; font-size: 14px; font-weight: 600; transition: color 0.2s;">
+                        <span>🔐</span>
+                        <span>Đổi mật khẩu</span>
+                    </a>
+                </nav>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="reveal-delayed" style="flex: 1;">
+            <div class="premium-card" style="padding: 32px; min-height: 600px;">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script>
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            window.location.href = '/Auth/Login';
+        }
+    </script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>

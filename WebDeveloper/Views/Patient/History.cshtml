@@ -1,0 +1,355 @@
+@{
+    ViewData["Title"] = "Lịch sử khám bệnh";
+    Layout = "_PatientLayout";
+}
+
+<style>
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+    background: white; border-radius: 32px; width: 100%;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    max-height: 90vh; overflow-y: auto;
+    transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+</style>
+
+<div class="reveal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 16px;">
+        <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1e293b;">Lịch sử khám bệnh</h2>
+        
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px; background: #fff; padding: 6px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <span style="font-size: 12px; font-weight: 700; color: #64748b;">Từ:</span>
+                <input type="date" id="startDate" onchange="fetchHistory()" style="border: none; outline: none; font-size: 13px; color: #1e293b; font-weight: 600; cursor: pointer;" />
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; background: #fff; padding: 6px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
+                <span style="font-size: 12px; font-weight: 700; color: #64748b;">Đến:</span>
+                <input type="date" id="endDate" onchange="fetchHistory()" style="border: none; outline: none; font-size: 13px; color: #1e293b; font-weight: 600; cursor: pointer;" />
+            </div>
+            <button id="clearFilterBtn" onclick="clearFilter()" style="display: none; background: none; border: none; color: #ef4444; font-size: 12px; font-weight: 800; cursor: pointer; padding: 4px 8px;">
+                Xóa lọc
+            </button>
+        </div>
+
+        <span id="historyCount" style="font-size: 13px; color: #64748b; font-weight: 600;">Hoàn thành (0)</span>
+    </div>
+
+    <div id="historyContainer" style="display: flex; flex-direction: column; gap: 20px;">
+        <div class="skeleton" style="height: 140px; width: 100%; border-radius: 16px;"></div>
+        <div class="skeleton" style="height: 140px; width: 100%; border-radius: 16px;"></div>
+    </div>
+</div>
+
+<!-- Detail Modal -->
+<div id="detailModal" class="modal-overlay" onclick="closeDetail()">
+    <div class="modal-content" style="max-width: 600px; padding: 40px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
+            <div>
+                <h3 style="margin: 0; font-size: 26px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em;">Kết quả khám bệnh</h3>
+                <p id="detailAptId" style="margin: 4px 0 0; font-size: 14px; color: #64748b; font-weight: 500;">ID Lịch hẹn: #</p>
+            </div>
+            <button onclick="closeDetail()" style="background: #f1f5f9; border: none; width: 40px; height: 40px; border-radius: 14px; cursor: pointer; color: #64748b; font-size: 24px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseenter="this.style.background='#e2e8f0'; this.style.color='#0f172a'" onmouseleave="this.style.background='#f1f5f9'; this.style.color='#64748b'">×</button>
+        </div>
+        
+        <div id="detailContent" style="display: flex; flex-direction: column; gap: 28px;"></div>
+
+        <button onclick="closeDetail()" style="margin-top: 40px; padding: 16px; border-radius: 18px; border: none; background: #0f172a; color: white; font-size: 15px; font-weight: 800; width: 100%; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);" onmouseenter="this.style.background='#1e293b'; this.style.transform='translateY(-1px)'" onmouseleave="this.style.background='#0f172a'; this.style.transform='translateY(0)'">
+            Hoàn tất xem
+        </button>
+    </div>
+</div>
+
+<!-- Review Modal -->
+<div id="reviewModal" class="modal-overlay" onclick="closeReview()">
+    <div class="modal-content" style="max-width: 480px; padding: 40px;" onclick="event.stopPropagation()">
+        <h3 style="margin: 0 0 8px; font-size: 26px; font-weight: 950; color: #0f172a; letter-spacing: -0.02em;">Đánh giá trải nghiệm</h3>
+        <p style="color: #64748b; font-size: 15px; margin-bottom: 32px; font-weight: 500;">Ý kiến của bạn là chìa khóa để chúng tôi nâng cao chất lượng phục vụ.</p>
+
+        <div style="margin-bottom: 32px; text-align: center; padding: 24px; background: #f8fafc; border-radius: 24px; border: 1px solid #f1f5f9;">
+            <div id="starContainer" style="display: flex; justify-content: center; gap: 14px;"></div>
+            <div id="ratingText" style="margin-top: 16px; display: inline-block; padding: 6px 16px; border-radius: 10px; background: #fffbeb; color: #d97706; font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;"></div>
+        </div>
+
+        <div style="margin-bottom: 32px;">
+            <label style="display: block; margin-bottom: 12px; font-weight: 800; font-size: 15px; color: #1e293b;">Nhận xét chi tiết *</label>
+            <textarea id="reviewComment" placeholder="Hãy viết vài câu chia sẻ về trải nghiệm của bạn..." style="width: 100%; padding: 20px; border-radius: 20px; border: 2px solid #f1f5f9; background: #fcfcfd; min-height: 140px; font-size: 15px; font-family: inherit; resize: none; box-sizing: border-box; transition: all 0.2s; outline: none; color: #0f172a;" onfocus="this.style.borderColor='#6366f1'; this.style.background='#fff'; this.style.boxShadow='0 0 0 4px rgba(99, 102, 241, 0.1)'" onblur="this.style.borderColor='#f1f5f9'; this.style.background='#fcfcfd'; this.style.boxShadow='none'"></textarea>
+        </div>
+
+        <div style="display: flex; gap: 16px;">
+            <button onclick="closeReview()" style="flex: 1; padding: 16px; border-radius: 16px; border: 2px solid #f1f5f9; background: #fff; color: #64748b; font-weight: 800; font-size: 15px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'; this.style.color='#0f172a'" onmouseleave="this.style.background='#fff'; this.style.color='#64748b'">
+                Quay lại
+            </button>
+            <button id="submitReviewBtn" onclick="submitReview()" style="flex: 1.8; padding: 16px; border-radius: 16px; border: none; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; font-size: 15px; font-weight: 800; cursor: pointer; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); transition: all 0.3s;" onmouseenter="if(!this.disabled){this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 24px rgba(99, 102, 241, 0.4)'}" onmouseleave="if(!this.disabled){this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 20px rgba(99, 102, 241, 0.3)'}">
+                Gửi đánh giá ngay
+            </button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/Auth/Login';
+
+        const container = document.getElementById('historyContainer');
+        const countSpan = document.getElementById('historyCount');
+        const startDateInput = document.getElementById('startDate');
+        const endDateInput = document.getElementById('endDate');
+        const clearBtn = document.getElementById('clearFilterBtn');
+
+        let currentRating = 5;
+        let reviewAppointmentId = null;
+        let hasExistingReview = false;
+
+        function clearFilter() {
+            startDateInput.value = '';
+            endDateInput.value = '';
+            fetchHistory();
+        }
+
+        function fetchHistory() {
+            const start = startDateInput.value;
+            const end = endDateInput.value;
+            clearBtn.style.display = (start || end) ? 'inline-block' : 'none';
+            
+            container.innerHTML = `
+                <div class="skeleton" style="height: 140px; width: 100%; border-radius: 16px;"></div>
+                <div class="skeleton" style="height: 140px; width: 100%; border-radius: 16px;"></div>
+            `;
+
+            let url = '/api/v1/patient/history?page=0&size=100';
+            if (start) url += `&startDate=${start}`;
+            if (end) url += `&endDate=${end}`;
+
+            fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                const list = data.content || data || [];
+                countSpan.innerText = `Hoàn thành (${list.length})`;
+                renderHistory(list);
+            })
+            .catch(err => {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <h3 style="color: #ef4444; margin: 0 0 8px;">Lỗi tải dữ liệu</h3>
+                        <p style="color: #64748b;">Không thể tải lịch sử khám</p>
+                        <button onclick="fetchHistory()" style="margin-top: 16px; color: #6366f1; background: none; border: none; font-weight: 600; cursor: pointer;">Thử lại</button>
+                    </div>
+                `;
+            });
+        }
+
+        window.openDetail = function(id) {
+            fetch(`/api/v1/patient/history/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => { if(!res.ok) throw new Error(); return res.json(); })
+            .then(d => {
+                document.getElementById('detailAptId').innerText = `ID Lịch hẹn: #${d.appointmentId || id}`;
+                renderDetailContent(d);
+                document.getElementById('detailModal').classList.add('active');
+            })
+            .catch(() => Toastify({ text: "Không thể tải chi tiết", style: { background: "#ef4444" } }).showToast());
+        };
+
+        window.closeDetail = () => document.getElementById('detailModal').classList.remove('active');
+
+        function renderDetailContent(detail) {
+            let html = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div style="padding: 20px; border-radius: 20px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0;">
+                        <label style="font-size: 11px; color: #6366f1; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.05em;">Bác sĩ phụ trách</label>
+                        <div style="font-weight: 800; color: #1e293b; font-size: 16px;">BS. ${detail.doctorName}</div>
+                    </div>
+                    <div style="padding: 20px; border-radius: 20px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0;">
+                        <label style="font-size: 11px; color: #6366f1; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.05em;">Bệnh nhân</label>
+                        <div style="font-weight: 800; color: #1e293b; font-size: 16px;">${detail.patientName}</div>
+                    </div>
+                </div>
+            `;
+
+            if (detail.hasResult) {
+                html += `
+                    <div style="display: flex; flex-direction: column; gap: 20px;">
+                        <div style="padding: 24px; border-radius: 24px; background: #ffffff; border: 1.5px solid #ecfdf5; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.05);">
+                            <h4 style="margin: 0 0 16px; color: #059669; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">🩺</span> Chẩn đoán y khoa
+                            </h4>
+                            <p style="margin: 0; font-size: 15px; color: #1e293b; line-height: 1.6; font-weight: 500;">${detail.diagnosis || 'Không có'}</p>
+                        </div>
+                        <div style="padding: 24px; border-radius: 24px; background: #fcfcfe; border: 1.5px solid #eef2ff;">
+                            <h4 style="margin: 0 0 16px; color: #4f46e5; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 20px;">📝</span> Lời dặn của bác sĩ
+                            </h4>
+                            <p style="margin: 0; font-size: 15px; color: #475569; font-style: italic; line-height: 1.6;">"${detail.doctorNotes || ''}"</p>
+                        </div>
+                `;
+                if (detail.prescriptionUrl) {
+                    html += `
+                        <div style="margin-top: 8px;">
+                            <a href="${detail.prescriptionUrl}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 18px; border-radius: 20px; text-decoration: none; font-weight: 800; font-size: 15px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); transition: all 0.3s;" onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 20px 25px -5px rgba(16, 185, 129, 0.4)'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(16, 185, 129, 0.3)'">
+                                📄 Xem đơn thuốc (PDF Online)
+                            </a>
+                        </div>
+                    `;
+                }
+                html += `</div>`;
+            } else {
+                html += `
+                    <div style="padding: 40px; text-align: center; border-radius: 28px; background: #f8fafc; border: 2px dashed #e2e8f0;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+                        <h4 style="color: #64748b; margin: 0; font-size: 16px; font-weight: 700;">Đang xử lý kết quả</h4>
+                        <p style="margin: 8px 0 0; color: #94a3b8; font-size: 14px;">Bác sĩ đang cập nhật hồ sơ, vui lòng quay lại sau.</p>
+                    </div>
+                `;
+            }
+
+            if (detail.rating != null || (detail.comment && detail.comment.trim())) {
+                let stars = '';
+                for(let i=1; i<=5; i++) {
+                    stars += `<span style="font-size: 18px; color: ${i <= (detail.rating || 0) ? '#fbbf24' : '#e2e8f0'}">★</span>`;
+                }
+                html += `
+                    <div style="padding: 24px; border-radius: 24px; background: #fffbeb; border: 1.5px solid #fef3c7; margin-top: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                            <label style="font-size: 12px; color: #d97706; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Đánh giá từ bạn</label>
+                            <div style="display: flex; gap: 2px;">${stars}</div>
+                        </div>
+                        ${detail.comment ? `<p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.5; padding: 16px; background: rgba(255, 255, 255, 0.5); border-radius: 14px; border: 1px solid rgba(217, 119, 6, 0.1);">${detail.comment}</p>` : ''}
+                    </div>
+                `;
+            }
+            document.getElementById('detailContent').innerHTML = html;
+        }
+
+        window.openReview = function(id) {
+            reviewAppointmentId = id;
+            fetch(`/api/v1/patient/history/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(d => {
+                hasExistingReview = (d.rating != null && d.comment && d.comment.trim() !== "");
+                currentRating = d.rating || 5;
+                document.getElementById('reviewComment').value = hasExistingReview ? d.comment : "";
+                renderStars();
+                document.getElementById('reviewModal').classList.add('active');
+            })
+            .catch(() => Toastify({ text: "Không thể tải chi tiết để đánh giá", style: { background: "#ef4444" } }).showToast());
+        };
+
+        window.closeReview = () => {
+            document.getElementById('reviewModal').classList.remove('active');
+            reviewAppointmentId = null;
+        };
+
+        function renderStars() {
+            const texts = ['Không hài lòng', 'Chưa tốt', 'Bình thường', 'Rất hài lòng', 'Tuyệt vời tuyệt đối'];
+            let html = '';
+            for(let i=1; i<=5; i++) {
+                html += `
+                    <button type="button" onclick="currentRating=${i}; renderStars()" style="background: none; border: none; font-size: 48px; cursor: pointer; color: ${i <= currentRating ? '#fbbf24' : '#e2e8f0'}; transition: all 0.3s; padding: 0;" onmouseenter="this.style.transform='scale(1.25) rotate(15deg)'" onmouseleave="this.style.transform='scale(1) rotate(0deg)'">★</button>
+                `;
+            }
+            document.getElementById('starContainer').innerHTML = html;
+            document.getElementById('ratingText').innerText = texts[currentRating - 1];
+        }
+
+        window.submitReview = function() {
+            const comment = document.getElementById('reviewComment').value.trim();
+            if (!comment) {
+                Toastify({ text: "Vui lòng nhập nhận xét", style: { background: "#f59e0b" } }).showToast();
+                return;
+            }
+
+            const btn = document.getElementById('submitReviewBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang gửi...';
+            btn.style.background = '#cbd5e1';
+
+            const method = hasExistingReview ? 'PUT' : 'POST';
+            const url = hasExistingReview ? `/api/v1/patient/appointment/${reviewAppointmentId}/review` : `/api/v1/patient/appointment/${reviewAppointmentId}/review`;
+            
+            fetch(url, {
+                method: method,
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating: currentRating, comment: comment })
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Cảm ơn bạn đã đánh giá!", style: { background: "#10b981" } }).showToast();
+                    closeReview();
+                    fetchHistory();
+                } else {
+                    const msg = await res.text();
+                    Toastify({ text: msg || "Không thể gửi đánh giá", style: { background: "#ef4444" } }).showToast();
+                }
+            })
+            .catch(() => Toastify({ text: "Không thể gửi đánh giá", style: { background: "#ef4444" } }).showToast())
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = 'Gửi đánh giá ngay';
+                btn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+            });
+        };
+
+        function renderHistory(list) {
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 80px 40px; color: #64748b;">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px;">📋</div>
+                        <h3 style="color: #1e293b; margin: 0 0 8px; font-size: 20px; font-weight: 800;">Chưa có lịch sử khám</h3>
+                        <p style="margin: 0;">Thông tin các lần khám bệnh sẽ được hiển thị tại đây.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            list.forEach(apt => {
+                html += `
+                    <div class="premium-card" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+                                    <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">BS. ${apt.doctorName}</h3>
+                                    ${apt.patientName ? `<span style="font-weight: 600; font-size: 14px; color: #64748b; background: #f1f5f9; padding: 2px 10px; border-radius: 6px;">BN: ${apt.patientName}</span>` : ''}
+                                    <span style="padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);">Hoàn thành</span>
+                                </div>
+                                <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; color: #475569; font-size: 14px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="opacity: 0.7;">📅</span>
+                                        <span style="font-weight: 600;">${apt.dateWorking}</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span style="opacity: 0.7;">⏰</span>
+                                        <span style="font-weight: 600;">${apt.timeSlot || apt.startTime}</span>
+                                    </div>
+                                    <div style="grid-column: span 2; display: flex; align-items: center; gap: 8px;">
+                                        <span style="opacity: 0.7;">📍</span>
+                                        <span style="color: #64748b;">
+                                            ${apt.facilityName}
+                                            ${apt.facilityAddress ? `<span style="display: block; font-size: 12px; margin-top: 2px; opacity: 0.8;">${apt.facilityAddress}${apt.facilityProvince ? `, ${apt.facilityProvince}` : ''}</span>` : ''}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 10px;">
+                                <button onclick="openDetail(${apt.appointmentId || apt.id})" style="padding: 10px 18px; border-radius: 12px; border: 1px solid #e2e8f0; background: #fff; color: #1e293b; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.borderColor='#6366f1'" onmouseleave="this.style.borderColor='#e2e8f0'">📄 Kết quả</button>
+                                <button onclick="openReview(${apt.appointmentId || apt.id})" style="padding: 10px 18px; border-radius: 12px; border: none; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; font-size: 13px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);">⭐ Đánh giá</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        fetchHistory();
+    </script>
+}

@@ -1,0 +1,170 @@
+@{
+    ViewData["Title"] = "Lịch hẹn sắp tới";
+    Layout = "_PatientLayout";
+}
+
+<div class="reveal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
+        <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1e293b;">Lịch hẹn sắp tới</h2>
+        <span id="appointmentCount" style="font-size: 13px; color: #64748b; font-weight: 600;">Tất cả (0)</span>
+    </div>
+    
+    <div id="appointmentsContainer" style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Skeletons -->
+        <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+        <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+        <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/Auth/Login';
+        }
+
+        const container = document.getElementById('appointmentsContainer');
+        const countSpan = document.getElementById('appointmentCount');
+
+        function fetchAppointments() {
+            container.innerHTML = `
+                <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+                <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+                <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+            `;
+
+            fetch('/api/v1/patient/appointments?page=0&size=100', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(res => {
+                if (!res.ok) throw new Error("Failed to load");
+                return res.json();
+            })
+            .then(data => {
+                const list = (data.content || data || []).filter(apt => ['PENDING', 'CONFIRMED'].includes(apt.bookingStatus));
+                countSpan.innerText = `Tất cả (${list.length})`;
+                renderAppointments(list);
+            })
+            .catch(err => {
+                console.error(err);
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 60px;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <h3 style="color: #ef4444; margin: 0 0 8px;">Lỗi tải dữ liệu</h3>
+                        <p style="color: #64748b;">Không thể tải danh sách lịch hẹn</p>
+                        <button onclick="fetchAppointments()" style="margin-top: 16px; color: #6366f1; background: none; border: none; font-weight: 600; cursor: pointer;">Thử lại</button>
+                    </div>
+                `;
+            });
+        }
+
+        function getStatusStyles(status) {
+            switch (status) {
+                case 'PENDING':
+                    return { bg: 'rgba(245, 158, 11, 0.1)', color: '#d97706', border: 'rgba(245, 158, 11, 0.2)', text: 'Chờ xác nhận' };
+                case 'CONFIRMED':
+                    return { bg: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: 'rgba(16, 185, 129, 0.2)', text: 'Đã xác nhận' };
+                default:
+                    return { bg: '#f1f5f9', color: '#64748b', border: '#e2e8f0', text: status };
+            }
+        }
+
+        window.cancelAppointment = function(id, btn) {
+            if (!confirm("Bạn có chắc muốn hủy lịch hẹn này?")) return;
+            
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⌛ Đang hủy...';
+            btn.disabled = true;
+            btn.style.cursor = 'not-allowed';
+
+            fetch(`/api/v1/patient/appointment/${id}/cancel`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Đã hủy lịch hẹn thành công", style: { background: "#10b981" } }).showToast();
+                    fetchAppointments();
+                } else {
+                    const msg = await res.text();
+                    Toastify({ text: msg || "Không thể hủy lịch hẹn", style: { background: "#ef4444" } }).showToast();
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                    btn.style.cursor = 'pointer';
+                }
+            })
+            .catch(() => {
+                Toastify({ text: "Không thể hủy lịch hẹn", style: { background: "#ef4444" } }).showToast();
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+            });
+        };
+
+        function renderAppointments(list) {
+            if (list.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 80px 40px; color: #64748b;">
+                        <div style="width: 80px; height: 80px; border-radius: 50%; background: #f1f5f9; display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 32px;">📅</div>
+                        <h3 style="color: #1e293b; margin: 0 0 8px; font-size: 20px; font-weight: 800;">Bạn chưa có lịch hẹn nào</h3>
+                        <p style="margin: 0 0 24px; max-width: 300px; margin-inline: auto;">Bắt đầu chăm sóc sức khỏe của bạn bằng cách đặt lịch khám với các bác sĩ hàng đầu.</p>
+                        <a href="/Portal/Doctors" style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; text-decoration: none; border-radius: 12px; font-weight: 700; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);">Đặt lịch ngay</a>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            list.forEach(apt => {
+                const status = getStatusStyles(apt.bookingStatus);
+                html += `
+                    <div class="premium-card" style="padding: 24px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${status.color};">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">BS. ${apt.doctorName}</h3>
+                                <span style="padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: ${status.bg}; color: ${status.color}; border: 1px solid ${status.border};">${status.text}</span>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 12px 24px; color: #475569; font-size: 14px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="opacity: 0.7;">📅</span>
+                                    <span style="font-weight: 600;">${apt.dateWorking}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="opacity: 0.7;">⏰</span>
+                                    <span style="font-weight: 600;">${apt.timeSlot || apt.startTime}</span>
+                                </div>
+                                <div style="grid-column: span 2; display: flex; align-items: center; gap: 8px;">
+                                    <span style="opacity: 0.7;">📍</span>
+                                    <span style="color: #64748b;">
+                                        ${apt.facilityName}
+                                        ${apt.facilityAddress ? `<span style="display: block; font-size: 12px; margin-top: 2px; opacity: 0.8;">${apt.facilityAddress}${apt.facilityProvince ? `, ${apt.facilityProvince}` : ''}</span>` : ''}
+                                    </span>
+                                </div>
+                                ${apt.reason ? `
+                                    <div style="grid-column: span 2; display: flex; align-items: flex-start; gap: 8px; background: #f8fafc; padding: 10px 14px; border-radius: 10px; margin-top: 4px;">
+                                        <span style="opacity: 0.7;">📝</span>
+                                        <span style="font-size: 13px; line-height: 1.5;">${apt.reason}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+
+                        <div style="padding-left: 24px;">
+                            <button onclick="cancelAppointment(${apt.appointmentId || apt.id}, this)" 
+                                style="padding: 10px 20px; border-radius: 12px; border: 1px solid #fee2e2; background: #fff; color: #ef4444; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; gap: 8px;"
+                                onmouseenter="this.style.background='#fef2f2'"
+                                onmouseleave="this.style.background='#fff'">
+                                ✗ Hủy lịch
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        fetchAppointments();
+    </script>
+}

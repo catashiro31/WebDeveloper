@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>@ViewData["Title"] - DocBooking</title>
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Nền tảng đặt lịch khám bệnh trực tuyến, kết nối bệnh nhân với các bác sĩ và cơ sở y tế uy tín." />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    
+    <!-- Tailwind CSS (V4 Browser Build) -->
+    <script src="https://unpkg.com/@@tailwindcss/browser@4"></script>
+    
+    <!-- Toastify for Notifications (Replacing React-Toastify) -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <style type="text/tailwindcss">
+        /* Global CSS ported from index.css */
+        @@theme {
+            --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            --color-primary: #6366f1;
+            --color-secondary: #0ea47a;
+            --color-accent: #8b5cf6;
+        }
+        
+        :root {
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --secondary: #0ea47a;
+            --accent: #8b5cf6;
+            --bg-body: #f8fafc;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --glass-bg: rgba(255, 255, 255, 0.7);
+            --card-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-inter);
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            line-height: 1.5;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-top: 0;
+        }
+
+        .reveal {
+            animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+            opacity: 0;
+        }
+
+        .reveal-delayed {
+            animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) 0.2s forwards;
+            opacity: 0;
+        }
+
+        @@keyframes reveal {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .premium-card {
+            background: #fff;
+            border-radius: 20px;
+            border: 1px solid #f1f5f9;
+            box-shadow: var(--card-shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .premium-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08);
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 2px solid var(--bg-body);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+    
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body>
+    
+    <!-- Render Partial Header -->
+    @await Html.PartialAsync("_Header")
+
+    <main style="min-height: calc(100vh - 80px); padding-top: 80px;">
+        @RenderBody()
+    </main>
+
+    <!-- Render Partial Footer -->
+    @await Html.PartialAsync("_Footer")
+
+    <!-- Global Helpers -->
+    <script>
+        // Global toast notification helper
+        window.showToast = function(message, type = 'success') {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: "top", 
+                position: "right",
+                style: {
+                    background: type === 'error' ? "linear-gradient(to right, #ef4444, #f87171)" 
+                               : type === 'warning' ? "linear-gradient(to right, #f59e0b, #fbbf24)"
+                               : "linear-gradient(to right, #0ea47a, #10b981)",
+                    borderRadius: "10px",
+                    fontFamily: "Inter"
+                }
+            }).showToast();
+        }
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

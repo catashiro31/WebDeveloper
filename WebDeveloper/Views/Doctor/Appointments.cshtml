@@ -1,0 +1,331 @@
+@{
+    ViewData["Title"] = "Quản lý lịch hẹn";
+    Layout = "_DoctorLayout";
+}
+
+<style>
+.appointment-card {
+    background: white; border-radius: 18px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+    border: 1px solid #f1f5f9; transition: all 0.3s ease; position: relative; overflow: hidden;
+}
+.appointment-card:hover { box-shadow: 0 10px 30px rgba(95,109,252,0.1); }
+.filter-btn {
+    padding: 8px 16px; border-radius: 10px; border: none; background: transparent; color: #64748b;
+    cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s;
+}
+.filter-btn.active { background: white; color: #5f6dfc; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+    background: white; border-radius: 32px; width: 100%; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    max-height: 90vh; overflow-y: auto; transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+</style>
+
+<div class="reveal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; border-bottom: 1px solid #f1f5f9; padding-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Quản lý lịch hẹn</h2>
+            <p style="margin: 4px 0 0; font-size: 14px; color: #64748b;">Theo dõi và xử lý các yêu cầu khám bệnh từ bệnh nhân</p>
+        </div>
+        <div style="display: flex; gap: 10px; background: #f8fafc; padding: 6px; border-radius: 14px; border: 1px solid #e2e8f0; overflow-x: auto;">
+            <button class="filter-btn active" onclick="setFilter('ALL', this)">Tất cả</button>
+            <button class="filter-btn" onclick="setFilter('PENDING', this)">Chờ duyệt</button>
+            <button class="filter-btn" onclick="setFilter('CONFIRMED', this)">Sắp tới</button>
+            <button class="filter-btn" onclick="setFilter('COMPLETED', this)">Đã khám</button>
+        </div>
+    </div>
+
+    <div id="appointmentsContainer" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
+        <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
+    </div>
+</div>
+
+<!-- Result Modal -->
+<div id="resultModal" class="modal-overlay" onclick="closeResultModal()">
+    <div class="modal-content" style="max-width: 600px; padding: 40px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div>
+                <h3 id="modalTitle" style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">Trả kết quả khám</h3>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">Bệnh nhân: <span id="modalPatientName" style="color: #0f172a; font-weight: 700;"></span></p>
+            </div>
+            <button onclick="closeResultModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 20px; display: flex; align-items: center; justify-content: center;">×</button>
+        </div>
+
+        <form id="resultForm" onsubmit="submitResult(event)" style="display: flex; flex-direction: column; gap: 20px;">
+            <input type="hidden" id="appointmentId" />
+            <input type="hidden" id="resultMode" />
+            
+            <div style="background: #f8fafc; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: #334155; text-transform: uppercase; letter-spacing: 0.05em;">Chẩn đoán bệnh <span style="color: #ef4444;">*</span></label>
+                <textarea id="diagnosis" placeholder="Bác sĩ nhập chẩn đoán cụ thể..." required style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; min-height: 100px; resize: vertical; box-sizing: border-box; font-size: 15px; color: #1e293b; outline: none; transition: border-color 0.2s; font-family: inherit;" onfocus="this.style.borderColor='#5f6dfc'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: #64748b;">Tệp đính kèm (Ảnh/PDF đơn thuốc)</label>
+                <div style="position: relative; overflow: hidden;">
+                    <input type="file" id="prescriptionFile" accept="image/*,.pdf" onchange="handleFileChange(event)" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px dashed #cbd5e1; background: #f8fafc; font-size: 13px; cursor: pointer; box-sizing: border-box;" />
+                    <p id="fileStatus" style="margin: 8px 0 0; font-size: 12px; font-weight: 600; display: none;"></p>
+                    <div id="existingFileLink" style="margin: 8px 0 0; display: none; align-items: center; gap: 8px;">
+                        <p style="margin: 0; font-size: 12px; color: #3b82f6; font-weight: 600;">✓ Đã có file kết quả cũ</p>
+                        <a id="fileUrlAnchor" href="#" target="_blank" style="font-size: 12px; color: #5f6dfc; text-decoration: underline; font-weight: 600;">Xem file</a>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: #64748b;">Lời nhắn / Dặn dò bệnh nhân</label>
+                <textarea id="doctorNotes" placeholder="Dặn dò uống thuốc, ngày tái khám..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; min-height: 80px; resize: vertical; box-sizing: border-box; font-size: 14px; color: #475569; outline: none; transition: border-color 0.2s; font-family: inherit;" onfocus="this.style.borderColor='#5f6dfc'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 24px;">
+                <button type="button" onclick="closeResultModal()" style="flex: 1; padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Đóng</button>
+                <button type="submit" id="submitResultBtn" style="flex: 2; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, #5f6dfc, #3b82f6); color: white; cursor: pointer; font-weight: 700; font-size: 15px; box-shadow: 0 8px 20px rgba(95,109,252,0.3); transition: all 0.2s;">Lưu kết quả & Hoàn tất</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/Auth/Login';
+
+        const container = document.getElementById('appointmentsContainer');
+        let allAppointments = [];
+        let currentFilter = 'ALL';
+        let currentFile = null;
+
+        function formatSlotLabel(slot) {
+            if (!slot || typeof slot !== "string") return slot;
+            return slot.startsWith("SLOT_") ? slot.replace("SLOT_", "").replace(/_/g, ":") : slot;
+        }
+
+        function getStatusStyle(status) {
+            const styles = {
+                'PENDING': { bg: '#fef3c7', col: '#d97706' },
+                'CONFIRMED': { bg: '#dbeafe', col: '#2563eb' },
+                'COMPLETED': { bg: '#dcfce7', col: '#16a34a' },
+                'CANCELLED': { bg: '#fee2e2', col: '#dc2626' },
+                'NO_SHOW': { bg: '#f3f4f6', col: '#6b7280' }
+            };
+            return styles[status] || { bg: '#f3f4f6', col: '#6b7280' };
+        }
+
+        function getStatusText(status) {
+            const texts = { 'PENDING': 'Chờ xác nhận', 'CONFIRMED': 'Đã xác nhận', 'COMPLETED': 'Đã khám', 'CANCELLED': 'Đã hủy', 'NO_SHOW': 'Không đến' };
+            return texts[status] || status;
+        }
+
+        window.setFilter = function(filter, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = filter;
+            renderAppointments();
+        };
+
+        function fetchAppointments() {
+            container.innerHTML = `
+                <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
+                <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
+            `;
+            
+            fetch('/api/v1/doctor/appointments?page=0&size=200', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                allAppointments = data.content || data || [];
+                renderAppointments();
+            })
+            .catch(() => {
+                container.innerHTML = `<div style="padding: 40px; text-align: center; background: #fef2f2; border-radius: 16px; color: #dc2626; font-weight: 600;">Không thể tải danh sách lịch hẹn</div>`;
+            });
+        }
+
+        function renderAppointments() {
+            const filtered = currentFilter === 'ALL' ? allAppointments : allAppointments.filter(a => a.bookingStatus === currentFilter);
+            
+            if (filtered.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 100px 20px; background: #f9fafb; border-radius: 24px; border: 2px dashed #e2e8f0;">
+                        <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📅</div>
+                        <h3 style="margin: 0; font-size: 18px; color: #1e293b;">Không tìm thấy lịch hẹn</h3>
+                        <p style="color: #64748b; margin-top: 8px;">Bạn hiện không có yêu cầu nào trong danh mục này.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(apt => {
+                const sStyle = getStatusStyle(apt.bookingStatus);
+                let actionsHtml = '';
+                if (apt.bookingStatus === 'PENDING') {
+                    actionsHtml = `
+                        <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'CONFIRMED')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #10b981, #059669); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Xác nhận</button>
+                        <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'CANCELLED')" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #ef4444; background: white; color: #ef4444; cursor: pointer; font-weight: 700; font-size: 13px;">Từ chối</button>
+                    `;
+                } else if (apt.bookingStatus === 'CONFIRMED') {
+                    actionsHtml = `
+                        <button onclick="openResultModal(${apt.appointmentId || apt.id}, 'create')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #5f6dfc, #3b82f6); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(95,109,252,0.2);">Trả kết quả</button>
+                        <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'NO_SHOW')" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #94a3b8; background: white; color: #64748b; cursor: pointer; font-weight: 700; font-size: 13px;">Không đến</button>
+                    `;
+                } else if (apt.bookingStatus === 'COMPLETED') {
+                    actionsHtml = `
+                        <button onclick="openResultModal(${apt.appointmentId || apt.id}, 'edit')" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #5f6dfc; background: #f5f7ff; color: #5f6dfc; cursor: pointer; font-weight: 700; font-size: 13px;">Sửa kết quả</button>
+                    `;
+                }
+
+                html += `
+                    <div class="appointment-card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                                    <div style="width: 48px; height: 48px; border-radius: 12px; background: #f0f4ff; color: #5f6dfc; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800;">
+                                        ${(apt.patientName || 'P').charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h4 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">${apt.patientName}</h4>
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                            <span style="padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: ${sStyle.bg}; color: ${sStyle.col};">${getStatusText(apt.bookingStatus)}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; color: #64748b; font-size: 13px; font-weight: 500;">
+                                    <div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">📅</span> ${apt.dateWorking}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">⏰</span> ${formatSlotLabel(apt.timeSlot || apt.startTime)}</div>
+                                    ${apt.patientPhoneNumber ? `<div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">📱</span> ${apt.patientPhoneNumber}</div>` : ''}
+                                    ${apt.patientGender ? `<div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">👤</span> ${apt.patientGender === 'MALE' ? 'Nam' : 'Nữ'}</div>` : ''}
+                                </div>
+                                ${apt.reason ? `
+                                    <div style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #edf2f7; font-size: 13px; color: #475569; line-height: 1.5;">
+                                        <strong style="color: #64748b; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.5px;">Lý do khám</strong>
+                                        ${apt.reason}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px; min-width: 120px;">
+                                ${actionsHtml}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.updateStatus = function(id, status) {
+            const msgs = { 'CONFIRMED': 'Xác nhận lịch hẹn này?', 'CANCELLED': 'Từ chối lịch hẹn này?', 'NO_SHOW': 'Đánh dấu bệnh nhân không đến?', 'COMPLETED': 'Đánh dấu đã hoàn thành khám?' };
+            if (!confirm(msgs[status] || 'Xác nhận thay đổi?')) return;
+
+            fetch(`/api/v1/doctor/appointment/${id}/status?status=${status}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) fetchAppointments();
+                else Toastify({ text: await res.text() || "Lỗi", style: { background: "#ef4444" } }).showToast();
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast());
+        };
+
+        window.openResultModal = function(id, mode) {
+            const apt = allAppointments.find(a => (a.appointmentId || a.id) == id);
+            if (!apt) return;
+
+            document.getElementById('appointmentId').value = id;
+            document.getElementById('resultMode').value = mode;
+            document.getElementById('modalTitle').innerText = mode === 'edit' ? 'Cập nhật kết quả' : 'Trả kết quả khám';
+            document.getElementById('submitResultBtn').innerText = mode === 'edit' ? 'Cập nhật kết quả' : 'Lưu kết quả & Hoàn tất';
+            document.getElementById('modalPatientName').innerText = apt.patientName;
+            
+            document.getElementById('diagnosis').value = mode === 'edit' || apt.diagnosis ? (apt.diagnosis || '') : '';
+            document.getElementById('doctorNotes').value = mode === 'edit' || apt.doctorNotes ? (apt.doctorNotes || '') : '';
+            
+            currentFile = null;
+            document.getElementById('prescriptionFile').value = '';
+            document.getElementById('fileStatus').style.display = 'none';
+
+            const linkContainer = document.getElementById('existingFileLink');
+            if (apt.prescriptionUrl) {
+                linkContainer.style.display = 'flex';
+                document.getElementById('fileUrlAnchor').href = apt.prescriptionUrl;
+            } else {
+                linkContainer.style.display = 'none';
+            }
+
+            document.getElementById('resultModal').classList.add('active');
+        };
+
+        window.closeResultModal = () => document.getElementById('resultModal').classList.remove('active');
+
+        window.handleFileChange = function(e) {
+            const f = e.target.files[0];
+            const p = document.getElementById('fileStatus');
+            if (f) {
+                currentFile = f;
+                p.innerText = `✓ Đã chọn file mới: ${f.name}`;
+                p.style.display = 'block';
+                p.style.color = '#10b981';
+            } else {
+                currentFile = null;
+                p.style.display = 'none';
+            }
+        };
+
+        window.submitResult = function(e) {
+            e.preventDefault();
+            const id = document.getElementById('appointmentId').value;
+            const mode = document.getElementById('resultMode').value;
+            const diagnosis = document.getElementById('diagnosis').value.trim();
+            const notes = document.getElementById('doctorNotes').value.trim();
+
+            if (!diagnosis) {
+                Toastify({ text: "Vui lòng nhập chẩn đoán", style: { background: "#f59e0b" } }).showToast();
+                return;
+            }
+
+            const btn = document.getElementById('submitResultBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang lưu...';
+            btn.style.background = '#cbd5e1';
+
+            const formData = new FormData();
+            formData.append('diagnosis', diagnosis);
+            formData.append('doctorNotes', notes);
+            if (currentFile) formData.append('prescriptionFile', currentFile);
+
+            const url = mode === 'edit' ? `/api/v1/doctor/appointment/${id}/result` : `/api/v1/doctor/appointment/${id}/result`;
+            const method = mode === 'edit' ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            })
+            .then(async res => {
+                if (res.ok) {
+                    closeResultModal();
+                    fetchAppointments();
+                    Toastify({ text: "Lưu kết quả thành công", style: { background: "#10b981" } }).showToast();
+                } else {
+                    const msg = await res.text();
+                    Toastify({ text: msg || "Không thể lưu kết quả", style: { background: "#ef4444" } }).showToast();
+                }
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast())
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = mode === 'edit' ? 'Cập nhật kết quả' : 'Lưu kết quả & Hoàn tất';
+                btn.style.background = 'linear-gradient(135deg, #5f6dfc, #3b82f6)';
+            });
+        };
+
+        fetchAppointments();
+    </script>
+}

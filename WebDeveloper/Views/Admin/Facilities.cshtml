@@ -1,0 +1,372 @@
+@{
+    ViewData["Title"] = "Cơ sở y tế";
+    Layout = "_AdminLayout";
+}
+
+<style>
+.facility-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; }
+.facility-card { background: #ffffff; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; display: flex; flex-direction: column; }
+.facility-card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #6366f1; }
+.facility-image { width: 100%; height: 180px; background: #f1f5f9; object-fit: cover; }
+.facility-placeholder { width: 100%; height: 180px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); display: flex; align-items: center; justify-content: center; border-bottom: 1px solid #f1f5f9; }
+.facility-content { padding: 24px; flex: 1; display: flex; flex-direction: column; }
+.card-actions { display: flex; flex-wrap: wrap; gap: 12px; border-top: 1px solid #f1f5f9; padding-top: 20px; }
+.facility-verify-badge { font-size: 11px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; padding: 6px 12px; border-radius: 999px; border: 1px solid #e2e8f0; background: #f8fafc; color: #64748b; }
+.facility-verify-badge.verified { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+.btn-verify-quick { flex: 1; min-width: 120px; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid #0ea47a; background: #ecfdf5; color: #047857; }
+.btn-verify-quick:hover { background: #d1fae5; }
+.btn-card-action { flex: 1; padding: 10px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; border: 1px solid #e2e8f0; background: #ffffff; color: #475569; }
+.btn-card-action:hover { background: #f8fafc; border-color: #cbd5e1; color: #1e293b; }
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 1000; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background: #ffffff; border-radius: 24px; padding: 32px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); transform: scale(0.95); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.modal-overlay.active .modal-content { transform: scale(1); }
+.form-group { margin-bottom: 20px; }
+.form-group label { display: block; font-size: 13px; font-weight: 700; color: #1e293b; margin-bottom: 6px; }
+.form-group input, .form-group textarea, .form-group select { width: 100%; padding: 12px 14px; border-radius: 12px; border: 1px solid #e2e8f0; background: #f8fafc; font-size: 14px; outline: none; transition: all 0.2s; box-sizing: border-box; font-family: inherit; }
+.form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: #6366f1; background: #fff; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+.file-upload-box { border: 2px dashed #e2e8f0; border-radius: 14px; padding: 20px; text-align: center; cursor: pointer; transition: all 0.2s; position: relative; }
+.file-upload-box:hover { border-color: #6366f1; background: #f5f3ff; }
+.file-upload-box input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.add-facility-btn { padding: 12px 24px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-radius: 14px; border: none; font-weight: 700; display: flex; align-items: center; gap: 10px; cursor: pointer; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); transition: all 0.2s; }
+.add-facility-btn:hover { transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.4); }
+</style>
+
+<div class="reveal">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
+        <div>
+            <h2 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b;">Cơ sở y tế</h2>
+            <p style="margin: 8px 0 0; font-size: 15px; color: #64748b;">Quản lý hệ thống bệnh viện, phòng khám liên kết trên nền tảng</p>
+        </div>
+        <button class="add-facility-btn" onclick="openModal()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>Thêm cơ sở</span>
+        </button>
+    </div>
+
+    <div id="loading" style="text-align: center; padding: 100px; color: #64748b;">Đang nạp dữ liệu cơ sở y tế...</div>
+
+    <div id="emptyState" style="display: none; text-align: center; padding: 100px; background: white; border-radius: 24px; border: 1px dashed #e2e8f0;">
+        <div style="margin-bottom: 24px; display: flex; justify-content: center;">
+            <svg width="80" height="80" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="4" y="2" width="16" height="20" rx="3" fill="#6366f1" fill-opacity="0.1"/>
+                <rect x="4" y="2" width="16" height="20" rx="3" stroke="#6366f1" stroke-width="2" stroke-dasharray="4 2"/>
+                <rect x="8" y="7" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                <rect x="8" y="11" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                <rect x="8" y="15" width="4" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                <circle cx="18" cy="18" r="5" fill="#6366f1"/>
+                <path d="M18 15.5V20.5M15.5 18H20.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h3 style="margin: 0;">Mạng lưới trống</h3>
+        <p style="color: #64748b; margin-top: 8px;">Nhấn nút "Thêm cơ sở" để mở rộng mạng lưới liên kết y tế</p>
+    </div>
+
+    <div id="facilitiesContainer" class="facility-grid" style="display: none;"></div>
+</div>
+
+<!-- Modal -->
+<div id="facilityModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <h3 id="modalTitle" style="margin: 0; font-size: 20px; font-weight: 800;">Thêm cơ sở mới</h3>
+            <button onclick="closeModal()" style="border: none; background: none; font-size: 24px; cursor: pointer; color: #94a3b8;">×</button>
+        </div>
+
+        <form id="facilityForm" onsubmit="submitForm(event)">
+            <input type="hidden" id="f_id" />
+            
+            <div class="form-group">
+                <label>Tên cơ sở y tế *</label>
+                <input type="text" id="f_name" placeholder="Ví dụ: Bệnh viện Đa khoa Tâm Anh..." required />
+            </div>
+
+            <div class="form-group">
+                <label>Chọn tỉnh/thành phố *</label>
+                <select id="f_province" required>
+                    <option value="">-- Chọn tỉnh --</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="Hải Phòng">Hải Phòng</option>
+                    <option value="Cần Thơ">Cần Thơ</option>
+                    <option value="Bình Dương">Bình Dương</option>
+                    <option value="Đồng Nai">Đồng Nai</option>
+                    <option value="Nghệ An">Nghệ An</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Địa chỉ cụ thể *</label>
+                <input type="text" id="f_address" placeholder="Số nhà, tên đường, quận/huyện..." required />
+            </div>
+
+            <div class="form-group">
+                <label>Link Google Maps (Tùy chọn)</label>
+                <input type="text" id="f_mapUrl" placeholder="https://maps.google.com/..." />
+            </div>
+
+            <div class="form-group">
+                <label>Mô tả tóm tắt</label>
+                <textarea id="f_desc" placeholder="Điểm mạnh hoặc dịch vụ nổi bật của cơ sở..." rows="3"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Hình ảnh đại diện</label>
+                <div class="file-upload-box">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                    </svg>
+                    <p id="imageText" style="margin: 0; font-size: 13px; color: #64748b;">Nhấn để chọn ảnh hoặc kéo thả vào đây</p>
+                    <input type="file" id="f_image" accept="image/*" onchange="handleImageChange(event)" />
+                </div>
+                <div id="imagePreview" style="margin-top: 8px; display: none;">
+                    <img id="imagePreviewImg" src="" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0;" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Giấy phép hoạt động (Bắt buộc) *</label>
+                <div class="file-upload-box" id="licenseBox" style="border-color: #ef4444;">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                    <p id="licenseText" style="margin: 0; font-size: 13px; color: #64748b;">Tải lên Giấy phép hoạt động (Ảnh/PDF)</p>
+                    <input type="file" id="f_license" accept="image/*,application/pdf" onchange="handleLicenseChange(event)" />
+                </div>
+                <a id="licenseLink" href="#" target="_blank" style="font-size: 12px; color: #6366f1; margin-top: 8px; display: none; font-weight: 600;">Xem giấy phép hiện tại</a>
+            </div>
+
+            <div style="display: flex; gap: 16px; margin-top: 32px;">
+                <button type="button" class="btn-card-action" style="flex: 1; padding: 14px;" onclick="closeModal()">Hủy bỏ</button>
+                <button type="submit" id="submitBtn" class="add-facility-btn" style="flex: 2; justify-content: center; padding: 14px;">Gia nhập mạng lưới</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        let facilitiesList = [];
+        let editingFacility = null;
+        let imageFile = null;
+        let licenseFile = null;
+
+        function fetchFacilities() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('facilitiesContainer').style.display = 'none';
+
+            fetch('/api/v1/admin/facilities', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('loading').style.display = 'none';
+                facilitiesList = Array.isArray(data) ? data : [];
+                
+                if (facilitiesList.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                    return;
+                }
+
+                let html = '';
+                facilitiesList.forEach(fac => {
+                    const id = fac.facilityId || fac.id;
+                    const name = fac.facilityName || fac.name || '';
+                    const verified = fac.verified ?? fac.isVerified;
+                    const address = fac.address ? (fac.province ? `${fac.address}, ${fac.province}` : fac.address) : (fac.province || 'Đang cập nhật địa chỉ');
+                    
+                    html += `
+                        <div class="facility-card">
+                            ${fac.imageUrl 
+                                ? `<img src="${fac.imageUrl}" alt="${name}" class="facility-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />`
+                                : ``
+                            }
+                            <div class="facility-placeholder" style="display: ${fac.imageUrl ? 'none' : 'flex'}">
+                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <rect x="4" y="2" width="16" height="20" rx="3" fill="#6366f1" fill-opacity="0.1"/>
+                                    <rect x="4" y="2" width="16" height="20" rx="3" stroke="#6366f1" stroke-width="2" stroke-dasharray="4 2"/>
+                                    <rect x="8" y="7" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                                    <rect x="8" y="11" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                                    <rect x="8" y="15" width="4" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                                    <circle cx="18" cy="18" r="5" fill="#6366f1"/>
+                                    <path d="M18 15.5V20.5M15.5 18H20.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </div>
+                            
+                            <div class="facility-content">
+                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
+                                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">${name}</h3>
+                                    <span class="facility-verify-badge ${verified ? 'verified' : ''}">${verified ? 'Đã xác minh' : 'Chờ xác minh'}</span>
+                                </div>
+                                <div style="font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    ${address}
+                                </div>
+                                <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 24px; flex: 1;">
+                                    ${fac.description || 'Không có mô tả thông tin cho cơ sở y tế này.'}
+                                </p>
+                                
+                                ${fac.licenseUrl ? `
+                                <div style="margin-bottom: 16px;">
+                                    <a href="${fac.licenseUrl}" target="_blank" style="font-size: 12px; color: #6366f1; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #eef2ff; border-radius: 8px; border: 1px solid #e0e7ff; text-decoration: none;">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                        Giấy phép hoạt động
+                                    </a>
+                                </div>` : ''}
+                                
+                                <div class="card-actions">
+                                    ${!verified ? `<button type="button" class="btn-verify-quick" onclick="verifyFacility(${id})">Xác minh nhanh</button>` : ''}
+                                    <button type="button" class="btn-card-action" onclick='openModal(${JSON.stringify(fac).replace(/'/g, "&apos;")})'>Chỉnh sửa</button>
+                                    <button type="button" class="btn-card-action" style="color: #ef4444;" onclick="deleteFacility(${id})">Gỡ bỏ</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById('facilitiesContainer').innerHTML = html;
+                document.getElementById('facilitiesContainer').style.display = 'grid';
+            })
+            .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
+        }
+
+        window.openModal = function(fac = null) {
+            editingFacility = fac;
+            imageFile = null;
+            licenseFile = null;
+            document.getElementById('f_image').value = '';
+            document.getElementById('f_license').value = '';
+
+            if (fac) {
+                document.getElementById('modalTitle').innerText = 'Cập nhật cơ sở';
+                document.getElementById('f_id').value = fac.facilityId || fac.id;
+                document.getElementById('f_name').value = fac.facilityName || fac.name || '';
+                document.getElementById('f_province').value = fac.province || '';
+                document.getElementById('f_address').value = fac.address || '';
+                document.getElementById('f_mapUrl').value = fac.mapUrl || '';
+                document.getElementById('f_desc').value = fac.description || '';
+                
+                document.getElementById('imageText').innerHTML = fac.imageUrl ? 'Đã có ảnh đại diện (Nhấn để thay đổi)' : 'Nhấn để chọn ảnh hoặc kéo thả vào đây';
+                if (fac.imageUrl) {
+                    document.getElementById('imagePreview').style.display = 'block';
+                    document.getElementById('imagePreviewImg').src = fac.imageUrl;
+                } else document.getElementById('imagePreview').style.display = 'none';
+
+                document.getElementById('licenseText').innerHTML = fac.licenseUrl ? 'Đã có giấy phép (Nhấn để thay đổi)' : 'Tải lên Giấy phép hoạt động (Ảnh/PDF)';
+                document.getElementById('licenseBox').style.borderColor = '#e2e8f0';
+                if (fac.licenseUrl) {
+                    document.getElementById('licenseLink').href = fac.licenseUrl;
+                    document.getElementById('licenseLink').style.display = 'inline-block';
+                } else document.getElementById('licenseLink').style.display = 'none';
+
+                document.getElementById('submitBtn').innerText = 'Lưu thay đổi';
+            } else {
+                document.getElementById('modalTitle').innerText = 'Thêm cơ sở mới';
+                document.getElementById('facilityForm').reset();
+                document.getElementById('f_id').value = '';
+                document.getElementById('imageText').innerHTML = 'Nhấn để chọn ảnh hoặc kéo thả vào đây';
+                document.getElementById('imagePreview').style.display = 'none';
+                document.getElementById('licenseText').innerHTML = 'Tải lên Giấy phép hoạt động (Ảnh/PDF)';
+                document.getElementById('licenseBox').style.borderColor = '#ef4444';
+                document.getElementById('licenseLink').style.display = 'none';
+                document.getElementById('submitBtn').innerText = 'Gia nhập mạng lưới';
+            }
+            
+            document.getElementById('facilityModal').classList.add('active');
+        };
+
+        window.closeModal = () => document.getElementById('facilityModal').classList.remove('active');
+
+        window.handleImageChange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                imageFile = file;
+                document.getElementById('imageText').innerHTML = `<strong>${file.name}</strong>`;
+                document.getElementById('imagePreview').style.display = 'block';
+                document.getElementById('imagePreviewImg').src = URL.createObjectURL(file);
+            }
+        };
+
+        window.handleLicenseChange = function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                licenseFile = file;
+                document.getElementById('licenseText').innerHTML = `<strong>${file.name}</strong>`;
+                document.getElementById('licenseBox').style.borderColor = '#e2e8f0';
+            } else if (!editingFacility?.licenseUrl) {
+                document.getElementById('licenseBox').style.borderColor = '#ef4444';
+            }
+        };
+
+        window.submitForm = function(e) {
+            e.preventDefault();
+            if (!editingFacility && !licenseFile) {
+                Toastify({ text: "Vui lòng tải lên Giấy phép hoạt động!", style: {background: "#f59e0b"} }).showToast();
+                return;
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true; btn.innerText = 'Đang nạp...';
+
+            const formData = new FormData();
+            formData.append('name', document.getElementById('f_name').value.trim());
+            formData.append('province', document.getElementById('f_province').value);
+            formData.append('address', document.getElementById('f_address').value.trim());
+            formData.append('mapUrl', document.getElementById('f_mapUrl').value.trim());
+            formData.append('description', document.getElementById('f_desc').value.trim());
+            if (imageFile) formData.append('file', imageFile);
+            if (licenseFile) formData.append('licenseFile', licenseFile);
+
+            const url = editingFacility ? `/api/v1/admin/facilities/${document.getElementById('f_id').value}` : `/api/v1/admin/facilities`;
+            const method = editingFacility ? 'PUT' : 'POST';
+
+            fetch(url, {
+                method: method,
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Thành công", style: {background: "#10b981"} }).showToast();
+                    closeModal();
+                    fetchFacilities();
+                } else Toastify({ text: await res.text() || "Lỗi lưu cơ sở", style: {background: "#ef4444"} }).showToast();
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast())
+            .finally(() => { btn.disabled = false; btn.innerText = editingFacility ? 'Lưu thay đổi' : 'Gia nhập mạng lưới'; });
+        };
+
+        window.deleteFacility = function(id) {
+            if (!confirm("Xóa cơ sở y tế này? Hành động không thể hoàn tác.")) return;
+            fetch(`/api/v1/admin/facilities/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Đã xóa", style: {background: "#10b981"} }).showToast();
+                    fetchFacilities();
+                } else Toastify({ text: await res.text() || "Lỗi xóa cơ sở", style: {background: "#ef4444"} }).showToast();
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
+        };
+
+        window.verifyFacility = function(id) {
+            fetch(`/api/v1/admin/facilities/${id}/verify`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Đã xác minh", style: {background: "#10b981"} }).showToast();
+                    fetchFacilities();
+                } else Toastify({ text: await res.text() || "Lỗi xác minh", style: {background: "#ef4444"} }).showToast();
+            })
+            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
+        };
+
+        fetchFacilities();
+    </script>
+}

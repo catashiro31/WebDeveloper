@@ -1,0 +1,122 @@
+@{
+    ViewData["Title"] = "Tổng quan hệ thống";
+    Layout = "_AdminLayout";
+}
+
+<div class="reveal">
+    <h3 style="margin: 0 0 24px; color: #333; font-size: 20px; font-weight: 800;">Tổng quan hệ thống</h3>
+
+    <div id="statsLoading" style="text-align: center; padding: 40px;">Đang tải...</div>
+
+    <div id="statsContent" style="display: none;">
+        <!-- Hàng 3 mục chính -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px;">
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eef2ff; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #10b981;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="margin: 0 0 8px; color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tổng Bác sĩ</p>
+                        <p id="totalDoctors" style="margin: 0; font-size: 32px; font-weight: 800; color: #0f172a;">0</p>
+                    </div>
+                    <span style="font-size: 40px;">👨‍⚕️</span>
+                </div>
+            </div>
+
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eef2ff; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #6366f1;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="margin: 0 0 8px; color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tổng Lịch hẹn</p>
+                        <p id="totalAppointments" style="margin: 0; font-size: 32px; font-weight: 800; color: #0f172a;">0</p>
+                    </div>
+                    <span style="font-size: 40px;">📅</span>
+                </div>
+            </div>
+
+            <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #eef2ff; position: relative; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #f59e0b;"></div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <p style="margin: 0 0 8px; color: #64748b; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tổng Đánh giá</p>
+                        <p id="totalReviews" style="margin: 0; font-size: 32px; font-weight: 800; color: #0f172a;">0</p>
+                    </div>
+                    <span style="font-size: 40px;">⭐</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Các chỉ số phụ -->
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 32px;">
+            <div style="background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">👥</span>
+                <div>
+                    <p style="margin: 0; color: #64748b; font-size: 12px;">Người dùng</p>
+                    <p id="totalUsers" style="margin: 0; font-size: 18px; font-weight: 700; color: #334155;">0</p>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">🏥</span>
+                <div>
+                    <p style="margin: 0; color: #64748b; font-size: 12px;">Bệnh nhân</p>
+                    <p id="totalPatients" style="margin: 0; font-size: 18px; font-weight: 700; color: #334155;">0</p>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">⏳</span>
+                <div>
+                    <p style="margin: 0; color: #64748b; font-size: 12px;">Bác sĩ chờ duyệt</p>
+                    <p id="pendingDoctorsCard" style="margin: 0; font-size: 18px; font-weight: 700; color: #ef4444;">0</p>
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border-radius: 12px; padding: 16px; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 12px;">
+                <span style="font-size: 20px;">📊</span>
+                <div>
+                    <p style="margin: 0; color: #64748b; font-size: 12px;">Hẹn khám hôm nay</p>
+                    <p id="todayAppointments" style="margin: 0; font-size: 18px; font-weight: 700; color: #334155;">0</p>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: linear-gradient(135deg, #1e293b, #334155); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
+            <h4 style="margin: 0 0 12px; display: flex; align-items: center; gap: 8px;">
+                <span style="color: #fbbf24;">⚡</span> Thông báo nhanh
+            </h4>
+            <p style="margin: 0; opacity: 0.9; font-size: 14px; line-height: 1.6;">
+                Hiện có <strong id="pendingDoctorsNotice" style="color: #fbbf24;">0 bác sĩ</strong> đang chờ được phê duyệt hồ sơ. 
+                Vui lòng kiểm tra mục "Bác sĩ" để xử lý kịp thời.
+            </p>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/Auth/Login';
+
+        fetch('/api/v1/admin/stats', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(res => res.json())
+        .then(data => {
+            document.getElementById('statsLoading').style.display = 'none';
+            document.getElementById('statsContent').style.display = 'block';
+
+            document.getElementById('totalDoctors').innerText = (data.totalDoctors || 0).toLocaleString();
+            document.getElementById('totalAppointments').innerText = (data.totalAppointments || 0).toLocaleString();
+            document.getElementById('totalReviews').innerText = (data.totalReviews || 0).toLocaleString();
+            document.getElementById('totalUsers').innerText = (data.totalUsers || 0).toLocaleString();
+            document.getElementById('totalPatients').innerText = (data.totalPatients || 0).toLocaleString();
+            document.getElementById('pendingDoctorsCard').innerText = (data.pendingDoctors || 0).toLocaleString();
+            document.getElementById('todayAppointments').innerText = (data.todayAppointments || 0).toLocaleString();
+            document.getElementById('pendingDoctorsNotice').innerText = (data.pendingDoctors || 0).toLocaleString() + " bác sĩ";
+        })
+        .catch(err => {
+            document.getElementById('statsLoading').innerText = 'Không thể tải dữ liệu thống kê';
+            document.getElementById('statsLoading').style.color = '#ef4444';
+        });
+    </script>
+}

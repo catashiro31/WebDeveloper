@@ -1,0 +1,242 @@
+@{
+    Layout = null;
+    ViewData["Title"] = "Đăng nhập";
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - DocBooking</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Toastify -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        .login-page { display: flex; min-height: 100vh; }
+        .login-left { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background: #f8fafc; position: relative; overflow: hidden; }
+        .login-left::before { content: ''; position: absolute; top: -120px; left: -120px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
+        .login-form-container { width: 100%; max-width: 420px; position: relative; z-index: 1; background: #fff; padding: 48px; border-radius: 32px; border: 1px solid #e2e8f0; box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.05); }
+        .login-back-link { display: inline-flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; font-size: 14px; font-weight: 600; margin-bottom: 40px; transition: all 0.2s; }
+        .login-back-link:hover { color: #6366f1; transform: translateX(-4px); }
+        .login-brand { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .login-brand-icon { width: 44px; height: 44px; background: linear-gradient(135deg, #6366f1, #8b5cf6); border-radius: 14px; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
+        .login-title { font-size: 32px; font-weight: 800; color: #0f172a; margin: 0 0 8px; letter-spacing: -0.04em; }
+        .login-subtitle { font-size: 15px; color: #64748b; margin: 0 0 40px; line-height: 1.6; }
+        
+        .login-field { margin-bottom: 24px; }
+        .login-label { display: block; font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 8px; }
+        .login-input-wrap { position: relative; }
+        .login-input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; display: flex; align-items: center; pointer-events: none; transition: color 0.3s; }
+        .login-input { width: 100%; padding: 14px 16px 14px 48px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 15px; color: #1e293b; background: #f8fafc; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit; box-sizing: border-box; }
+        .login-input:focus { border-color: #6366f1; background: #fff; box-shadow: 0 10px 15px -3px rgba(99,102,241,0.1); }
+        .login-input:focus + .login-input-icon { color: #6366f1; }
+        .login-input::placeholder { color: #94a3b8; opacity: 0.6; }
+        
+        .login-input-toggle { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #94a3b8; padding: 0; display: flex; transition: color 0.2s; }
+        .login-input-toggle:hover { color: #6366f1; }
+        
+        .login-forgot { display: flex; justify-content: flex-end; margin-top: -16px; margin-bottom: 32px; }
+        .login-forgot a { font-size: 14px; color: #6366f1; text-decoration: none; font-weight: 600; transition: all 0.2s; }
+        .login-forgot a:hover { color: #4f46e5; text-decoration: underline; }
+        
+        .login-submit-btn { width: 100%; padding: 15px; border: none; border-radius: 14px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit; box-shadow: 0 10px 25px rgba(99,102,241,0.3); }
+        .login-submit-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(99,102,241,0.4); }
+        .login-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+        
+        .login-register { margin-top: 32px; text-align: center; font-size: 15px; color: #64748b; }
+        .login-register a { color: #6366f1; text-decoration: none; font-weight: 700; margin-left: 6px; }
+        .login-register a:hover { text-decoration: underline; }
+        
+        .login-right { flex: 1.2; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; background: #0f172a; }
+        .login-right-overlay { position: absolute; inset: 0; background: linear-gradient(135deg, rgba(15,23,42,0.9), rgba(99,102,241,0.7)); z-index: 1; }
+        
+        .login-right-content { position: relative; z-index: 2; text-align: left; padding: 80px; color: #fff; max-width: 520px; }
+        .login-right-content h2 { font-size: 42px; font-weight: 800; margin: 0 0 20px; letter-spacing: -0.04em; line-height: 1.1; }
+        .login-right-content p { font-size: 17px; line-height: 1.7; color: rgba(255,255,255,0.8); margin: 0; }
+        
+        .login-right-features { margin-top: 48px; display: flex; flex-direction: column; gap: 20px; }
+        .login-right-feature { display: flex; align-items: center; gap: 16px; background: rgba(255,255,255,0.1); backdrop-filter: blur(12px); padding: 18px 24px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); transition: all 0.3s; }
+        .login-right-feature:hover { background: rgba(255,255,255,0.15); transform: translateX(10px); }
+        .login-right-feature-icon { width: 40px; height: 40px; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #8b5cf6); display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 8px 16px rgba(0,0,0,0.2); }
+        .login-right-feature span { font-size: 16px; font-weight: 600; color: #fff; }
+        
+        @@keyframes reveal { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .reveal { animation: reveal 0.8s forwards; }
+        .reveal-delayed { animation: reveal 0.8s forwards; opacity: 0; }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <!-- LEFT PANEL -->
+        <div class="login-left">
+            <div class="login-form-container reveal">
+                <a href="/" class="login-back-link">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    Quay lại trang chủ
+                </a>
+
+                <div class="login-brand reveal-delayed" style="animation-delay: 0.2s">
+                    <div class="login-brand-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                        </svg>
+                    </div>
+                    <span style="font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em;">DocBooking</span>
+                </div>
+
+                <h1 class="login-title reveal-delayed" style="animation-delay: 0.3s">Đăng nhập</h1>
+                <p class="login-subtitle reveal-delayed" style="animation-delay: 0.35s">Hãy đăng nhập để tiếp tục đặt lịch hẹn với bác sĩ của bạn.</p>
+
+                <form id="loginForm" class="reveal-delayed" style="animation-delay: 0.4s">
+                    <div class="login-field">
+                        <label class="login-label">Email công việc</label>
+                        <div class="login-input-wrap">
+                            <span class="login-input-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="4" width="20" height="16" rx="2" />
+                                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                                </svg>
+                            </span>
+                            <input id="email" type="email" class="login-input" placeholder="name@example.com" required />
+                        </div>
+                    </div>
+
+                    <div class="login-field">
+                        <label class="login-label">Mật khẩu</label>
+                        <div class="login-input-wrap">
+                            <span class="login-input-icon">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                </svg>
+                            </span>
+                            <input id="password" type="password" class="login-input" placeholder="••••••••" required />
+                            <button type="button" class="login-input-toggle" id="togglePassword">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="login-forgot">
+                        <a href="/Auth/ForgotPassword">Quên mật khẩu?</a>
+                    </div>
+
+                    <button type="submit" class="login-submit-btn" id="submitBtn">
+                        Tiếp tục
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                    </button>
+                </form>
+
+                <div class="login-register reveal-delayed" style="animation-delay: 0.5s">
+                    Chưa có tài khoản?
+                    <a href="/Auth/Register">Đăng ký ngay</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="login-right">
+            <div class="login-right-overlay"></div>
+            <!-- Mock Background Image -->
+            <div style="position: absolute; inset: 0; background: url('https://images.unsplash.com/photo-1551076805-e1869033e561?q=80&w=2000&auto=format&fit=crop'); background-size: cover; opacity: 0.3;"></div>
+            
+            <div class="login-right-content">
+                <h2 class="reveal">Giải pháp chăm sóc sức khỏe thông minh</h2>
+                <p class="reveal-delayed" style="animation-delay: 0.2s">
+                    Mang y tế đến tận tay bạn với mạng lưới bác sĩ chuyên khoa rộng khắp và hệ thống đặt lịch tiện lợi.
+                </p>
+
+                <div class="login-right-features">
+                    <div class="login-right-feature reveal-delayed" style="animation-delay: 0.3s">
+                        <div class="login-right-feature-icon"><span>📅</span></div>
+                        <span>Đặt lịch trực tuyến 24/7</span>
+                    </div>
+                    <div class="login-right-feature reveal-delayed" style="animation-delay: 0.4s">
+                        <div class="login-right-feature-icon"><span>👨‍⚕️</span></div>
+                        <span>Đội ngũ bác sĩ hàng đầu</span>
+                    </div>
+                    <div class="login-right-feature reveal-delayed" style="animation-delay: 0.5s">
+                        <div class="login-right-feature-icon"><span>🔒</span></div>
+                        <span>Bảo mật dữ liệu tuyệt đối</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const pwd = document.getElementById('password');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+            } else {
+                pwd.type = 'password';
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = document.getElementById('submitBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = 'Đang xử lý...';
+
+            try {
+                const response = await fetch('/api/v1/auth/signin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+
+                if (response.ok) {
+                    // Save Token to LocalStorage
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    // Save Token to Cookie so ASP.NET Core MVC can read it
+                    document.cookie = "jwtToken=" + data.token + "; path=/; max-age=" + (3600 * 24 * 7);
+
+                    Toastify({
+                        text: "Đăng nhập thành công!",
+                        style: { background: "linear-gradient(to right, #0ea47a, #10b981)", borderRadius: "10px" }
+                    }).showToast();
+
+                    setTimeout(() => {
+                        if (data.user.role === 'ADMIN') window.location.href = '/Admin/Dashboard';
+                        else if (data.user.role === 'DOCTOR') window.location.href = '/Doctor/Dashboard';
+                        else window.location.href = '/';
+                    }, 1000);
+                } else {
+                    Toastify({
+                        text: data.message || "Sai mật khẩu hoặc email",
+                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
+                    }).showToast();
+                    btn.disabled = false;
+                    btn.innerHTML = 'Tiếp tục <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+                }
+            } catch (error) {
+                console.error(error);
+                btn.disabled = false;
+                btn.innerHTML = 'Tiếp tục <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+            }
+        });
+    </script>
+</body>
+</html>

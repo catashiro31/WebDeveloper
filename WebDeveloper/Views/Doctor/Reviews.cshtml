@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Đánh giá từ bệnh nhân";
+    Layout = "_DoctorLayout";
+}
+
+<style>
+.star { color: #d1d5db; font-size: 16px; margin-right: 2px; }
+.star.filled { color: #fbbf24; }
+.progress-bar-bg { flex: 1; height: 8px; background: rgba(255,255,255,0.3); border-radius: 4px; overflow: hidden; }
+.progress-bar-fill { height: 100%; background: white; border-radius: 4px; transition: width 0.5s ease-out; }
+</style>
+
+<div class="reveal">
+    <h3 style="margin: 0 0 20px; color: #333; font-size: 24px;">Đánh giá từ bệnh nhân</h3>
+
+    <div id="statsContainer" style="display: none; background: linear-gradient(135deg, #5f6dfc, #a78bfa); border-radius: 16px; padding: 24px; margin-bottom: 24px; color: white; align-items: center; gap: 24px; box-shadow: 0 4px 20px rgba(95,109,252,0.15); flex-wrap: wrap;">
+        <div style="text-align: center; min-width: 120px;">
+            <div id="avgRating" style="font-size: 48px; font-weight: 700; line-height: 1;">0.0</div>
+            <div id="avgStars" style="display: flex; justify-content: center; margin: 8px 0;"></div>
+            <div style="font-size: 14px; opacity: 0.9;"><span id="totalReviewsCount">0</span> đánh giá</div>
+        </div>
+
+        <div id="starBreakdown" style="flex: 1; min-width: 200px;">
+            <!-- Breakdown bars rendered here -->
+        </div>
+    </div>
+
+    <div id="reviewsContainer" style="display: flex; flex-direction: column; gap: 16px;">
+        <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+        <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/Auth/Login';
+
+        const container = document.getElementById('reviewsContainer');
+
+        function renderStars(rating) {
+            let html = '';
+            for (let i = 1; i <= 5; i++) {
+                html += `<span class="star ${i <= rating ? 'filled' : ''}">★</span>`;
+            }
+            return html;
+        }
+
+        function fetchReviews() {
+            fetch('/api/v1/doctor/reviews?page=0&size=50', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                let reviews = [];
+                if (data && Array.isArray(data.content)) reviews = data.content;
+                else if (Array.isArray(data)) reviews = data;
+
+                if (reviews.length === 0) {
+                    document.getElementById('statsContainer').style.display = 'none';
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px; color: #6b7280; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;">
+                            <p style="font-size: 18px; margin: 0;">Chưa có đánh giá nào</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Calculate stats
+                const total = reviews.length;
+                const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
+                const avg = (sum / total).toFixed(1);
+
+                document.getElementById('statsContainer').style.display = 'flex';
+                document.getElementById('avgRating').innerText = avg;
+                document.getElementById('totalReviewsCount').innerText = total;
+                document.getElementById('avgStars').innerHTML = renderStars(Math.round(avg));
+
+                // Star breakdown
+                let breakdownHtml = '';
+                for (let star = 5; star >= 1; star--) {
+                    const count = reviews.filter(r => r.rating === star).length;
+                    const percent = total > 0 ? (count / total) * 100 : 0;
+                    breakdownHtml += `
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                            <span style="width: 24px; font-size: 14px; text-align: right;">${star}★</span>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${percent}%;"></div>
+                            </div>
+                            <span style="width: 30px; font-size: 12px; text-align: right; opacity: 0.9;">${count}</span>
+                        </div>
+                    `;
+                }
+                document.getElementById('starBreakdown').innerHTML = breakdownHtml;
+
+                // Render reviews
+                let html = '';
+                reviews.forEach(review => {
+                    const dateStr = review.createdAt ? new Date(review.createdAt).toLocaleDateString('vi-VN') : '';
+                    html += `
+                        <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid #f1f5f9;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                                <div>
+                                    <div style="font-weight: 700; color: #1e293b; margin-bottom: 4px; font-size: 16px;">
+                                        ${review.patientName || 'Bệnh nhân'}
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <div>${renderStars(review.rating || 0)}</div>
+                                        <span style="color: #64748b; font-size: 14px; font-weight: 500;">${review.rating || 0}/5</span>
+                                    </div>
+                                </div>
+                                <div style="color: #94a3b8; font-size: 13px; font-weight: 500;">${dateStr}</div>
+                            </div>
+                            ${review.comment ? `<p style="margin: 8px 0 0; color: #475569; line-height: 1.6; font-size: 15px;">"${review.comment}"</p>` : ''}
+                            ${review.appointmentDate ? `<div style="margin-top: 12px; font-size: 13px; color: #94a3b8; font-weight: 500;">Khám ngày: ${review.appointmentDate}</div>` : ''}
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            })
+            .catch(() => {
+                container.innerHTML = `<div style="color: #dc2626; text-align: center; padding: 40px; background: #fef2f2; border-radius: 16px;">Không thể tải đánh giá</div>`;
+            });
+        }
+
+        fetchReviews();
+    </script>
+}

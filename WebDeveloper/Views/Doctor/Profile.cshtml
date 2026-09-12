@@ -1,0 +1,346 @@
+@{
+    ViewData["Title"] = "Hồ sơ bác sĩ";
+    Layout = "_DoctorLayout";
+}
+
+<style>
+.step-indicator { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 2.5rem; }
+.step-item { display: flex; align-items: center; }
+.step-circle { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; transition: all 0.3s ease; }
+.step-line { width: 80px; height: 2px; margin-bottom: 20px; transition: background 0.3s ease; }
+.section-card { background: #fff; border-radius: 16px; border: 1px solid #f0f0f0; box-shadow: 0 1px 4px rgba(0,0,0,0.06); padding: 1.5rem; margin-bottom: 1.25rem; }
+.floating-input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #e5e7eb; font-size: 14px; background: #fafafa; outline: none; transition: border-color 0.2s; box-sizing: border-box; font-family: inherit; }
+.floating-input:focus { border-color: #0ea47a; }
+.upload-zone { border: 2px dashed #d1d5db; border-radius: 12px; padding: 2rem 1rem; cursor: pointer; background: #fafafa; transition: all 0.2s ease; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+.upload-zone.has-file { padding: 0; background: #000; min-height: 140px; border-color: #0ea47a; }
+.modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+</style>
+
+<div id="initialLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px;">
+    <div style="width: 50px; height: 50px; border-radius: 50%; background: #0ea47a; animation: spin 1s infinite linear; margin-bottom: 16px;"></div>
+    <p style="color: #64748b;">Đang tải thông tin hồ sơ...</p>
+</div>
+
+<!-- APPROVED VIEW -->
+<div id="approvedView" class="reveal" style="display: none; max-width: 900px; margin: 0 auto;">
+    <div style="background: #fff; border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; margin-bottom: 24px; display: flex; align-items: center; gap: 24px; position: relative; overflow: hidden; flex-wrap: wrap;">
+        <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: #0ea47a;"></div>
+        <div id="profileAvatar" style="width: 100px; height: 100px; border-radius: 20px; background: linear-gradient(135deg, #0ea47a, #059669); display: flex; align-items: center; justify-content: center; color: white; font-size: 36px; font-weight: 800; flex-shrink: 0; overflow: hidden;"></div>
+        <div style="flex: 1; min-width: 250px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                <h1 id="profileName" style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;"></h1>
+                <div style="background: #e8faf3; color: #0ea47a; padding: 4px 12px; border-radius: 30px; font-size: 12px; font-weight: 700;">Đã xác minh</div>
+            </div>
+            <p id="profileDegreeSpecialty" style="margin: 0; color: #64748b; font-size: 15px; font-weight: 500;"></p>
+        </div>
+        <div style="text-align: right; min-width: 380px;">
+            <div id="actionButtons" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button id="transferBtn" onclick="openTransferModal()" style="padding: 12px 20px; background: white; color: #0ea47a; border: 2px solid #0ea47a; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s;">Chuyển công tác</button>
+                <button onclick="toggleEditMode(true)" style="padding: 12px 24px; background: linear-gradient(135deg, #0ea47a, #059669); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; box-shadow: 0 8px 16px rgba(14,164,122,0.2);">Chỉnh sửa tiểu sử & giá</button>
+            </div>
+            <div id="editButtons" style="display: none; gap: 10px; justify-content: flex-end;">
+                <button onclick="toggleEditMode(false)" style="padding: 12px 20px; background: #f8fafc; color: #64748b; border: 1.5px solid #e2e8f0; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px;">Hủy</button>
+                <button onclick="saveEdit()" id="saveEditBtn" style="padding: 12px 24px; background: #0ea47a; color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; box-shadow: 0 8px 16px rgba(14,164,122,0.2);">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <div style="background: white; border-radius: 24px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;">
+            <h3 style="margin: 0 0 20px; font-size: 14px; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Thông tin xác thực</h3>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Học vị / Bằng cấp</label>
+                    <p id="viewDegree" style="margin: 0; font-weight: 600; color: #1e293b;"></p>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Chuyên khoa</label>
+                    <p id="viewSpecialty" style="margin: 0; font-weight: 600; color: #1e293b;"></p>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Nơi làm việc</label>
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                        <p id="viewFacility" style="margin: 0; font-weight: 600; color: #1e293b;"></p>
+                    </div>
+                    <p id="viewAddress" style="margin: 8px 0 0; font-size: 13px; color: #64748b;"></p>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Kinh nghiệm</label>
+                    <p id="viewExp" style="margin: 0; font-weight: 600; color: #1e293b;"></p>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: white; border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border: 1px solid #f1f5f9;">
+            <h3 style="margin: 0 0 24px; font-size: 14px; font-weight: 800; color: #0ea47a; text-transform: uppercase;">Hồ sơ công khai</h3>
+            <div style="margin-bottom: 28px;">
+                <label style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 14px; font-weight: 700; color: #334155;">Giá khám tư vấn (VNĐ)</span>
+                </label>
+                <div id="viewPrice" style="background: #f0fdf4; padding: 16px 20px; border-radius: 16px; border: 1px solid #dcfce7; font-size: 24px; font-weight: 800; color: #0ea47a;"></div>
+                <input type="number" id="editPrice" class="floating-input" style="display: none; font-size: 16px; font-weight: 700; color: #0ea47a; border-color: #0ea47a;" />
+            </div>
+            <div>
+                <label style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 14px; font-weight: 700; color: #334155;">Tiểu sử & Giới thiệu</span>
+                </label>
+                <div id="viewBio" style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #f1f5f9; font-size: 15px; line-height: 1.7; color: #475569; min-height: 160px; white-space: pre-line;"></div>
+                <textarea id="editBio" class="floating-input" style="display: none; min-height: 200px; border-color: #0ea47a;"></textarea>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SUCCESS PENDING VIEW -->
+<div id="successView" class="reveal" style="display: none; max-width: 440px; margin: 40px auto; background: white; border-radius: 24px; border: 1px solid #f0f0f0; box-shadow: 0 4px 24px rgba(0,0,0,0.07); padding: 3rem 2.5rem; text-align: center;">
+    <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #0ea47a, #059669); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; box-shadow: 0 8px 24px rgba(14,164,122,0.3);">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+    </div>
+    <h2 style="margin: 0 0 10px; font-size: 22px; font-weight: 700; color: #0f172a;">Hồ sơ đang chờ duyệt!</h2>
+    <p style="margin: 0 0 2rem; font-size: 14px; color: #6b7280; line-height: 1.7;">Hồ sơ của bạn đã được gửi đến admin.<br/>Vui lòng chờ xét duyệt trong vòng <strong style="color: #0ea47a;">24–48 giờ</strong>.</p>
+    <a href="/Doctor" style="display: block; width: 100%; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #0ea47a, #059669); font-size: 14px; font-weight: 600; color: white; text-decoration: none; box-shadow: 0 4px 14px rgba(14,164,122,0.35); box-sizing: border-box;">Về trang chủ</a>
+</div>
+
+<!-- MULTISTEP FORM (NOT APPROVED) -->
+<div id="formView" class="reveal" style="display: none; max-width: 600px; margin: 0 auto;">
+    <div style="text-align: center; margin-bottom: 2rem;">
+        <h2 style="margin: 0 0 10px; font-size: 24px; font-weight: 800; color: #1a1a2e;">Cập nhật hồ sơ bác sĩ</h2>
+        <p style="margin: 0; color: #6b7280; font-size: 14px;">Hoàn thiện thông tin để bắt đầu sử dụng hệ thống</p>
+    </div>
+
+    <form id="profileForm" onsubmit="submitForm(event)">
+        <div class="section-card">
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Tiểu sử *</label>
+            <textarea id="f_bio" class="floating-input" style="min-height: 100px;" required></textarea>
+            
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Bằng cấp *</label>
+            <input type="text" id="f_degree" class="floating-input" required />
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Năm KN *</label>
+                    <input type="number" id="f_exp" class="floating-input" required min="0" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Giá khám (VNĐ) *</label>
+                    <input type="number" id="f_price" class="floating-input" required min="0" />
+                </div>
+            </div>
+
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Chuyên khoa *</label>
+            <select id="f_specialty" class="floating-input" required></select>
+
+            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Cơ sở y tế *</label>
+            <select id="f_facility" class="floating-input" required></select>
+        </div>
+
+        <button type="submit" id="submitFormBtn" style="width: 100%; padding: 14px; border-radius: 12px; border: none; background: #0ea47a; color: white; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 4px 14px rgba(14,164,122,0.3);">Gửi hồ sơ xét duyệt</button>
+    </form>
+</div>
+
+<!-- TRANSFER MODAL -->
+<div id="transferModal" class="modal-overlay" onclick="closeTransferModal()">
+    <div class="modal-content" style="max-width: 500px; padding: 32px; background: white; border-radius: 24px;" onclick="event.stopPropagation()">
+        <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 800;">Yêu cầu chuyển công tác</h2>
+        <p style="margin: 0 0 24px; font-size: 14px; color: #64748b;">Thông tin sẽ được Admin xét duyệt.</p>
+
+        <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px;">Cơ sở y tế mới</label>
+        <select id="t_facility" class="floating-input" style="margin-bottom: 20px;"></select>
+
+        <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px;">Lý do chuyển</label>
+        <textarea id="t_reason" class="floating-input" style="min-height: 100px; margin-bottom: 24px;"></textarea>
+
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeTransferModal()" style="flex: 1; padding: 14px; border-radius: 12px; background: #f1f5f9; border: none; font-weight: 700; cursor: pointer;">Hủy</button>
+            <button onclick="submitTransfer()" id="submitTransferBtn" style="flex: 2; padding: 14px; border-radius: 12px; background: #0ea47a; color: white; border: none; font-weight: 700; cursor: pointer;">Gửi yêu cầu</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        if (!token) window.location.href = '/Auth/Login';
+        let user = null; try { user = JSON.parse(userStr); } catch(e){}
+
+        let profileData = null;
+        let facilitiesList = [];
+
+        function init() {
+            fetch('/api/v1/doctor/profile', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('initialLoading').style.display = 'none';
+                const status = data.verificationStatus || (user ? user.verificationStatus : 'PENDING');
+                
+                if (status === 'APPROVED') {
+                    profileData = data;
+                    renderApproved(data);
+                } else if (status === 'PENDING') {
+                    document.getElementById('successView').style.display = 'block';
+                } else {
+                    document.getElementById('formView').style.display = 'block';
+                    loadOptions();
+                }
+            })
+            .catch(() => {
+                document.getElementById('initialLoading').style.display = 'none';
+                document.getElementById('formView').style.display = 'block';
+                loadOptions();
+            });
+        }
+
+        function renderApproved(data) {
+            document.getElementById('approvedView').style.display = 'block';
+            
+            if (user?.avatarUrl) {
+                document.getElementById('profileAvatar').innerHTML = `<img src="${user.avatarUrl}" style="width:100%;height:100%;object-fit:cover;" />`;
+            } else {
+                document.getElementById('profileAvatar').innerText = (user?.fullName || 'D').charAt(0);
+            }
+            document.getElementById('profileName').innerText = user?.fullName || '';
+            document.getElementById('profileDegreeSpecialty').innerText = `${data.degree} • ${data.specialty?.specialtyName || data.specialtyName || ''}`;
+            
+            document.getElementById('viewDegree').innerText = data.degree || '';
+            document.getElementById('viewSpecialty').innerText = data.specialty?.specialtyName || data.specialtyName || '';
+            document.getElementById('viewFacility').innerText = data.facility?.facilityName || data.facilityName || '';
+            document.getElementById('viewAddress').innerText = data.facilityAddress || data.facility?.address || '';
+            document.getElementById('viewExp').innerText = `${data.experienceYears} năm thực hành`;
+            
+            document.getElementById('viewPrice').innerText = Number(data.price || 0).toLocaleString('vi-VN');
+            document.getElementById('viewBio').innerText = data.bio || '';
+            
+            const transBtn = document.getElementById('transferBtn');
+            if (data.hasPendingTransfer) {
+                transBtn.innerText = "Đang chờ duyệt chuyển chỗ";
+                transBtn.style.background = "#fff7ed";
+                transBtn.style.color = "#c2410c";
+                transBtn.style.borderColor = "#fdba74";
+                transBtn.disabled = true;
+            }
+            
+            // load facilities for transfer
+            fetch('/api/v1/portal/facilities').then(res => res.json()).then(res => {
+                facilitiesList = res.content || res || [];
+                const select = document.getElementById('t_facility');
+                select.innerHTML = '<option value="">-- Chọn cơ sở --</option>' + 
+                    facilitiesList.filter(f => f.id != (data.facilityId || data.facility?.id)).map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+            });
+        }
+
+        function loadOptions() {
+            fetch('/api/v1/portal/specialties').then(r => r.json()).then(res => {
+                const arr = res.content || res || [];
+                document.getElementById('f_specialty').innerHTML = '<option value="">-- Chọn chuyên khoa --</option>' + 
+                    arr.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+            });
+            fetch('/api/v1/portal/facilities').then(r => r.json()).then(res => {
+                const arr = res.content || res || [];
+                document.getElementById('f_facility').innerHTML = '<option value="">-- Chọn cơ sở --</option>' + 
+                    arr.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+            });
+        }
+
+        window.toggleEditMode = function(isEdit) {
+            document.getElementById('actionButtons').style.display = isEdit ? 'none' : 'flex';
+            document.getElementById('editButtons').style.display = isEdit ? 'flex' : 'none';
+            
+            document.getElementById('viewPrice').style.display = isEdit ? 'none' : 'block';
+            document.getElementById('editPrice').style.display = isEdit ? 'block' : 'none';
+            
+            document.getElementById('viewBio').style.display = isEdit ? 'none' : 'block';
+            document.getElementById('editBio').style.display = isEdit ? 'block' : 'none';
+            
+            if (isEdit) {
+                document.getElementById('editPrice').value = profileData.price || '';
+                document.getElementById('editBio').value = profileData.bio || '';
+            }
+        };
+
+        window.saveEdit = function() {
+            const price = document.getElementById('editPrice').value;
+            const bio = document.getElementById('editBio').value;
+            
+            const btn = document.getElementById('saveEditBtn');
+            btn.disabled = true; btn.innerText = "Đang lưu...";
+            
+            fetch('/api/v1/doctor/profile', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bio, price: Number(price) })
+            })
+            .then(res => {
+                if (res.ok) {
+                    Toastify({ text: "Cập nhật thành công", style: {background: "#10b981"} }).showToast();
+                    profileData.price = Number(price);
+                    profileData.bio = bio;
+                    document.getElementById('viewPrice').innerText = Number(price).toLocaleString('vi-VN');
+                    document.getElementById('viewBio').innerText = bio;
+                    toggleEditMode(false);
+                } else Toastify({ text: "Lỗi cập nhật", style: {background: "#ef4444"} }).showToast();
+            })
+            .finally(() => { btn.disabled = false; btn.innerText = "Lưu thay đổi"; });
+        };
+
+        window.submitForm = function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            formData.append('bio', document.getElementById('f_bio').value);
+            formData.append('degree', document.getElementById('f_degree').value);
+            formData.append('experienceYears', document.getElementById('f_exp').value);
+            formData.append('price', document.getElementById('f_price').value);
+            formData.append('specialtyId', document.getElementById('f_specialty').value);
+            formData.append('facilityId', document.getElementById('f_facility').value);
+
+            const btn = document.getElementById('submitFormBtn');
+            btn.disabled = true; btn.innerText = "Đang gửi...";
+
+            fetch('/api/v1/doctor/profile', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            })
+            .then(res => {
+                if (res.ok) {
+                    if (user) { user.verificationStatus = 'PENDING'; localStorage.setItem('user', JSON.stringify(user)); }
+                    document.getElementById('formView').style.display = 'none';
+                    document.getElementById('successView').style.display = 'block';
+                } else Toastify({ text: "Lỗi gửi hồ sơ", style: {background: "#ef4444"} }).showToast();
+            })
+            .finally(() => { btn.disabled = false; btn.innerText = "Gửi hồ sơ xét duyệt"; });
+        };
+
+        window.openTransferModal = () => document.getElementById('transferModal').classList.add('active');
+        window.closeTransferModal = () => document.getElementById('transferModal').classList.remove('active');
+
+        window.submitTransfer = function() {
+            const fac = document.getElementById('t_facility').value;
+            const reason = document.getElementById('t_reason').value;
+            if (!fac || !reason) {
+                Toastify({ text: "Vui lòng nhập đủ thông tin", style: {background: "#f59e0b"} }).showToast();
+                return;
+            }
+            
+            const btn = document.getElementById('submitTransferBtn');
+            btn.disabled = true; btn.innerText = "Đang gửi...";
+            
+            fetch('/api/v1/doctor/transfer', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify({ targetFacilityId: fac, reason })
+            })
+            .then(res => {
+                if (res.ok) {
+                    Toastify({ text: "Đã gửi yêu cầu", style: {background: "#10b981"} }).showToast();
+                    closeTransferModal();
+                    setTimeout(() => location.reload(), 1500);
+                } else Toastify({ text: "Lỗi gửi yêu cầu", style: {background: "#ef4444"} }).showToast();
+            })
+            .finally(() => { btn.disabled = false; btn.innerText = "Gửi yêu cầu"; });
+        };
+
+        init();
+    </script>
+}

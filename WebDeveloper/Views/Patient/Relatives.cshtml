@@ -1,0 +1,296 @@
+@{
+    ViewData["Title"] = "Hồ sơ người thân";
+    Layout = "_PatientLayout";
+}
+
+<style>
+.relative-card {
+    background: white; border-radius: 24px; padding: 24px; border: 1px solid #f1f5f9;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative; overflow: hidden;
+}
+.relative-card:hover { transform: translateY(-4px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08); border-color: #6366f1; }
+.relative-card::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+    background: #6366f1; opacity: 0; transition: opacity 0.3s;
+}
+.relative-card:hover::before { opacity: 1; }
+.info-item { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #475569; font-size: 14px; }
+.info-icon { width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; background: #f8fafc; border-radius: 8px; font-size: 12px; }
+.floating-label-input { display: flex; flex-direction: column; gap: 6px; }
+.floating-label-input label { font-size: 13px; font-weight: 700; color: #64748b; margin-left: 4px; }
+.floating-label-input input, .floating-label-input select {
+    padding: 12px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 15px;
+    color: #1e293b; outline: none; transition: all 0.2s; font-family: inherit;
+}
+.floating-label-input input:focus, .floating-label-input select:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+    background: white; border-radius: 32px; width: 100%;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+    max-height: 90vh; overflow-y: auto;
+    transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+</style>
+
+<div class="reveal">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Hồ sơ người thân</h2>
+            <p style="margin: 4px 0 0; font-size: 15px; color: #64748b;">Lưu trữ thông tin để đặt lịch khám nhanh chóng hơn.</p>
+        </div>
+        <button onclick="openModal()" style="padding: 14px 28px; border-radius: 16px; border: none; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; cursor: pointer; font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 10px; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); transition: all 0.2s;" onmouseenter="this.style.transform='translateY(-2px)'" onmouseleave="this.style.transform='translateY(0)'">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Thêm hồ sơ mới
+        </button>
+    </div>
+
+    <div id="relativesContainer" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px;">
+        <div class="skeleton" style="height: 180px; width: 100%; border-radius: 24px;"></div>
+        <div class="skeleton" style="height: 180px; width: 100%; border-radius: 24px;"></div>
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="relativeModal" class="modal-overlay" onclick="closeModal()">
+    <div class="modal-content" style="max-width: 600px; padding: 40px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+            <h3 id="modalTitle" style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em;">Thêm người thân mới</h3>
+            <button onclick="closeModal()" style="background: #f8fafc; border: none; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 20px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseenter="this.style.background='#e2e8f0'" onmouseleave="this.style.background='#f8fafc'">×</button>
+        </div>
+
+        <form id="relativeForm" onsubmit="handleSubmit(event)" style="display: flex; flex-direction: column; gap: 24px;">
+            <input type="hidden" id="relativeId" />
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="floating-label-input">
+                    <label>Họ tên đầy đủ *</label>
+                    <input type="text" id="fullName" placeholder="VD: Nguyễn Văn A" required />
+                </div>
+                <div class="floating-label-input">
+                    <label>Số điện thoại *</label>
+                    <input type="tel" id="phoneNumber" placeholder="VD: 0987654321" required />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div class="floating-label-input">
+                    <label>Ngày sinh *</label>
+                    <input type="date" id="dateOfBirth" required />
+                </div>
+                <div class="floating-label-input">
+                    <label>Giới tính *</label>
+                    <select id="gender" required>
+                        <option value="MALE">Nam</option>
+                        <option value="FEMALE">Nữ</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="floating-label-input">
+                <label>Mối quan hệ *</label>
+                <input type="text" id="relationship" placeholder="VD: Bố, Mẹ, Con, Vợ..." required />
+            </div>
+
+            <div class="floating-label-input">
+                <label>Địa chỉ liên lạc *</label>
+                <input type="text" id="address" placeholder="Nhập địa chỉ chi tiết" required />
+            </div>
+
+            <div style="display: flex; gap: 16px; margin-top: 16px;">
+                <button type="button" onclick="closeModal()" style="flex: 1; padding: 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Hủy bỏ</button>
+                <button type="submit" id="submitBtn" style="flex: 2; padding: 16px; border-radius: 16px; border: none; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; cursor: pointer; font-weight: 700; font-size: 15px; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); transition: all 0.2s;" onmouseenter="if(!this.disabled){this.style.transform='translateY(-2px)'}" onmouseleave="if(!this.disabled){this.style.transform='translateY(0)'}">Lưu hồ sơ ngay</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = '/Auth/Login';
+
+        const container = document.getElementById('relativesContainer');
+        const modal = document.getElementById('relativeModal');
+        const form = document.getElementById('relativeForm');
+        let relativesList = [];
+
+        // Set max date for DoB
+        const today = new Date();
+        const maxDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        document.getElementById('dateOfBirth').max = maxDate;
+
+        function fetchRelatives() {
+            container.innerHTML = `
+                <div class="skeleton" style="height: 180px; width: 100%; border-radius: 24px;"></div>
+                <div class="skeleton" style="height: 180px; width: 100%; border-radius: 24px;"></div>
+            `;
+            
+            fetch('/api/v1/patient/relatives', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(res => res.json())
+            .then(data => {
+                relativesList = Array.isArray(data) ? data : [];
+                renderRelatives();
+            })
+            .catch(() => {
+                container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: #ef4444; padding: 40px;">Lỗi tải dữ liệu</div>`;
+            });
+        }
+
+        function getGenderLabel(g) { return g === 'MALE' ? 'Nam' : g === 'FEMALE' ? 'Nữ' : 'Khác'; }
+
+        function renderRelatives() {
+            if (relativesList.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1/-1; text-align: center; padding: 80px; background: #f8fafc; border-radius: 32px; border: 2px dashed #e2e8f0;">
+                        <div style="font-size: 48px; margin-bottom: 16px;">📂</div>
+                        <h3 style="color: #64748b; margin: 0;">Chưa có hồ sơ người thân nào</h3>
+                        <p style="color: #94a3b8; margin-top: 8px;">Hãy nhấn vào nút "Thêm hồ sơ mới" để bắt đầu.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            relativesList.forEach(r => {
+                const dobStr = r.dateOfBirth ? new Date(r.dateOfBirth).toLocaleDateString('vi-VN') : '';
+                html += `
+                    <div class="relative-card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 48px; height: 48px; border-radius: 16px; background: ${r.gender === 'MALE' ? '#e0f2fe' : '#fce7f3'}; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                    ${r.gender === 'MALE' ? '👨' : '👩'}
+                                </div>
+                                <div>
+                                    <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">${r.fullName}</h3>
+                                    <span style="font-size: 12px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em;">${r.relationship}</span>
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button onclick="openModal(${r.patientId || r.id})" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b; transition: all 0.2s;" onmouseenter="this.style.background='#e2e8f0'" onmouseleave="this.style.background='#f1f5f9'">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                                <button onclick="deleteRelative(${r.patientId || r.id})" style="background: #fee2e2; border: none; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #ef4444; transition: all 0.2s;" onmouseenter="this.style.background='#fca5a5'; this.style.color='white'" onmouseleave="this.style.background='#fee2e2'; this.style.color='#ef4444'">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="info-item"><div class="info-icon">🎂</div><span>${dobStr} (${getGenderLabel(r.gender)})</span></div>
+                        <div class="info-item"><div class="info-icon">📞</div><span>${r.phoneNumber}</span></div>
+                        <div class="info-item"><div class="info-icon">📍</div><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.address}</span></div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window.openModal = function(id = null) {
+            form.reset();
+            document.getElementById('relativeId').value = '';
+            
+            if (id) {
+                const r = relativesList.find(x => (x.patientId || x.id) == id);
+                if (r) {
+                    document.getElementById('modalTitle').innerText = 'Chỉnh sửa hồ sơ';
+                    document.getElementById('relativeId').value = id;
+                    document.getElementById('fullName').value = r.fullName || '';
+                    document.getElementById('phoneNumber').value = r.phoneNumber || '';
+                    document.getElementById('dateOfBirth').value = r.dateOfBirth ? r.dateOfBirth.substring(0, 10) : '';
+                    document.getElementById('gender').value = r.gender || 'MALE';
+                    document.getElementById('relationship').value = r.relationship || '';
+                    document.getElementById('address').value = r.address || '';
+                }
+            } else {
+                document.getElementById('modalTitle').innerText = 'Thêm người thân mới';
+            }
+            modal.classList.add('active');
+        };
+
+        window.closeModal = () => modal.classList.remove('active');
+
+        window.handleSubmit = function(e) {
+            e.preventDefault();
+            
+            const phone = document.getElementById('phoneNumber').value;
+            if (!phone.match(/^(0|\+84)(\s|\.)?((3[2-9])|(5[689])|(7[06-9])|(8[1-689])|(9[0-46-9]))(\d)(\s|\.)?(\d{3})(\s|\.)?(\d{3})$/)) {
+                Toastify({ text: "Số điện thoại không đúng định dạng", style: { background: "#f59e0b" } }).showToast();
+                return;
+            }
+            
+            const dob = document.getElementById('dateOfBirth').value;
+            if (new Date(dob) > new Date()) {
+                Toastify({ text: "Ngày sinh không thể ở tương lai", style: { background: "#f59e0b" } }).showToast();
+                return;
+            }
+
+            const payload = {
+                fullName: document.getElementById('fullName').value.trim(),
+                phoneNumber: phone,
+                dateOfBirth: dob,
+                gender: document.getElementById('gender').value,
+                relationship: document.getElementById('relationship').value.trim(),
+                address: document.getElementById('address').value.trim()
+            };
+
+            const id = document.getElementById('relativeId').value;
+            const isEdit = !!id;
+            
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang lưu...';
+            btn.style.background = '#cbd5e1';
+
+            fetch(`/api/v1/patient/relative${isEdit ? `/${id}` : ''}`, {
+                method: isEdit ? 'PUT' : 'POST',
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: isEdit ? "Cập nhật hồ sơ thành công" : "Thêm người thân thành công", style: { background: "#10b981" } }).showToast();
+                    closeModal();
+                    fetchRelatives();
+                } else {
+                    const msg = await res.text();
+                    Toastify({ text: msg || "Không thể lưu thông tin", style: { background: "#ef4444" } }).showToast();
+                }
+            })
+            .catch(() => Toastify({ text: "Không thể lưu thông tin", style: { background: "#ef4444" } }).showToast())
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = isEdit ? 'Cập nhật hồ sơ' : 'Lưu hồ sơ ngay';
+                btn.style.background = 'linear-gradient(135deg, #6366f1, #4f46e5)';
+            });
+        };
+
+        window.deleteRelative = function(id) {
+            if (!confirm("Bạn có chắc muốn xóa hồ sơ này?")) return;
+            
+            fetch(`/api/v1/patient/relative/${id}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    Toastify({ text: "Đã xóa hồ sơ", style: { background: "#10b981" } }).showToast();
+                    fetchRelatives();
+                } else {
+                    const msg = await res.text();
+                    Toastify({ text: msg || "Không thể xóa hồ sơ", style: { background: "#ef4444" } }).showToast();
+                }
+            })
+            .catch(() => Toastify({ text: "Không thể xóa hồ sơ", style: { background: "#ef4444" } }).showToast());
+        };
+
+        fetchRelatives();
+    </script>
+}
