@@ -78,8 +78,8 @@
             btn.disabled = true;
             btn.style.cursor = 'not-allowed';
 
-            fetch(`/api/v1/patient/appointment/${id}/cancel`, {
-                method: 'POST',
+            fetch(`/api/v1/patient/appointments/${id}/cancel`, {
+                method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(async res => {

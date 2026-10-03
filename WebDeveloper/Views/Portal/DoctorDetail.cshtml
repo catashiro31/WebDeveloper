@@ -224,11 +224,12 @@
             <div class="img-wrap">
                 @if (isPlaceholder)
                 {
-                    <div class="initials-fallback">@GetInitials(Model.FullName)</div>
+                    <div class="initials-fallback">@GetInitials(Model.FullName ?? "")</div>
                 }
                 else
                 {
-                    <img src="@photo" alt="@Model.FullName" class="doc-img" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\'initials-fallback\'>@GetInitials(Model.FullName)</div>';" />
+                    <div class="initials-fallback" style="display:none;">@GetInitials(Model.FullName ?? "")</div>
+                    <img src="@photo" alt="@Model.FullName" class="doc-img" onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';" />
                 }
             </div>
 
@@ -468,11 +469,12 @@
                                 <div class="avatar-wrap">
                                     @if (isDPhotoPlaceholder)
                                     {
-                                        <div class="initials-avatar">@GetInitials(d.DoctorName)</div>
+                                        <div class="initials-avatar">@GetInitials(d.DoctorName ?? "")</div>
                                     }
                                     else
                                     {
-                                        <img src="@dPhoto" alt="@d.DoctorName" class="avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'initials-avatar\\'>@GetInitials(d.DoctorName)</div>';" />
+                                        <div class="initials-avatar" style="display:none;">@GetInitials(d.DoctorName ?? "")</div>
+                                        <img src="@dPhoto" alt="@d.DoctorName" class="avatar" onerror="this.style.display='none'; this.previousElementSibling.style.display='flex';" />
                                     }
                                 </div>
                                 <div class="card-body">
@@ -708,7 +710,7 @@
                     reason: reason
                 };
 
-                const res = await fetch('/api/v1/patient/appointment', {
+                const res = await fetch('/api/v1/patient/appointments', {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',

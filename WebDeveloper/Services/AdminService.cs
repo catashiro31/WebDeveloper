@@ -21,19 +21,22 @@ namespace WebDeveloper.Services
             _emailService = emailService;
         }
 
-        public async Task<StatResponse> GetStats(DateOnly start, DateOnly end)
+        public async Task<StatResponse> GetStats(DateOnly? start, DateOnly? end)
         {
+            var actualStart = start ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7).AddDays(-30));
+            var actualEnd = end ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+
             var apps = await _db.Appointments
                 .Include(a => a.Schedule)
-                .Where(a => a.Schedule.DateWorking >= start && a.Schedule.DateWorking <= end)
+                .Where(a => a.Schedule.DateWorking >= actualStart && a.Schedule.DateWorking <= actualEnd)
                 .ToListAsync();
 
             long completed = apps.Count(a => a.BookingStatus == BookingStatus.COMPLETED);
             long pending = apps.Count(a => a.BookingStatus == BookingStatus.PENDING || a.BookingStatus == BookingStatus.CONFIRMED);
             long cancelled = apps.Count(a => a.BookingStatus == BookingStatus.CANCELLED);
 
-            var startDateTime = start.ToDateTime(TimeOnly.MinValue);
-            var endDateTime = end.AddDays(1).ToDateTime(TimeOnly.MinValue);
+            var startDateTime = actualStart.ToDateTime(TimeOnly.MinValue);
+            var endDateTime = actualEnd.AddDays(1).ToDateTime(TimeOnly.MinValue);
 
             long doctorsInPeriod = await _db.Users.CountAsync(u => u.Role == RoleStatus.DOCTOR && u.IsActive == true && u.CreatedAt >= startDateTime && u.CreatedAt < endDateTime);
             long patientsInPeriod = await _db.Users.CountAsync(u => u.Role == RoleStatus.PATIENT && u.IsActive == true && u.CreatedAt >= startDateTime && u.CreatedAt < endDateTime);

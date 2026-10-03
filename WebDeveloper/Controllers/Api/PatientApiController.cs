@@ -22,72 +22,96 @@ namespace WebDeveloper.Controllers.Api
             _db = db;
         }
 
-        [HttpGet("relative")]
-        public async Task<IActionResult> GetRelatives()
-        {
-            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
-            return Ok(await _patientService.GetRelatives(user));
-        }
-
-        [HttpPost("relative")]
-        public async Task<IActionResult> AddRelative([FromBody] RelativeRequest req)
+        [HttpPost("relatives")]
+        public async Task<IActionResult> CreateRelative([FromBody] RelativeRequest req)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _patientService.AddRelative(user, req));
         }
 
-        [HttpPut("relative/{id}")]
+        [HttpGet("relatives/{id}")]
+        public async Task<IActionResult> GetRelativeDetail(int id)
+        {
+            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
+            return Ok(await _patientService.GetRelativeById(user, id));
+        }
+
+        [HttpGet("relatives")]
+        public async Task<IActionResult> GetAllRelatives()
+        {
+            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
+            return Ok(await _patientService.GetRelatives(user));
+        }
+
+        [HttpPut("relatives/{id}")]
         public async Task<IActionResult> UpdateRelative(int id, [FromBody] RelativeRequest req)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _patientService.UpdateRelative(user, id, req));
         }
 
-        [HttpDelete("relative/{id}")]
+        [HttpDelete("relatives/{id}")]
         public async Task<IActionResult> DeleteRelative(int id)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _patientService.DeleteRelative(user, id));
         }
 
-        [HttpPost("appointment")]
+        [HttpPost("appointments")]
         public async Task<IActionResult> BookAppointment([FromBody] AppointmentRequest req)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _patientService.BookAppointment(user, req));
         }
 
-        [HttpPut("appointment/cancel/{id}")]
+        [HttpGet("appointments")]
+        public async Task<IActionResult> GetMyAppointments(
+            [FromQuery] int page = 0,
+            [FromQuery] int size = 10)
+        {
+            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
+            return Ok(await _patientService.GetAppointments(user, null, null, null, page, size));
+        }
+
+        [HttpPut("appointments/{id}/cancel")]
         public async Task<IActionResult> CancelAppointment(int id)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _patientService.CancelAppointment(user, id));
         }
 
-        [HttpGet("appointments")]
-        public async Task<IActionResult> GetAppointments(
-            [FromQuery] BookingStatus? status, 
-            [FromQuery] DateOnly? startDate, 
-            [FromQuery] DateOnly? endDate, 
-            [FromQuery] int page = 0, 
-            [FromQuery] int size = 10)
+        [HttpGet("history")]
+        public async Task<IActionResult> GetHistory(
+            [FromQuery] int page = 0,
+            [FromQuery] int size = 10,
+            [FromQuery] string? startDate = null,
+            [FromQuery] string? endDate = null)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
-            return Ok(await _patientService.GetAppointments(user, status, startDate, endDate, page, size));
+            DateOnly? start = startDate != null ? DateOnly.Parse(startDate) : null;
+            DateOnly? end = endDate != null ? DateOnly.Parse(endDate) : null;
+            return Ok(await _patientService.GetAppointments(user, BookingStatus.COMPLETED, start, end, page, size));
         }
 
-        [HttpGet("appointment/{id}")]
-        public async Task<IActionResult> GetAppointmentDetail(int id)
+        [HttpGet("history/{id}")]
+        public async Task<IActionResult> GetHistoryDetail(int id)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _patientService.GetAppointmentDetail(user, id));
         }
 
-        [HttpPost("appointment/{id}/review")]
-        public async Task<IActionResult> SubmitReview(int id, [FromBody] ReviewRequest req)
+        [HttpPost("appointments/{id}/review")]
+        public async Task<IActionResult> CreateReview(int id, [FromBody] ReviewRequest req)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _patientService.SubmitReview(user, id, req));
+        }
+
+        [HttpPut("appointments/{id}/review")]
+        public async Task<IActionResult> UpdateReview(int id, [FromBody] ReviewRequest req)
+        {
+            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
+            return Ok(await _patientService.UpdateReview(user, id, req));
         }
     }
 }

@@ -23,7 +23,21 @@ namespace WebDeveloper.Services
                 .Where(p => p.UserId == user.UserId && p.IsActive)
                 .ToListAsync();
 
-            return profiles.Select(p => new RelativeResponse
+            return profiles.Select(MapToRelativeResponse).ToList();
+        }
+
+        public async Task<RelativeResponse> GetRelativeById(User user, int id)
+        {
+            var profile = await _db.PatientProfiles
+                .FirstOrDefaultAsync(p => p.PatientId == id && p.UserId == user.UserId && p.IsActive)
+                ?? throw new InvalidOperationException("Không tìm thấy người thân hoặc bạn không có quyền xem hồ sơ này!");
+
+            return MapToRelativeResponse(profile);
+        }
+
+        private static RelativeResponse MapToRelativeResponse(PatientProfile p)
+        {
+            return new RelativeResponse
             {
                 PatientId = p.PatientId,
                 FullName = p.FullName,
@@ -32,7 +46,7 @@ namespace WebDeveloper.Services
                 PhoneNumber = p.PhoneNumber,
                 Address = p.Address,
                 Relationship = p.Relationship
-            }).ToList();
+            };
         }
 
         public async Task<string> AddRelative(User user, RelativeRequest req)
@@ -87,52 +101,62 @@ namespace WebDeveloper.Services
             if (profile.UserId != user.UserId)
                 throw new InvalidOperationException("Bạn không có quyền xóa hồ sơ này!");
 
+            if (profile.Relationship == "SELF")
+                throw new InvalidOperationException("Không thể xóa hồ sơ chính!");
+
             var activeStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
             var hasActiveApps = await _db.Appointments
                 .AnyAsync(a => a.PatientId == id && activeStatuses.Contains(a.BookingStatus));
 
             if (hasActiveApps)
-                throw new InvalidOperationException("Không thể xóa hồ sơ đang có lịch hẹn chờ duyệt hoặc đã xác nhận!");
+                throw new InvalidOperationException("Không thể xóa hồ sơ này vì đang có lịch hẹn chưa hoàn thành. Vui lòng hủy lịch hẹn trước!");
 
             profile.IsActive = false;
             await _db.SaveChangesAsync();
-            return "Xóa hồ sơ thành công";
+            return "Xóa hồ sơ người thân thành công";
         }
 
         public async Task<string> BookAppointment(User user, AppointmentRequest req)
         {
+            // Giới hạn 3 lịch hẹn active (giống Java)
+            var activeStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
+            var activeCount = await _db.Appointments
+                .Where(a => a.Patient.UserId == user.UserId && activeStatuses.Contains(a.BookingStatus))
+                .CountAsync();
+
+            if (activeCount >= 3)
+                throw new InvalidOperationException("Bạn chỉ được đặt tối đa 3 lịch hẹn!");
+
             var profile = await _db.PatientProfiles.FindAsync(req.PatientId)
-                ?? throw new InvalidOperationException("Hồ sơ bệnh nhân không tồn tại");
+                ?? throw new InvalidOperationException("Hồ sơ bệnh nhân này không tồn tại hoặc bạn không có quyền sử dụng!");
 
             if (profile.UserId != user.UserId)
                 throw new InvalidOperationException("Hồ sơ này không thuộc về bạn!");
 
-            var schedule = await _db.DoctorSchedules.FindAsync(req.ScheduleId)
-                ?? throw new InvalidOperationException("Ca làm việc không tồn tại");
+            var schedule = await _db.DoctorSchedules
+                .Include(s => s.Doctor)
+                .FirstOrDefaultAsync(s => s.ScheduleId == req.ScheduleId)
+                ?? throw new InvalidOperationException("Ca khám không tồn tại");
+
+            if (schedule.Doctor.VerificationStatus != VerificationStatus.APPROVED)
+                throw new InvalidOperationException("Bác sĩ chưa được xác minh, không thể đặt lịch!");
 
             if (schedule.SlotStatus != SlotStatus.AVAILABLE)
-                throw new InvalidOperationException("Ca làm việc này không còn trống");
+                throw new InvalidOperationException("Ca khám đã có người đặt hoặc đã đóng");
 
-            // No-show policy check (3 no-shows in a month = block booking)
-            var oneMonthAgo = DateOnly.FromDateTime(DateTime.UtcNow.AddMonths(-1));
-            var noShowCount = await _db.Appointments
-                .Where(a => a.Patient.UserId == user.UserId && a.BookingStatus == BookingStatus.NO_SHOW && a.Schedule.DateWorking >= oneMonthAgo)
-                .CountAsync();
-
-            if (noShowCount >= 3)
-                throw new InvalidOperationException("Bạn đã bỏ khám (NO_SHOW) 3 lần trong tháng qua. Tính năng đặt khám đã bị khóa.");
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            if (schedule.DateWorking < today)
+                throw new InvalidOperationException("Không thể đặt lịch cho ngày đã qua!");
 
             // Overlap check
-            var activeStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
+            var overlapStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
             var isOverlapping = await _db.Appointments
-                .AnyAsync(a => a.PatientId == req.PatientId && a.Schedule.DateWorking == schedule.DateWorking && a.Schedule.TimeSlot == schedule.TimeSlot && activeStatuses.Contains(a.BookingStatus));
+                .AnyAsync(a => a.PatientId == req.PatientId && a.Schedule.DateWorking == schedule.DateWorking && a.Schedule.TimeSlot == schedule.TimeSlot && overlapStatuses.Contains(a.BookingStatus));
             
             if (isOverlapping)
-                throw new InvalidOperationException("Bệnh nhân này đã có một lịch hẹn khác vào cùng khung giờ, vui lòng chọn khung giờ khác.");
+                throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có một lịch hẹn khác vào cùng thời gian!");
 
-            // Optimistic Locking Simulation (Entity Framework Core handles it via [ConcurrencyCheck] on Version)
             schedule.SlotStatus = SlotStatus.BOOKED;
-            schedule.Version = (schedule.Version ?? 0) + 1;
 
             var appointment = new Appointment
             {
@@ -294,7 +318,46 @@ namespace WebDeveloper.Services
             }
 
             await _db.SaveChangesAsync();
-            return "Đánh giá thành công";
+            return "Gửi đánh giá thành công!";
+        }
+
+        public async Task<string> UpdateReview(User user, int appointmentId, ReviewRequest req)
+        {
+            var app = await _db.Appointments
+                .Include(a => a.Patient)
+                .Include(a => a.Schedule).ThenInclude(s => s.Doctor)
+                .FirstOrDefaultAsync(a => a.Id == appointmentId)
+                ?? throw new InvalidOperationException("Lịch hẹn không tồn tại");
+
+            if (app.Patient.UserId != user.UserId)
+                throw new InvalidOperationException("Bạn không có quyền đánh giá");
+
+            if (app.BookingStatus != BookingStatus.COMPLETED)
+                throw new InvalidOperationException("Chỉ có thể đánh giá sau khi hoàn thành khám");
+
+            var review = await _db.Reviews.FirstOrDefaultAsync(r => r.AppointmentId == appointmentId)
+                ?? throw new InvalidOperationException("Chưa có đánh giá nào để cập nhật!");
+
+            review.Rating = req.Rating;
+            review.Comment = req.Comment;
+            await _db.SaveChangesAsync();
+
+            // Update Doctor Stats
+            var docId = app.Schedule.DoctorId;
+            var doc = await _db.DoctorDetails.FindAsync(docId);
+            if (doc != null)
+            {
+                var reviews = await _db.Reviews
+                    .Include(r => r.Appointment).ThenInclude(a => a.Schedule)
+                    .Where(r => r.Appointment.Schedule.DoctorId == docId && r.IsVisible == true)
+                    .ToListAsync();
+
+                doc.ReviewCount = reviews.Count;
+                doc.RatingAverage = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating ?? 0) * 10) / 10.0 : 0;
+            }
+
+            await _db.SaveChangesAsync();
+            return "Cập nhật đánh giá thành công!";
         }
     }
 }

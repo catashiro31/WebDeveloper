@@ -25,8 +25,20 @@ namespace WebDeveloper.Services
                 .Include(d => d.User)
                 .Include(d => d.Specialty)
                 .Include(d => d.Facility)
-                .FirstOrDefaultAsync(d => d.UserId == user.UserId)
-                ?? throw new InvalidOperationException("Bạn chưa đăng ký hồ sơ bác sĩ!");
+                .FirstOrDefaultAsync(d => d.UserId == user.UserId);
+
+            if (doctor == null)
+            {
+                // Bác sĩ mới đăng ký chưa nộp hồ sơ — không phải lỗi 400; FE cần 200 để hiển thị form / dashboard
+                return new DoctorProfileResponse
+                {
+                    FullName = user.FullName,
+                    Email = user.Email,
+                    PhoneNumber = user.PhoneNumber,
+                    AvatarUrl = user.AvatarUrl,
+                    VerificationStatus = null
+                };
+            }
 
             var pendingTransfer = await _db.DoctorTransferRequests
                 .Where(t => t.DoctorId == doctor.DoctorId && t.Status == TransferStatus.PENDING)
@@ -249,8 +261,7 @@ namespace WebDeveloper.Services
         {
             var appointmentsQuery = _db.Appointments
                 .Include(a => a.Schedule)
-                .Include(a => a.Patient)
-                .Include(a => a.Patient.User)
+                .Include(a => a.Patient).ThenInclude(p => p.User)
                 .Where(a => a.Schedule.Doctor.UserId == user.UserId)
                 .OrderByDescending(a => a.Schedule.DateWorking)
                 .ThenBy(a => a.Schedule.TimeSlot);

@@ -136,7 +136,7 @@
                 <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
             `;
             
-            fetch('/api/v1/doctor/appointments?page=0&size=200', { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch('/api/v1/doctor/appointment?page=0&size=200', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
                 allAppointments = data.content || data || [];

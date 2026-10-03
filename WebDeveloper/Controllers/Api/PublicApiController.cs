@@ -32,13 +32,13 @@ namespace WebDeveloper.Controllers.Api
             return Ok(await _publicService.GetDoctors(keyword, specId, facilityId, province, minPrice, maxPrice, sortBy, page, size));
         }
 
-        [HttpGet("doctor/{id}")]
+        [HttpGet("doctors/{id}")]
         public async Task<IActionResult> GetDoctorDetail(int id) => Ok(await _publicService.GetDoctorById(id));
 
-        [HttpGet("doctor/{id}/reviews")]
+        [HttpGet("doctors/{id}/reviews")]
         public async Task<IActionResult> GetDoctorReviews(int id) => Ok(await _publicService.GetReviewsByDoctorId(id));
 
-        [HttpGet("doctor/{id}/slots")]
+        [HttpGet("doctors/{id}/slots")]
         public async Task<IActionResult> GetAvailableSlots(int id, [FromQuery] DateOnly date) => Ok(await _publicService.GetAvailableSlots(id, date));
 
         [HttpGet("facilities")]

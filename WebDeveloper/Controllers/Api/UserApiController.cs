@@ -36,7 +36,7 @@ namespace WebDeveloper.Controllers.Api
             return Ok(await _userService.UpdateProfile(user, req));
         }
 
-        [HttpPut("change-password")]
+        [HttpPut("password")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);

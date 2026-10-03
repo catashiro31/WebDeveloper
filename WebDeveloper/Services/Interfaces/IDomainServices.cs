@@ -31,6 +31,7 @@ namespace WebDeveloper.Services.Interfaces
     public interface IPatientService
     {
         Task<List<RelativeResponse>> GetRelatives(User user);
+        Task<RelativeResponse> GetRelativeById(User user, int id);
         Task<string> AddRelative(User user, RelativeRequest request);
         Task<string> UpdateRelative(User user, int id, RelativeRequest request);
         Task<string> DeleteRelative(User user, int id);
@@ -39,11 +40,12 @@ namespace WebDeveloper.Services.Interfaces
         Task<PagedResult<AppointmentResponse>> GetAppointments(User user, BookingStatus? status, DateOnly? startDate, DateOnly? endDate, int page, int size);
         Task<AppointmentDetailResponse> GetAppointmentDetail(User user, int appointmentId);
         Task<string> SubmitReview(User user, int appointmentId, ReviewRequest request);
+        Task<string> UpdateReview(User user, int appointmentId, ReviewRequest request);
     }
 
     public interface IAdminService
     {
-        Task<StatResponse> GetStats(DateOnly start, DateOnly end);
+        Task<StatResponse> GetStats(DateOnly? start, DateOnly? end);
         Task<PagedResult<object>> GetAllDoctors(int page, int size);
         Task<List<object>> GetPendingDoctors();
         Task<object> GetDoctorDetail(int id);

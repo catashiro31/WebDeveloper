@@ -8,6 +8,8 @@ namespace WebDeveloper.Services.Interfaces
         Task<SignInResponse> SignIn(SignInRequest request);
         Task<string> SignUp(SignUpRequest request);
         Task SignOut(string token);
+        Task<string> VerifyAccount(string email, string code);
+        Task<string> ForgotPassword(string email);
     }
 
     public interface IUserService
@@ -28,5 +30,7 @@ namespace WebDeveloper.Services.Interfaces
         Task SendDoctorApprovedEmail(string email, string fullName);
         Task SendDoctorRejectedEmail(string email, string fullName, string reason);
         Task SendPermanentBanEmail(string email, string fullName, string reason);
+        Task SendSignUpConfirmationAsync(string email, string fullName, string code);
+        Task SendPasswordResetEmailAsync(string email, string fullName, string newPassword);
     }
 }

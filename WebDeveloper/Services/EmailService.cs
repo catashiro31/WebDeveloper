@@ -48,6 +48,29 @@ namespace WebDeveloper.Services
             await SendEmailAsync(email, subject, body);
         }
 
+        public async Task SendSignUpConfirmationAsync(string email, string fullName, string code)
+        {
+            var subject = "DocBooking - Xác nhận đăng ký tài khoản";
+            var verificationLink = $"{_config["App:ClientUrl"]}/verify?email={email}&code={code}";
+            var body = $"<h3>Xin chào {fullName},</h3>" +
+                       $"<p>Cảm ơn bạn đã đăng ký tài khoản tại DocBooking.</p>" +
+                       $"<p>Vui lòng click vào link bên dưới để xác thực tài khoản của bạn:</p>" +
+                       $"<p><a href='{verificationLink}'>{verificationLink}</a></p>" +
+                       "<p>Trân trọng,<br/>DocBooking Team</p>";
+            await SendEmailAsync(email, subject, body);
+        }
+
+        public async Task SendPasswordResetEmailAsync(string email, string fullName, string newPassword)
+        {
+            var subject = "DocBooking - Đặt lại mật khẩu";
+            var body = $"<h3>Xin chào {fullName},</h3>" +
+                       $"<p>Bạn đã yêu cầu đặt lại mật khẩu. Mật khẩu mới của bạn là:</p>" +
+                       $"<h2 style='color: blue;'>{newPassword}</h2>" +
+                       $"<p>Vui lòng đăng nhập và đổi lại mật khẩu ngay sau khi truy cập thành công.</p>" +
+                       "<p>Trân trọng,<br/>DocBooking Team</p>";
+            await SendEmailAsync(email, subject, body);
+        }
+
         private async Task SendEmailAsync(string toEmail, string subject, string htmlBody)
         {
             try

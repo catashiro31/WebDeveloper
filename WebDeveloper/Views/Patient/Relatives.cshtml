@@ -249,7 +249,7 @@
             btn.innerText = 'Đang lưu...';
             btn.style.background = '#cbd5e1';
 
-            fetch(`/api/v1/patient/relative${isEdit ? `/${id}` : ''}`, {
+            fetch(`/api/v1/patient/relatives${isEdit ? `/${id}` : ''}`, {
                 method: isEdit ? 'PUT' : 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
@@ -275,7 +275,7 @@
         window.deleteRelative = function(id) {
             if (!confirm("Bạn có chắc muốn xóa hồ sơ này?")) return;
             
-            fetch(`/api/v1/patient/relative/${id}`, {
+            fetch(`/api/v1/patient/relatives/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             })

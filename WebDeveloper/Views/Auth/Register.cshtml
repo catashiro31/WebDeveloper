@@ -295,8 +295,12 @@
                 } else {
                     let parsedMsg = msg;
                     try { parsedMsg = JSON.parse(msg); } catch(e){}
+                    let errorText = "Đã xảy ra lỗi hệ thống.";
+                    if (parsedMsg && parsedMsg.message) errorText = parsedMsg.message;
+                    else if (typeof parsedMsg === 'string') errorText = parsedMsg;
+
                     Toastify({
-                        text: (typeof parsedMsg === 'string') ? parsedMsg : "Đã xảy ra lỗi hệ thống.",
+                        text: errorText,
                         style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
                     }).showToast();
                     btn.disabled = false;

@@ -57,5 +57,33 @@ namespace WebDeveloper.Controllers.Api
             }
             return BadRequest(new { Message = "Token không hợp lệ" });
         }
+
+        [HttpGet("verify")]
+        public async Task<IActionResult> VerifyAccount([FromQuery] string email, [FromQuery] string code)
+        {
+            try
+            {
+                var result = await _authService.VerifyAccount(email, code);
+                return Ok(new { Message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromQuery] string email)
+        {
+            try
+            {
+                var result = await _authService.ForgotPassword(email);
+                return Ok(new { Message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
     }
 }

@@ -133,6 +133,17 @@
 
             <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Cơ sở y tế *</label>
             <select id="f_facility" class="floating-input" required></select>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Ảnh CCCD *</label>
+                    <input type="file" id="f_idCard" class="floating-input" accept="image/*" required style="padding: 10px;" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Chứng chỉ hành nghề *</label>
+                    <input type="file" id="f_certificate" class="floating-input" accept="application/pdf" required style="padding: 10px;" />
+                </div>
+            </div>
         </div>
 
         <button type="submit" id="submitFormBtn" style="width: 100%; padding: 14px; border-radius: 12px; border: none; background: #0ea47a; color: white; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 4px 14px rgba(14,164,122,0.3);">Gửi hồ sơ xét duyệt</button>
@@ -173,7 +184,7 @@
             .then(res => res.json())
             .then(data => {
                 document.getElementById('initialLoading').style.display = 'none';
-                const status = data.verificationStatus || (user ? user.verificationStatus : 'PENDING');
+                const status = data.verificationStatus || (user && user.verificationStatus ? user.verificationStatus : 'UNREGISTERED');
                 
                 if (status === 'APPROVED') {
                     profileData = data;
@@ -293,6 +304,12 @@
             formData.append('price', document.getElementById('f_price').value);
             formData.append('specialtyId', document.getElementById('f_specialty').value);
             formData.append('facilityId', document.getElementById('f_facility').value);
+            
+            const idCardFile = document.getElementById('f_idCard').files[0];
+            if (idCardFile) formData.append('idCardImage', idCardFile);
+            
+            const certFile = document.getElementById('f_certificate').files[0];
+            if (certFile) formData.append('certificatePdf', certFile);
 
             const btn = document.getElementById('submitFormBtn');
             btn.disabled = true; btn.innerText = "Đang gửi...";

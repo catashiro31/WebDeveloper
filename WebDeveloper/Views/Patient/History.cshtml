@@ -273,7 +273,7 @@
             btn.style.background = '#cbd5e1';
 
             const method = hasExistingReview ? 'PUT' : 'POST';
-            const url = hasExistingReview ? `/api/v1/patient/appointment/${reviewAppointmentId}/review` : `/api/v1/patient/appointment/${reviewAppointmentId}/review`;
+            const url = `/api/v1/patient/appointments/${reviewAppointmentId}/review`;
             
             fetch(url, {
                 method: method,

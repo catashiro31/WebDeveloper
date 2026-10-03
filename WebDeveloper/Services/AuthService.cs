@@ -15,11 +15,13 @@ namespace WebDeveloper.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly JwtTokenProvider _jwt;
+        private readonly IEmailService _emailService;
 
-        public AuthService(ApplicationDbContext db, JwtTokenProvider jwt)
+        public AuthService(ApplicationDbContext db, JwtTokenProvider jwt, IEmailService emailService)
         {
             _db = db;
             _jwt = jwt;
+            _emailService = emailService;
         }
 
         public async Task<SignInResponse> SignIn(SignInRequest request)
@@ -29,7 +31,11 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Tài khoản không tồn tại!");
 
             if (user.IsActive != true)
-                throw new InvalidOperationException("Tài khoản đã bị khóa! Lý do: " + (user.ReasonBanned ?? "Không rõ"));
+            {
+                if (user.VerificationCode != null)
+                    throw new InvalidOperationException("Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực!");
+                throw new InvalidOperationException("Tài khoản đã bị khóa. Lý do: " + (user.ReasonBanned ?? "Vi phạm chính sách"));
+            }
 
             if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
                 throw new InvalidOperationException("Mật khẩu không chính xác!");
@@ -51,8 +57,13 @@ namespace WebDeveloper.Services
 
         public async Task<string> SignUp(SignUpRequest request)
         {
+            if (request.Role == WebDeveloper.Models.Enums.RoleStatus.ADMIN)
+                throw new InvalidOperationException("Không thể đăng ký tài khoản với quyền quản trị!");
+
             if (await _db.Users.AnyAsync(u => u.Email == request.Email))
                 throw new InvalidOperationException("Email đã được sử dụng!");
+
+            var randomCode = Guid.NewGuid().ToString();
 
             var user = new User
             {
@@ -61,13 +72,18 @@ namespace WebDeveloper.Services
                 FullName = request.FullName,
                 PhoneNumber = request.PhoneNumber,
                 Role = request.Role,
-                IsActive = true,
+                IsActive = false,
+                VerificationCode = randomCode,
+                CodeExpiry = DateTime.UtcNow.AddHours(24),
                 CreatedAt = DateTime.UtcNow
             };
 
             _db.Users.Add(user);
             await _db.SaveChangesAsync();
-            return "Đăng ký tài khoản thành công!";
+
+            await _emailService.SendSignUpConfirmationAsync(user.Email, user.FullName ?? "", user.VerificationCode);
+
+            return "Vui lòng kiểm tra email để xác thực tài khoản!";
         }
 
         public async Task SignOut(string token)
@@ -81,6 +97,61 @@ namespace WebDeveloper.Services
             };
             _db.TokenBlacklists.Add(blacklist);
             await _db.SaveChangesAsync();
+        }
+
+        public async Task<string> VerifyAccount(string email, string code)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email)
+                ?? throw new InvalidOperationException("Người dùng không tồn tại!");
+
+            if (user.VerificationCode == null || user.VerificationCode != code)
+                throw new InvalidOperationException("Đường link xác thực không hợp lệ!");
+
+            if (user.CodeExpiry == null || DateTime.UtcNow > user.CodeExpiry)
+                throw new InvalidOperationException("Đường link xác thực đã hết hạn! Vui lòng đăng ký lại.");
+
+            user.IsActive = true;
+            user.VerificationCode = null;
+            user.CodeExpiry = null;
+
+            if (user.Role == WebDeveloper.Models.Enums.RoleStatus.PATIENT)
+            {
+                var selfProfile = new PatientProfile
+                {
+                    FullName = user.FullName ?? "",
+                    PhoneNumber = user.PhoneNumber,
+                    Relationship = "SELF",
+                    UserId = user.UserId
+                };
+                _db.PatientProfiles.Add(selfProfile);
+            }
+
+            await _db.SaveChangesAsync();
+            return "Xác thực tài khoản thành công! Bây giờ bạn có thể đăng nhập.";
+        }
+
+        public async Task<string> ForgotPassword(string email)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email)
+                ?? throw new InvalidOperationException("Email không tồn tại trong hệ thống!");
+
+            if (user.IsActive != true)
+            {
+                if (user.VerificationCode != null)
+                    throw new InvalidOperationException("Tài khoản chưa được xác thực. Vui lòng xác thực email trước!");
+                throw new InvalidOperationException("Tài khoản đã bị khóa. Không thể đặt lại mật khẩu!");
+            }
+
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var random = new Random();
+            var newPassword = new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            await _db.SaveChangesAsync();
+
+            await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName ?? "", newPassword);
+
+            return "Mật khẩu mới đã được gửi đến email của bạn!";
         }
     }
 
