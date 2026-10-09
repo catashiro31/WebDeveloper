@@ -103,7 +103,7 @@ Trong hệ thống đặt lịch y tế trực tuyến, có nhiều bài toán p
 
 Nếu đưa hệ thống này lên môi trường thực tế (Production) với quy mô hàng trăm ngàn người dùng, đây là 10 lỗ hổng và rủi ro lớn nhất hệ thống sẽ đối mặt, hậu quả và cách ngành công nghiệp phần mềm đang giải quyết:
 
-### 1. Gửi Mật Khẩu Trần Qua Email (Plaintext Password in Email)
+### 1. Gửi Mật Khẩu Trần Qua Email (Plaintext Password in Email) [Done]
 - **Hậu quả**: Chức năng Quên Mật Khẩu hiện tại đang tự sinh mật khẩu mới (8 ký tự) và gửi thẳng văn bản đó vào Email người dùng. Bất kỳ ai chặn bắt được Email (hoặc nhân viên IT đọc được log mail server) đều có thể chiếm đoạt tài khoản. Vi phạm nghiêm trọng chuẩn bảo mật quốc tế.
 - **Giải pháp hiện nay**: Hệ thống tuyệt đối không được sinh mật khẩu hộ người dùng. Chuẩn hiện tại là sinh ra một **Password Reset Token** (mã hóa), gửi 1 đường link chứa token đó qua Email. Người dùng click vào link và tự điền mật khẩu mới.
 
@@ -111,11 +111,11 @@ Nếu đưa hệ thống này lên môi trường thực tế (Production) với
 - **Hậu quả**: Trong các API lấy danh sách Lịch khám (`GetAppointments`), mã nguồn đang dùng `Include().ThenInclude()` liên tục 4-5 cấp (Lấy Lịch -> lấy Ca Khám -> lấy Bác sĩ -> lấy Khoa -> lấy Bệnh nhân). EF Core sẽ sinh ra câu lệnh SQL `JOIN` khổng lồ, trả về hàng triệu dòng dữ liệu trùng lặp trên bộ nhớ RAM, làm sập Server (Out Of Memory) ngay lập tức khi lượng dữ liệu lớn.
 - **Giải pháp hiện nay**: Sử dụng **`.AsSplitQuery()`** trong EF Core để tách thành nhiều câu Query nhỏ. Hoặc với các chức năng chỉ cần đọc dữ liệu nhanh (Read-heavy), sử dụng thư viện **Dapper** (Micro-ORM) viết SQL thuần để tối ưu hiệu suất.
 
-### 3. Cập nhật dữ liệu hàng loạt ở HTTP GET (Vi phạm RESTful)
+### 3. Cập nhật dữ liệu hàng loạt ở HTTP GET (Vi phạm RESTful) [Done]
 - **Hậu quả**: API `/transfers` (Lấy danh sách chuyển công tác) đang gọi lén hàm `UpdateHistoricalSchedules()` thực thi `UPDATE` toàn bộ bảng `DoctorSchedules`. Nếu Admin F5 trang này 10 lần, Database sẽ bị khóa (Table Lock) 10 lần, làm treo mọi giao dịch đặt lịch của người bệnh.
 - **Giải pháp hiện nay**: Bóc tách logic UPDATE ra khỏi HTTP GET. Đưa logic đồng bộ lịch sử vào một quy trình Event (VD: Khi bác sĩ đổi chỗ làm xong thì kích hoạt Event cập nhật ca khám cũ) hoặc chuyển sang một API `HTTP POST` độc lập để chạy bất đồng bộ.
 
-### 4. Bất đồng bộ thời gian do Hardcode Timezone
+### 4. Bất đồng bộ thời gian do Hardcode Timezone [Done]
 - **Hậu quả**: Việc sử dụng `DateTime.UtcNow.AddHours(7)` cố định trong code sẽ khiến hệ thống không thể hoạt động nếu được deploy ở máy chủ quốc tế, hoặc khi mở rộng cho bệnh nhân quốc tế (ví dụ việt kiều). Khách đặt lịch 8h sáng nhưng hệ thống lại ghi nhận lệch múi giờ, dẫn tới bác sĩ nhầm lịch.
 - **Giải pháp hiện nay**: Toàn bộ Backend/Database phải lưu theo chuẩn **UTC Time** (`DateTimeOffset`). Việc cộng trừ múi giờ (+7) là việc của Frontend (Browser/Mobile) tự tính toán dựa trên cấu hình máy tính của người dùng cuối.
 
@@ -131,7 +131,7 @@ Nếu đưa hệ thống này lên môi trường thực tế (Production) với
 - **Hậu quả**: Ứng dụng chưa có bất kỳ cơ chế giới hạn nào. Kẻ tấn công chỉ cần viết 1 đoạn script gọi API Đăng nhập hoặc Xem danh sách Bác sĩ 10.000 lần / giây. Server sẽ cạn kiệt Connection Pool tới Database và sập ngay lập tức.
 - **Giải pháp hiện nay**: Cài đặt **API Gateway** (như Kong, Ocelot) hoặc sử dụng middleware **Rate Limiting** của .NET kết hợp Redis. Cấm mọi IP thực hiện quá `x` requests / giây. Tích hợp Web Application Firewall (WAF) như Cloudflare.
 
-### 8. Lộ lọt bảo mật Token do cách lưu trữ chưa chuẩn
+### 8. Lộ lọt bảo mật Token do cách lưu trữ chưa chuẩn [Done]
 - **Hậu quả**: Hiện tại Token JWT tuy có đọc từ Cookie, nhưng mặc định các hệ thống SPA (React/Angular) lại lưu ở `LocalStorage`. Bất kỳ script độc hại nào (XSS - Cross Site Scripting) nhúng vào web đều có thể lấy trộm JWT và mạo danh bác sĩ/admin vĩnh viễn.
 - **Giải pháp hiện nay**: Backend phải thiết lập Token trả về dưới dạng **`HttpOnly; Secure; SameSite` Cookies**. Khi đó Javascript ở trình duyệt không thể đọc được Token, chặn đứng 100% rủi ro bị đánh cắp qua XSS. 
 

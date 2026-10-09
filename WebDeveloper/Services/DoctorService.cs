@@ -505,14 +505,7 @@ namespace WebDeveloper.Services
             return "Đã gửi yêu cầu chuyển công tác thành công!";
         }
 
-        public void UpdateHistoricalSchedules()
-        {
-            // Tương đương updateMissingFacilities()
-            _db.Database.ExecuteSqlRaw(@"
-                UPDATE doctor_schedules 
-                SET facility_id = (SELECT facility_id FROM doctor_details d WHERE d.doctor_id = doctor_schedules.doctor_id) 
-                WHERE facility_id IS NULL");
-        }
+
 
         public async Task<PagedResult<object>> GetTransferRequests(TransferStatus status, int page, int size)
         {

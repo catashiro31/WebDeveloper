@@ -164,20 +164,19 @@ namespace WebDeveloper.Controllers.Api
             return Ok(new { comment = commentText, labels = results });
         }
 
-        // Doctor Transfers
         [HttpGet("transfers")]
         public async Task<IActionResult> GetTransferRequests(
             [FromQuery] string status = "PENDING",
             [FromQuery] int page = 0,
             [FromQuery] int size = 10)
         {
-            _doctorService.UpdateHistoricalSchedules();
             if (Enum.TryParse<TransferStatus>(status, true, out var transferStatus))
             {
                 return Ok(await _doctorService.GetTransferRequests(transferStatus, page, size));
             }
             return BadRequest("Trạng thái không hợp lệ");
         }
+
 
         [HttpPut("transfers/{id}/approve")]
         public async Task<IActionResult> ApproveTransfer(int id, [FromBody] ProcessTransferRequest req)
