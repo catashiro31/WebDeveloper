@@ -22,6 +22,17 @@ namespace WebDeveloper.Controllers.Api
             try
             {
                 var res = await _authService.SignIn(req);
+
+                // Set HttpOnly Cookie for XSS protection
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(1440) // 1 day, matching Jwt config
+                };
+                Response.Cookies.Append("jwtToken", res.Token, cookieOptions);
+
                 return Ok(res);
             }
             catch (Exception ex)
@@ -48,13 +59,25 @@ namespace WebDeveloper.Controllers.Api
         [Authorize]
         public async Task<IActionResult> SignOutApp()
         {
-            var authHeader = Request.Headers["Authorization"].FirstOrDefault();
-            if (authHeader != null && authHeader.StartsWith("Bearer "))
+            // Try to get token from Cookie first, then fallback to Header
+            var token = Request.Cookies["jwtToken"];
+            
+            if (string.IsNullOrEmpty(token))
             {
-                var token = authHeader["Bearer ".Length..];
+                var authHeader = Request.Headers["Authorization"].FirstOrDefault();
+                if (authHeader != null && authHeader.StartsWith("Bearer "))
+                {
+                    token = authHeader["Bearer ".Length..];
+                }
+            }
+
+            if (!string.IsNullOrEmpty(token))
+            {
                 await _authService.SignOut(token);
+                Response.Cookies.Delete("jwtToken");
                 return Ok(new { Message = "Đăng xuất thành công" });
             }
+            
             return BadRequest(new { Message = "Token không hợp lệ" });
         }
 
