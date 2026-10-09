@@ -27,6 +27,7 @@ namespace WebDeveloper.BackgroundServices
                 {
                     await CleanupSystem();
                     await CleanupBlacklist();
+                    await CalculateDoctorRatings();
                 }
                 catch (Exception ex)
                 {
@@ -84,6 +85,37 @@ namespace WebDeveloper.BackgroundServices
             var expired = await db.TokenBlacklists.Where(t => t.ExpiryDate < DateTime.UtcNow).ToListAsync();
             db.TokenBlacklists.RemoveRange(expired);
             await db.SaveChangesAsync();
+        }
+
+        private async Task CalculateDoctorRatings()
+        {
+            using var scope = _services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+            _logger.LogInformation("--- Bắt đầu tính toán Rating hàng loạt ---");
+
+            var stats = await db.Reviews
+                .Where(r => r.IsVisible == true)
+                .Select(r => new { r.Rating, DoctorId = r.Appointment.Schedule.DoctorId })
+                .GroupBy(r => r.DoctorId)
+                .Select(g => new
+                {
+                    DoctorId = g.Key,
+                    ReviewCount = g.Count(),
+                    AverageRating = Math.Round(g.Average(x => x.Rating ?? 0) * 10) / 10.0
+                })
+                .ToListAsync();
+
+            var doctors = await db.DoctorDetails.ToListAsync();
+            foreach (var doc in doctors)
+            {
+                var stat = stats.FirstOrDefault(s => s.DoctorId == doc.DoctorId);
+                doc.ReviewCount = stat?.ReviewCount ?? 0;
+                doc.RatingAverage = stat?.AverageRating ?? 0;
+            }
+
+            await db.SaveChangesAsync();
+            _logger.LogInformation("--- Cập nhật Rating hoàn tất ---");
         }
     }
 }

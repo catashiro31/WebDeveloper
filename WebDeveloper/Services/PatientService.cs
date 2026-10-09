@@ -304,21 +304,6 @@ namespace WebDeveloper.Services
             _db.Reviews.Add(review);
             await _db.SaveChangesAsync();
 
-            // Update Doctor Stats
-            var docId = app.Schedule.DoctorId;
-            var doc = await _db.DoctorDetails.FindAsync(docId);
-            if (doc != null)
-            {
-                var reviews = await _db.Reviews
-                    .Include(r => r.Appointment).ThenInclude(a => a.Schedule)
-                    .Where(r => r.Appointment.Schedule.DoctorId == docId && r.IsVisible == true)
-                    .ToListAsync();
-                
-                doc.ReviewCount = reviews.Count;
-                doc.RatingAverage = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating ?? 0) * 10) / 10.0 : 0;
-            }
-
-            await _db.SaveChangesAsync();
             return "Gửi đánh giá thành công!";
         }
 
@@ -343,21 +328,6 @@ namespace WebDeveloper.Services
             review.Comment = req.Comment;
             await _db.SaveChangesAsync();
 
-            // Update Doctor Stats
-            var docId = app.Schedule.DoctorId;
-            var doc = await _db.DoctorDetails.FindAsync(docId);
-            if (doc != null)
-            {
-                var reviews = await _db.Reviews
-                    .Include(r => r.Appointment).ThenInclude(a => a.Schedule)
-                    .Where(r => r.Appointment.Schedule.DoctorId == docId && r.IsVisible == true)
-                    .ToListAsync();
-
-                doc.ReviewCount = reviews.Count;
-                doc.RatingAverage = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating ?? 0) * 10) / 10.0 : 0;
-            }
-
-            await _db.SaveChangesAsync();
             return "Cập nhật đánh giá thành công!";
         }
     }

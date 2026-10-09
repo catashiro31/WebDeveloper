@@ -107,7 +107,7 @@ Nếu đưa hệ thống này lên môi trường thực tế (Production) với
 - **Hậu quả**: Chức năng Quên Mật Khẩu hiện tại đang tự sinh mật khẩu mới (8 ký tự) và gửi thẳng văn bản đó vào Email người dùng. Bất kỳ ai chặn bắt được Email (hoặc nhân viên IT đọc được log mail server) đều có thể chiếm đoạt tài khoản. Vi phạm nghiêm trọng chuẩn bảo mật quốc tế.
 - **Giải pháp hiện nay**: Hệ thống tuyệt đối không được sinh mật khẩu hộ người dùng. Chuẩn hiện tại là sinh ra một **Password Reset Token** (mã hóa), gửi 1 đường link chứa token đó qua Email. Người dùng click vào link và tự điền mật khẩu mới.
 
-### 2. "Cartesian Explosion" (Bùng nổ dữ liệu kết bảng) trong Entity Framework
+### 2. "Cartesian Explosion" (Bùng nổ dữ liệu kết bảng) trong Entity Framework [Done]
 - **Hậu quả**: Trong các API lấy danh sách Lịch khám (`GetAppointments`), mã nguồn đang dùng `Include().ThenInclude()` liên tục 4-5 cấp (Lấy Lịch -> lấy Ca Khám -> lấy Bác sĩ -> lấy Khoa -> lấy Bệnh nhân). EF Core sẽ sinh ra câu lệnh SQL `JOIN` khổng lồ, trả về hàng triệu dòng dữ liệu trùng lặp trên bộ nhớ RAM, làm sập Server (Out Of Memory) ngay lập tức khi lượng dữ liệu lớn.
 - **Giải pháp hiện nay**: Sử dụng **`.AsSplitQuery()`** trong EF Core để tách thành nhiều câu Query nhỏ. Hoặc với các chức năng chỉ cần đọc dữ liệu nhanh (Read-heavy), sử dụng thư viện **Dapper** (Micro-ORM) viết SQL thuần để tối ưu hiệu suất.
 
@@ -119,7 +119,7 @@ Nếu đưa hệ thống này lên môi trường thực tế (Production) với
 - **Hậu quả**: Việc sử dụng `DateTime.UtcNow.AddHours(7)` cố định trong code sẽ khiến hệ thống không thể hoạt động nếu được deploy ở máy chủ quốc tế, hoặc khi mở rộng cho bệnh nhân quốc tế (ví dụ việt kiều). Khách đặt lịch 8h sáng nhưng hệ thống lại ghi nhận lệch múi giờ, dẫn tới bác sĩ nhầm lịch.
 - **Giải pháp hiện nay**: Toàn bộ Backend/Database phải lưu theo chuẩn **UTC Time** (`DateTimeOffset`). Việc cộng trừ múi giờ (+7) là việc của Frontend (Browser/Mobile) tự tính toán dựa trên cấu hình máy tính của người dùng cuối.
 
-### 5. Nút thắt cổ chai ở Background Job quét DB liên tục
+### 5. Nút thắt cổ chai ở Background Job quét DB liên tục [Chưa cần phải sử lý vì hệ thống nhỏ]
 - **Hậu quả**: Hàm `AppointmentCleanupService` định kỳ thức dậy và `SELECT/UPDATE` toàn bộ Database để tìm lịch hẹn quá hạn. Khi hệ thống có 10 triệu lịch hẹn, Job này quét sẽ ngốn 100% CPU của Database, làm chậm mọi thao tác khác.
 - **Giải pháp hiện nay**: Áp dụng mô hình **Event-Driven Architecture** (RabbitMQ / Kafka). Thay vì rà quét toàn bộ DB, khi một user vừa đặt lịch xong, hệ thống ném 1 viên nén (Message) vào Queue, cấu hình nó ngủ đúng 30 phút. Hết 30 phút, Queue nhả viên nén ra kích hoạt lệnh hủy đúng 1 lịch khám duy nhất đó.
 

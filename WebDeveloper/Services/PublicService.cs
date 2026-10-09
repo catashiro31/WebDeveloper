@@ -22,17 +22,24 @@ namespace WebDeveloper.Services
 
         public async Task<PortalStatsResponse> GetPortalStats()
         {
-            var totalDoctors = await _db.DoctorDetails.CountAsync(d => d.VerificationStatus == VerificationStatus.APPROVED);
-            var totalAppointments = await _db.Appointments.CountAsync();
-            var avgRatingObj = await _db.DoctorDetails.Where(d => d.VerificationStatus == VerificationStatus.APPROVED).AverageAsync(d => d.RatingAverage);
-            var avgRating = avgRatingObj ?? 5.0;
-
-            return new PortalStatsResponse
+            return await _cache.GetOrCreateAsync("PORTAL_STATS", async entry =>
             {
-                TotalDoctors = totalDoctors,
-                TotalAppointments = totalAppointments,
-                AverageRating = Math.Round(avgRating * 10.0) / 10.0
-            };
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30);
+
+                var totalDoctors = await _db.DoctorDetails.CountAsync(d => d.VerificationStatus == VerificationStatus.APPROVED);
+                var totalAppointments = await _db.Appointments.CountAsync();
+                
+                // Tránh quá tải do tính toán thống kê (Rating) Real-Time liên tục
+                var avgRatingObj = await _db.DoctorDetails.Where(d => d.VerificationStatus == VerificationStatus.APPROVED).AverageAsync(d => d.RatingAverage);
+                var avgRating = avgRatingObj ?? 5.0;
+
+                return new PortalStatsResponse
+                {
+                    TotalDoctors = totalDoctors,
+                    TotalAppointments = totalAppointments,
+                    AverageRating = Math.Round(avgRating * 10.0) / 10.0
+                };
+            });
         }
 
         public async Task<List<FacilityResponse>> GetAllFacilities()

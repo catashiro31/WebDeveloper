@@ -438,13 +438,10 @@ namespace WebDeveloper.Services
             
             review.IsVisible = false;
             
-            var doc = await _db.DoctorDetails.FindAsync(review.Appointment.Schedule.DoctorId);
-            if (doc != null)
-            {
-                var reviews = await _db.Reviews.Where(r => r.Appointment.Schedule.DoctorId == doc.DoctorId && r.IsVisible == true).ToListAsync();
-                doc.ReviewCount = reviews.Count;
-                doc.RatingAverage = reviews.Any() ? Math.Round(reviews.Average(r => r.Rating ?? 0) * 10) / 10.0 : 0;
-            }
+            // Tối ưu hóa: Thay vì tính toán Rating Real-Time gây quá tải,
+            // ta áp dụng Batch Processing. Điểm đánh giá trung bình và số lượng review
+            // sẽ được BackgroundService (AppointmentCleanupService) tính toán lại định kỳ.
+
 
             await _db.SaveChangesAsync();
             return "Đã ẩn bài đánh giá";
