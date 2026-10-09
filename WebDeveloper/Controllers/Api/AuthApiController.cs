@@ -23,24 +23,73 @@ namespace WebDeveloper.Controllers.Api
             {
                 var res = await _authService.SignIn(req);
 
-                // Set HttpOnly Cookie for XSS protection
-                var cookieOptions = new CookieOptions
+                var accessCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
                     Secure = true,
                     SameSite = SameSiteMode.Strict,
-                    Expires = DateTime.UtcNow.AddMinutes(1440) // 1 day, matching Jwt config
+                    Expires = DateTime.UtcNow.AddMinutes(15) 
                 };
-                Response.Cookies.Append("jwtToken", res.Token, cookieOptions);
+                Response.Cookies.Append("accessToken", res.Token, accessCookieOptions);
 
-                // Hide token from response body to prevent XSS (HttpOnly cookie is used)
+                var refreshCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(7)
+                };
+                Response.Cookies.Append("refreshToken", res.RefreshToken, refreshCookieOptions);
+
+                // Hide tokens from response body to prevent XSS
                 res.Token = "SECURE_HTTPONLY_COOKIE";
+                res.RefreshToken = "";
                 
                 return Ok(res);
             }
             catch (Exception ex)
             {
                 return BadRequest(new { Message = ex.Message });
+            }
+        }
+
+        [HttpPost("refresh-token")]
+        public async Task<IActionResult> RefreshToken()
+        {
+            try
+            {
+                var refreshToken = Request.Cookies["refreshToken"];
+
+                if (string.IsNullOrEmpty(refreshToken))
+                {
+                    return Unauthorized(new { Message = "Tokens are missing." });
+                }
+
+                var res = await _authService.RefreshToken(refreshToken);
+
+                var accessCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddMinutes(15)
+                };
+                Response.Cookies.Append("accessToken", res.Token, accessCookieOptions);
+
+                var refreshCookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.Strict,
+                    Expires = DateTime.UtcNow.AddDays(7)
+                };
+                Response.Cookies.Append("refreshToken", res.RefreshToken, refreshCookieOptions);
+
+                return Ok(new { Message = "Token refreshed successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Unauthorized(new { Message = ex.Message });
             }
         }
 
@@ -63,7 +112,7 @@ namespace WebDeveloper.Controllers.Api
         public async Task<IActionResult> SignOutApp()
         {
             // Try to get token from Cookie first, then fallback to Header
-            var token = Request.Cookies["jwtToken"];
+            var token = Request.Cookies["accessToken"];
             
             if (string.IsNullOrEmpty(token))
             {
@@ -77,7 +126,8 @@ namespace WebDeveloper.Controllers.Api
             if (!string.IsNullOrEmpty(token))
             {
                 await _authService.SignOut(token);
-                Response.Cookies.Delete("jwtToken");
+                Response.Cookies.Delete("accessToken");
+                Response.Cookies.Delete("refreshToken");
                 return Ok(new { Message = "Đăng xuất thành công" });
             }
             

@@ -36,6 +36,7 @@ namespace WebDeveloper.Models.DTOs.Auth
     public class SignInResponse
     {
         public string Token { get; set; } = string.Empty;
+        public string RefreshToken { get; set; } = string.Empty;
         public string Message { get; set; } = "Đăng nhập thành công!";
         public UserDto User { get; set; } = new UserDto();
     }

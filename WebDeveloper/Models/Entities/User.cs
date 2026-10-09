@@ -48,6 +48,12 @@ namespace WebDeveloper.Models.Entities
         [Column("verification_code")]
         public string? VerificationCode { get; set; }
 
+        [Column("refresh_token")]
+        public string? RefreshToken { get; set; }
+
+        [Column("refresh_token_expiry_time")]
+        public DateTime? RefreshTokenExpiryTime { get; set; }
+
         [Column("code_expiry")]
         public DateTime? CodeExpiry { get; set; }
 

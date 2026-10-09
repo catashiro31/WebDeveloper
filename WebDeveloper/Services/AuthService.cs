@@ -14,10 +14,10 @@ namespace WebDeveloper.Services
     public class AuthService : IAuthService
     {
         private readonly ApplicationDbContext _db;
-        private readonly JwtTokenProvider _jwt;
+        private readonly AccessTokenProvider _jwt;
         private readonly IEmailService _emailService;
 
-        public AuthService(ApplicationDbContext db, JwtTokenProvider jwt, IEmailService emailService)
+        public AuthService(ApplicationDbContext db, AccessTokenProvider jwt, IEmailService emailService)
         {
             _db = db;
             _jwt = jwt;
@@ -41,6 +41,11 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Mật khẩu không chính xác!");
 
             var token = _jwt.CreateToken(user);
+            var refreshToken = _jwt.GenerateRefreshToken();
+            
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+            await _db.SaveChangesAsync();
             
             string? verificationStatus = null;
             if (user.Role == WebDeveloper.Models.Enums.RoleStatus.DOCTOR)
@@ -52,6 +57,43 @@ namespace WebDeveloper.Services
             return new SignInResponse
             {
                 Token = token,
+                RefreshToken = refreshToken,
+                User = new UserDto
+                {
+                    Email = user.Email ?? "",
+                    FullName = user.FullName ?? "",
+                    Role = user.Role.ToString() ?? "",
+                    PhoneNumber = user.PhoneNumber,
+                    AvatarUrl = user.AvatarUrl,
+                    VerificationStatus = verificationStatus
+                }
+            };
+        }
+
+        public async Task<SignInResponse> RefreshToken(string refreshToken)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+
+            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+                throw new InvalidOperationException("Refresh token không hợp lệ hoặc đã hết hạn.");
+
+            var newAccessToken = _jwt.CreateToken(user);
+            var newRefreshToken = _jwt.GenerateRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            await _db.SaveChangesAsync();
+
+            string? verificationStatus = null;
+            if (user.Role == WebDeveloper.Models.Enums.RoleStatus.DOCTOR)
+            {
+                var doctorDetail = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId);
+                verificationStatus = doctorDetail?.VerificationStatus.ToString() ?? "UNREGISTERED";
+            }
+
+            return new SignInResponse
+            {
+                Token = newAccessToken,
+                RefreshToken = newRefreshToken,
                 User = new UserDto
                 {
                     Email = user.Email ?? "",

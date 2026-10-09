@@ -16,7 +16,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // 2. Add JWT Configuration & Authentication
-builder.Services.AddSingleton<JwtTokenProvider>();
+builder.Services.AddSingleton<AccessTokenProvider>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -35,7 +35,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
-                var token = context.Request.Cookies["jwtToken"];
+                var token = context.Request.Cookies["accessToken"];
                 if (!string.IsNullOrEmpty(token))
                 {
                     context.Token = token;

@@ -6,6 +6,7 @@ namespace WebDeveloper.Services.Interfaces
     public interface IAuthService
     {
         Task<SignInResponse> SignIn(SignInRequest request);
+        Task<SignInResponse> RefreshToken(string refreshToken);
         Task<string> SignUp(SignUpRequest request);
         Task SignOut(string token);
         Task<string> VerifyAccount(string email, string code);

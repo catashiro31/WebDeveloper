@@ -211,7 +211,7 @@
                     localStorage.setItem('user', JSON.stringify(data.user));
 
                     // Save Token to Cookie so ASP.NET Core MVC can read it
-                    document.cookie = "jwtToken=" + data.token + "; path=/; max-age=" + (3600 * 24 * 7);
+                    document.cookie = "accessToken=" + data.token + "; path=/; max-age=" + (3600 * 24 * 7);
                     document.cookie = "user_info=" + encodeURIComponent(JSON.stringify(data.user)) + "; path=/; max-age=" + (3600 * 24 * 7);
 
                     Toastify({

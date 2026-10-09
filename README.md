@@ -38,7 +38,7 @@ Hệ thống được thiết kế theo mô hình **MVC (Model-View-Controller) 
 - `/Data`: File `ApplicationDbContext.cs` thiết lập DbContext và Fluent API.
 - `/Models`: Entities, DTOs, Enums.
 - `/Middleware`: `GlobalExceptionMiddleware` để chuẩn hóa định dạng trả về lỗi (400, 401, 409, 500).
-- `/Security`: Các class liên quan đến JWT (như `JwtTokenProvider`).
+- `/Security`: Các class liên quan đến JWT (như `AccessTokenProvider`).
 - `/BackgroundServices`: Chứa các job chạy ngầm (IHostedService).
 
 ## Thiết kế Cơ sở dữ liệu (Mô hình ERD)
@@ -66,12 +66,11 @@ Trong hệ thống đặt lịch y tế trực tuyến, có nhiều bài toán p
 - **Cách xử lý hiện tại**: Entity `DoctorSchedule` dùng Annotation `[ConcurrencyCheck]`. Nếu có 2 luồng cùng update, EF Core sẽ văng ra lỗi `DbUpdateConcurrencyException` (Khóa lạc quan - Optimistic Locking).
 - **Giải pháp tối ưu / Hiện đại**: Ở các hệ thống lớn (Concurrency cao), việc để request chạm tới DB rồi mới văng lỗi sẽ gây tốn tài nguyên DB. Thay vào đó, hệ thống sẽ sử dụng **Distributed Lock (Khóa phân tán)** trên **Redis** (ví dụ: Redlock). Khi user ấn đặt, slot đó bị lock ngay trên RAM (Redis). Request thứ 2 đến sẽ bị từ chối lập tức mà không cần Query xuống Database.
 
-### 2. Bảo Mật Luồng Dữ Liệu & Phân Quyền
+### 2. Bảo Mật Luồng Dữ Liệu & Phân Quyền [Done]
 - **Vấn đề**: Ngăn chặn bệnh nhân gọi API của bác sĩ, hoặc ngăn chặn truy cập dữ liệu nhạy cảm của người khác.
-- **Cách xử lý hiện tại**: Sử dụng 1 **JWT (JSON Web Token)** duy nhất gắn Role. Dùng code thủ công `if (profile.UserId != user.UserId)` để chặn quyền.
-- **Giải pháp tối ưu / Hiện đại**: 
-  - Thay vì dùng 1 JWT sống dài, kiến trúc chuẩn sẽ dùng cặp **Access Token (sống ngắn 10-15p)** và **Refresh Token (sống dài 7-30 ngày)** lưu trong HTTP-Only Cookie để chống XSS.
-  - Quản lý user/role sẽ được tách ra 1 Server độc lập gọi là **Identity Provider** (chuẩn OAuth2/OpenID Connect) thông qua các công cụ như Keycloak hoặc Duende IdentityServer thay vì tự code.
+- **Cách xử lý hiện tại**: (Đã nâng cấp) Sử dụng cặp **Access Token (15 phút)** và **Refresh Token (7 ngày)** lưu trong HTTP-Only Cookie để chống XSS.
+- **Giải pháp mở rộng**: 
+  - Nếu sau này hệ thống phình to, có thể tách hẳn Server cấp quyền ra thành **Identity Provider** (chuẩn OAuth2/OpenID Connect) thông qua Keycloak hoặc Duende IdentityServer.
 
 ### 3. Xử Lý Lưu Trữ File (Ảnh CCCD, Chứng Chỉ, Kết quả)
 - **Vấn đề**: File lưu trực tiếp vào server có thể làm quá tải ổ cứng server và nghẽn băng thông.
@@ -132,7 +131,7 @@ Nếu đưa hệ thống này lên môi trường thực tế (Production) với
 - **Giải pháp hiện nay**: Cài đặt **API Gateway** (như Kong, Ocelot) hoặc sử dụng middleware **Rate Limiting** của .NET kết hợp Redis. Cấm mọi IP thực hiện quá `x` requests / giây. Tích hợp Web Application Firewall (WAF) như Cloudflare.
 
 ### 8. Lộ lọt bảo mật Token do cách lưu trữ chưa chuẩn [Done]
-- **Hậu quả**: Hiện tại Token JWT tuy có đọc từ Cookie, nhưng mặc định các hệ thống SPA (React/Angular) lại lưu ở `LocalStorage`. Bất kỳ script độc hại nào (XSS - Cross Site Scripting) nhúng vào web đều có thể lấy trộm JWT và mạo danh bác sĩ/admin vĩnh viễn.
+- **Hậu quả**: Hiện tại Access Token tuy có đọc từ Cookie, nhưng mặc định các hệ thống SPA (React/Angular) lại lưu ở `LocalStorage`. Bất kỳ script độc hại nào (XSS - Cross Site Scripting) nhúng vào web đều có thể lấy trộm token và mạo danh bác sĩ/admin vĩnh viễn.
 - **Giải pháp hiện nay**: Backend phải thiết lập Token trả về dưới dạng **`HttpOnly; Secure; SameSite` Cookies**. Khi đó Javascript ở trình duyệt không thể đọc được Token, chặn đứng 100% rủi ro bị đánh cắp qua XSS. 
 
 ### 9. Không Caching Database (Khủng hoảng lượng truy cập) [Done]
