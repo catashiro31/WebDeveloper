@@ -70,7 +70,7 @@ namespace WebDeveloper.Services
             {
                 entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12); // Cache for 12 hours
                 
-                var items = await _db.Specialties.Where(s => s.IsActive).ToListAsync();
+                var items = await _db.Specialties.Where(s => s.IsActive == true).ToListAsync();
                 return items.Select(s => new SpecialtyResponse
                 {
                     Id = s.SpecialtyId,

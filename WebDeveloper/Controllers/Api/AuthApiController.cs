@@ -33,6 +33,9 @@ namespace WebDeveloper.Controllers.Api
                 };
                 Response.Cookies.Append("jwtToken", res.Token, cookieOptions);
 
+                // Hide token from response body to prevent XSS (HttpOnly cookie is used)
+                res.Token = "SECURE_HTTPONLY_COOKIE";
+                
                 return Ok(res);
             }
             catch (Exception ex)

@@ -88,7 +88,16 @@ namespace WebDeveloper.Services
             };
 
             _db.Users.Add(user);
-            await _db.SaveChangesAsync();
+            
+            try
+            {
+                await _db.SaveChangesAsync();
+            }
+            catch (DbUpdateException)
+            {
+                // Bắt lỗi khi có Unique Index từ database để chống Race Condition hoàn toàn
+                throw new InvalidOperationException("Email đã được sử dụng!");
+            }
 
             await _emailService.SendSignUpConfirmationAsync(user.Email, user.FullName ?? "", user.VerificationCode);
 

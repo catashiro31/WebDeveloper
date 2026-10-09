@@ -73,6 +73,13 @@ namespace WebDeveloper.Controllers.Api
             return Ok(await _patientService.GetAppointments(user, null, null, null, page, size));
         }
 
+        [HttpGet("appointments/{id}")]
+        public async Task<IActionResult> GetAppointmentDetail(int id)
+        {
+            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
+            return Ok(await _patientService.GetAppointmentDetail(user, id));
+        }
+
         [HttpPut("appointments/{id}/cancel")]
         public async Task<IActionResult> CancelAppointment(int id)
         {

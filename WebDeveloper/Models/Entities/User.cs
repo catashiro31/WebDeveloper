@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using WebDeveloper.Models.Enums;
 
 namespace WebDeveloper.Models.Entities
 {
     [Table("users")]
+    [Index(nameof(Email), IsUnique = true)]
     public class User
     {
         [Key]

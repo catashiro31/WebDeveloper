@@ -385,7 +385,8 @@
   function logoutApp() {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-      window.location.href = '/Auth/Login';
+      fetch('/api/v1/auth/signout', { method: 'POST' }).finally(() => {
+          window.location.href = '/Auth/Login';
+      });
   }
 </script>
