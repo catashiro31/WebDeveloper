@@ -11,10 +11,12 @@ namespace WebDeveloper.Services
     public class PatientService : IPatientService
     {
         private readonly ApplicationDbContext _db;
+        private readonly StackExchange.Redis.IConnectionMultiplexer _redis;
 
-        public PatientService(ApplicationDbContext db)
+        public PatientService(ApplicationDbContext db, StackExchange.Redis.IConnectionMultiplexer redis)
         {
             _db = db;
+            _redis = redis;
         }
 
         public async Task<List<RelativeResponse>> GetRelatives(User user)
@@ -118,58 +120,78 @@ namespace WebDeveloper.Services
 
         public async Task<string> BookAppointment(User user, AppointmentRequest req)
         {
-            // Giới hạn 3 lịch hẹn active (giống Java)
-            var activeStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
-            var activeCount = await _db.Appointments
-                .Where(a => a.Patient.UserId == user.UserId && activeStatuses.Contains(a.BookingStatus))
-                .CountAsync();
-
-            if (activeCount >= 3)
-                throw new InvalidOperationException("Bạn chỉ được đặt tối đa 3 lịch hẹn!");
-
-            var profile = await _db.PatientProfiles.FindAsync(req.PatientId)
-                ?? throw new InvalidOperationException("Hồ sơ bệnh nhân này không tồn tại hoặc bạn không có quyền sử dụng!");
-
-            if (profile.UserId != user.UserId)
-                throw new InvalidOperationException("Hồ sơ này không thuộc về bạn!");
-
-            var schedule = await _db.DoctorSchedules
-                .Include(s => s.Doctor)
-                .FirstOrDefaultAsync(s => s.ScheduleId == req.ScheduleId)
-                ?? throw new InvalidOperationException("Ca khám không tồn tại");
-
-            if (schedule.Doctor.VerificationStatus != VerificationStatus.APPROVED)
-                throw new InvalidOperationException("Bác sĩ chưa được xác minh, không thể đặt lịch!");
-
-            if (schedule.SlotStatus != SlotStatus.AVAILABLE)
-                throw new InvalidOperationException("Ca khám đã có người đặt hoặc đã đóng");
-
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            if (schedule.DateWorking < today)
-                throw new InvalidOperationException("Không thể đặt lịch cho ngày đã qua!");
-
-            // Overlap check
-            var overlapStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
-            var isOverlapping = await _db.Appointments
-                .AnyAsync(a => a.PatientId == req.PatientId && a.Schedule.DateWorking == schedule.DateWorking && a.Schedule.TimeSlot == schedule.TimeSlot && overlapStatuses.Contains(a.BookingStatus));
+            // Lock phân tán bằng Redis để chống Double Booking
+            var redisDb = _redis.GetDatabase();
+            var lockKey = $"lock:schedule:{req.ScheduleId}";
             
-            if (isOverlapping)
-                throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có một lịch hẹn khác vào cùng thời gian!");
+            // Cố gắng lấy khóa (lock) trong 5 giây
+            bool isLocked = await redisDb.StringSetAsync(lockKey, "locked", TimeSpan.FromSeconds(5), StackExchange.Redis.When.NotExists);
 
-            schedule.SlotStatus = SlotStatus.BOOKED;
-
-            var appointment = new Appointment
+            if (!isLocked)
             {
-                PatientId = req.PatientId,
-                ScheduleId = req.ScheduleId,
-                Reason = req.Reason,
-                BookingStatus = BookingStatus.PENDING,
-                CreatedAt = DateTime.UtcNow
-            };
+                throw new InvalidOperationException("Ca khám này đang có người khác thao tác đặt lịch. Vui lòng thử lại sau ít giây!");
+            }
 
-            _db.Appointments.Add(appointment);
-            await _db.SaveChangesAsync();
-            return "Đặt lịch khám thành công";
+            try
+            {
+                // Giới hạn 3 lịch hẹn active (giống Java)
+                var activeStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
+                var activeCount = await _db.Appointments
+                    .Where(a => a.Patient.UserId == user.UserId && activeStatuses.Contains(a.BookingStatus))
+                    .CountAsync();
+
+                if (activeCount >= 3)
+                    throw new InvalidOperationException("Bạn chỉ được đặt tối đa 3 lịch hẹn!");
+
+                var profile = await _db.PatientProfiles.FindAsync(req.PatientId)
+                    ?? throw new InvalidOperationException("Hồ sơ bệnh nhân này không tồn tại hoặc bạn không có quyền sử dụng!");
+
+                if (profile.UserId != user.UserId)
+                    throw new InvalidOperationException("Hồ sơ này không thuộc về bạn!");
+
+                var schedule = await _db.DoctorSchedules
+                    .Include(s => s.Doctor)
+                    .FirstOrDefaultAsync(s => s.ScheduleId == req.ScheduleId)
+                    ?? throw new InvalidOperationException("Ca khám không tồn tại");
+
+                if (schedule.Doctor.VerificationStatus != VerificationStatus.APPROVED)
+                    throw new InvalidOperationException("Bác sĩ chưa được xác minh, không thể đặt lịch!");
+
+                if (schedule.SlotStatus != SlotStatus.AVAILABLE)
+                    throw new InvalidOperationException("Ca khám đã có người đặt hoặc đã đóng");
+
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                if (schedule.DateWorking < today)
+                    throw new InvalidOperationException("Không thể đặt lịch cho ngày đã qua!");
+
+                // Overlap check
+                var overlapStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
+                var isOverlapping = await _db.Appointments
+                    .AnyAsync(a => a.PatientId == req.PatientId && a.Schedule.DateWorking == schedule.DateWorking && a.Schedule.TimeSlot == schedule.TimeSlot && overlapStatuses.Contains(a.BookingStatus));
+                
+                if (isOverlapping)
+                    throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có một lịch hẹn khác vào cùng thời gian!");
+
+                schedule.SlotStatus = SlotStatus.BOOKED;
+
+                var appointment = new Appointment
+                {
+                    PatientId = req.PatientId,
+                    ScheduleId = req.ScheduleId,
+                    Reason = req.Reason,
+                    BookingStatus = BookingStatus.PENDING,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _db.Appointments.Add(appointment);
+                await _db.SaveChangesAsync();
+                return "Đặt lịch khám thành công";
+            }
+            finally
+            {
+                // Mở khóa sau khi hoàn tất (hoặc có lỗi văng ra)
+                await redisDb.KeyDeleteAsync(lockKey);
+            }
         }
 
         public async Task<string> CancelAppointment(User user, int appointmentId)

@@ -61,7 +61,7 @@ Mô hình cơ sở dữ liệu được thiết kế theo mô hình quan hệ (R
 
 Trong hệ thống đặt lịch y tế trực tuyến, có nhiều bài toán phức tạp phát sinh. Dưới đây là các vấn đề chính và cách mã nguồn hiện tại đang giải quyết:
 
-### 1. Tránh Đặt Trùng Lịch (Double Booking / Concurrency)
+### 1. Tránh Đặt Trùng Lịch (Double Booking / Concurrency) [Done]
 - **Vấn đề**: Nhiều bệnh nhân cùng lúc click đặt chung 1 ca làm việc của 1 bác sĩ. Nếu không cẩn thận, 2 bệnh nhân sẽ cùng đặt thành công 1 lịch.
 - **Cách xử lý hiện tại**: Entity `DoctorSchedule` dùng Annotation `[ConcurrencyCheck]`. Nếu có 2 luồng cùng update, EF Core sẽ văng ra lỗi `DbUpdateConcurrencyException` (Khóa lạc quan - Optimistic Locking).
 - **Giải pháp tối ưu / Hiện đại**: Ở các hệ thống lớn (Concurrency cao), việc để request chạm tới DB rồi mới văng lỗi sẽ gây tốn tài nguyên DB. Thay vào đó, hệ thống sẽ sử dụng **Distributed Lock (Khóa phân tán)** trên **Redis** (ví dụ: Redlock). Khi user ấn đặt, slot đó bị lock ngay trên RAM (Redis). Request thứ 2 đến sẽ bị từ chối lập tức mà không cần Query xuống Database.

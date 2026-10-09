@@ -15,6 +15,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+// 1.5 Add Redis
+builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp => 
+    StackExchange.Redis.ConnectionMultiplexer.Connect(builder.Configuration.GetConnectionString("Redis") ?? "localhost:6379"));
+
 // 2. Add JWT Configuration & Authentication
 builder.Services.AddSingleton<AccessTokenProvider>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
