@@ -77,7 +77,7 @@ Trong hệ thống đặt lịch y tế trực tuyến, có nhiều bài toán p
 - **Cách xử lý hiện tại**: Backend nhận file qua API rồi tự đẩy lên **Cloudinary** (Đồng bộ).
 - **Giải pháp tối ưu / Hiện đại**: Việc để file đi qua luồng của Backend sẽ làm chậm Server. Các hệ thống hiện đại áp dụng mô hình **Pre-signed URL (vd: AWS S3)**. Backend chỉ sinh ra một "đường link tạm thời có chữ ký". Client (Web/App) sẽ dùng link này để upload file **TRỰC TIẾP** từ máy khách lên S3/Cloudinary, giảm tải 100% băng thông tải file cho Backend.
 
-### 4. Đồng Bộ Trạng Thái, Thu Dọn Dữ Liệu Hết Hạn
+### 4. Đồng Bộ Trạng Thái, Thu Dọn Dữ Liệu Hết Hạn [Done]
 - **Vấn đề**: Lịch chờ duyệt bị bỏ quên sẽ làm chết (khóa) slot của bác sĩ, cần thu hồi lại.
 - **Cách xử lý hiện tại**: Viết 1 Background Task (`IHostedService`) liên tục thức dậy quét toàn bộ Database để tìm lịch quá hạn.
 - **Giải pháp tối ưu / Hiện đại**: 

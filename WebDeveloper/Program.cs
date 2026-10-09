@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -74,10 +76,19 @@ builder.Services.AddScoped<IDoctorService, DoctorService>();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IPublicService, PublicService>();
+builder.Services.AddScoped<IAppointmentJobService, AppointmentJobService>();
 
 // 5. Add Background Services & Caching
 builder.Services.AddMemoryCache();
-builder.Services.AddHostedService<AppointmentCleanupService>();
+// builder.Services.AddHostedService<AppointmentCleanupService>();
+
+// Configure Hangfire with PostgreSQL
+builder.Services.AddHangfire(configuration => configuration
+    .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+    .UseSimpleAssemblyNameTypeSerializer()
+    .UseRecommendedSerializerSettings()
+    .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddHangfireServer();
 
 builder.Services.AddControllersWithViews();
 // Add API controllers support specifically
@@ -100,6 +111,8 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
 app.UseCors("AllowAll");
+
+app.UseHangfireDashboard("/hangfire");
 
 // Custom Global Exception Middleware
 app.UseMiddleware<GlobalExceptionMiddleware>();

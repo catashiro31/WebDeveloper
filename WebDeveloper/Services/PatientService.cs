@@ -185,6 +185,17 @@ namespace WebDeveloper.Services
 
                 _db.Appointments.Add(appointment);
                 await _db.SaveChangesAsync();
+
+                // Lên lịch Hangfire (Gửi cảnh báo cho Bác sĩ sau 25 phút)
+                Hangfire.BackgroundJob.Schedule<WebDeveloper.Services.Interfaces.IAppointmentJobService>(
+                    job => job.SendWarningToDoctor(appointment.Id), 
+                    TimeSpan.FromMinutes(25));
+                
+                // Lên lịch Hangfire (Tự động Hủy sau 30 phút)
+                Hangfire.BackgroundJob.Schedule<WebDeveloper.Services.Interfaces.IAppointmentJobService>(
+                    job => job.CancelUnconfirmedAppointment(appointment.Id), 
+                    TimeSpan.FromMinutes(30));
+
                 return "Đặt lịch khám thành công";
             }
             finally
