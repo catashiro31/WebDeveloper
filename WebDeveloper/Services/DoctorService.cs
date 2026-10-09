@@ -244,7 +244,7 @@ namespace WebDeveloper.Services
             if (doctor.VerificationStatus != VerificationStatus.APPROVED)
                 throw new InvalidOperationException("Tài khoản chưa được duyệt, không thể tạo lịch!");
             
-            if (req.Date < DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7))) // Vietnam time roughly
+            if (req.Date < DateOnly.FromDateTime(DateTime.UtcNow)) // Vietnam time roughly
                 throw new InvalidOperationException("Không thể đăng ký lịch cho ngày trong quá khứ hoặc hôm nay!");
 
             var existingSchedules = await _db.DoctorSchedules
@@ -449,7 +449,7 @@ namespace WebDeveloper.Services
         public async Task<List<DoctorAppointmentResponse>> GetOverdueConfirmedAppointments(User user)
         {
             // Vietnam time logic: UTC + 7
-            var now = DateTime.UtcNow.AddHours(7);
+            var now = DateTime.UtcNow;
             var today = DateOnly.FromDateTime(now);
             
             // Get appointments that are CONFIRMED and the date has passed
@@ -560,7 +560,7 @@ namespace WebDeveloper.Services
             doctor.FacilityId = request.TargetFacilityId;
 
             // Đóng các slot AVAILABLE trong tương lai (tại cơ sở cũ)
-            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var futureSlots = await _db.DoctorSchedules
                 .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking >= today && s.SlotStatus == SlotStatus.AVAILABLE)
                 .ToListAsync();

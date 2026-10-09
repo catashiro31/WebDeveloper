@@ -169,7 +169,7 @@ namespace WebDeveloper.Services
                 .Where(s => s.DoctorId == doctorId && s.DateWorking == date && s.SlotStatus == SlotStatus.AVAILABLE)
                 .ToListAsync();
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             var minTime = TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(8)); // 1 hour buffer
 
             return schedules.Where(s => 

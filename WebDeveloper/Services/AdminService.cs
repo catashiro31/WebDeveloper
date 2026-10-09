@@ -23,8 +23,8 @@ namespace WebDeveloper.Services
 
         public async Task<StatResponse> GetStats(DateOnly? start, DateOnly? end)
         {
-            var actualStart = start ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7).AddDays(-30));
-            var actualEnd = end ?? DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            var actualStart = start ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30));
+            var actualEnd = end ?? DateOnly.FromDateTime(DateTime.UtcNow);
 
             var apps = await _db.Appointments
                 .Include(a => a.Schedule)
@@ -41,7 +41,7 @@ namespace WebDeveloper.Services
             long doctorsInPeriod = await _db.Users.CountAsync(u => u.Role == RoleStatus.DOCTOR && u.IsActive == true && u.CreatedAt >= startDateTime && u.CreatedAt < endDateTime);
             long patientsInPeriod = await _db.Users.CountAsync(u => u.Role == RoleStatus.PATIENT && u.IsActive == true && u.CreatedAt >= startDateTime && u.CreatedAt < endDateTime);
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             long todayApps = await _db.Appointments.CountAsync(a => a.Schedule.DateWorking == today);
 
             return new StatResponse
@@ -339,7 +339,7 @@ namespace WebDeveloper.Services
             foreach(var a in pApps)
             {
                 a.BookingStatus = BookingStatus.CANCELLED;
-                if (a.Schedule.DateWorking >= DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7)))
+                if (a.Schedule.DateWorking >= DateOnly.FromDateTime(DateTime.UtcNow))
                     a.Schedule.SlotStatus = SlotStatus.AVAILABLE;
             }
 

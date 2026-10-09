@@ -144,7 +144,7 @@ namespace WebDeveloper.Services
             if (schedule.SlotStatus != SlotStatus.AVAILABLE)
                 throw new InvalidOperationException("Ca khám đã có người đặt hoặc đã đóng");
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             if (schedule.DateWorking < today)
                 throw new InvalidOperationException("Không thể đặt lịch cho ngày đã qua!");
 
@@ -187,7 +187,7 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Không thể hủy lịch hẹn ở trạng thái này");
 
             app.BookingStatus = BookingStatus.CANCELLED;
-            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             if (app.Schedule.DateWorking >= today)
             {
                 app.Schedule.SlotStatus = SlotStatus.AVAILABLE;

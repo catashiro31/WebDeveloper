@@ -43,8 +43,8 @@ namespace WebDeveloper.BackgroundServices
             using var scope = _services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
-            var now = TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var now = TimeOnly.FromDateTime(DateTime.UtcNow);
 
             _logger.LogInformation("--- Bắt đầu tiến trình dọn dẹp hệ thống: {Time} ---", now);
 
