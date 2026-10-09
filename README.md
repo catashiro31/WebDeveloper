@@ -138,6 +138,38 @@ Nếu đưa hệ thống này lên môi trường thực tế (Production) với
 - **Hậu quả**: Dữ liệu như "Danh sách Chuyên Khoa", "Danh sách Cơ sở Y Tế" gần như không bao giờ đổi. Nếu 10,000 người vào trang chủ, hệ thống sẽ chọc xuống PostgreSQL 10,000 lần cùng một câu Query y hệt nhau, gây lãng phí tài nguyên khủng khiếp.
 - **Giải pháp hiện nay**: Bắt buộc phải áp dụng **Distributed Caching (Redis/Memcached)**. Khi có người request danh sách Chuyên khoa lần đầu, kết quả sẽ lưu vào RAM (Redis). 9,999 người vào sau sẽ lấy thẳng từ RAM với tốc độ 1ms mà DB không hề hay biết.
 
-### 10. Lỗ hổng Race-Condition (Cạnh tranh luồng) khi đăng ký Tài Khoản
+### 10. Lỗ hổng Race-Condition (Cạnh tranh luồng) khi đăng ký Tài Khoản [Done]
 - **Hậu quả**: Trong hàm `SignUp`, ứng dụng kiểm tra `if (!Any(Email))` rồi mới `Add(User)`. Trong khe hở 1 mili-giây giữa dòng If và dòng Add, một tool tự động bắn 2 request đăng ký cùng 1 email. Chữ If đều pass và Database sẽ bị chèn 2 User có chung email, gây sụp đổ logic đăng nhập.
 - **Giải pháp hiện nay**: Mọi xử lý liên quan tới tính Duy Nhất tuyệt đối không thể chỉ tin tưởng vào code `If` ở Backend. Phải đẩy ràng buộc xuống thẳng Database bằng cách thiết lập **Unique Index** cho cột Email. Khi bị chèn đúp, Database sẽ báo lỗi trực tiếp và Backend chỉ việc Catch lỗi đó.
+
+## Phân Tích Logic Chuyên Sâu (Cấp Độ Chuyên Gia & BA)
+Phần này phân tích các bài toán mang tính chất **Nghiệp Vụ (Business Logic)** phức tạp mà các hệ thống y tế thực tế phải đối mặt và cách kiến trúc phần mềm giải quyết.
+
+### 11. Bài toán "Bùng lịch" (No-show) & Hủy lịch sát giờ (Late Cancellation)
+- **Góc nhìn BA (Nghiệp vụ)**: Bệnh nhân đặt lịch nhưng không đến khám (No-show) hoặc sát giờ (ví dụ trước 15 phút) mới bấm hủy. Điều này khiến Bác sĩ bị lãng phí quỹ thời gian rỗng, cơ sở y tế thất thu, trong khi bệnh nhân khác thực sự cần lại không có chỗ.
+- **Hậu quả Hệ thống**: Thiếu cơ chế chế tài sẽ dẫn đến tỷ lệ chuyển đổi ảo cao.
+- **Giải pháp Kiến trúc**:
+  - **Logic 1 (Giới hạn thời gian hủy)**: Cấu hình biến môi trường `CancellationWindow = 12` (giờ). Bệnh nhân chỉ được phép bấm nút Hủy lịch trước giờ khám ít nhất 12 tiếng. Quá thời gian này, nút Hủy sẽ bị vô hiệu hóa.
+  - **Logic 2 (Hệ thống Điểm tín nhiệm - Reputation System)**: Thêm trường `NoShowCount` vào `User`. Khi tới giờ khám mà bệnh nhân không xuất hiện, Bác sĩ/Lễ tân nhấn nút "Vắng mặt". Nếu `NoShowCount >= 3`, tự động đưa vào bảng `Blacklist` và cấm quyền đặt lịch vĩnh viễn hoặc trong 6 tháng.
+  - **Logic 3 (Đặt cọc - Deposit)**: Ở quy mô lớn hơn, tích hợp Cổng thanh toán (VNPay/Momo) yêu cầu nạp tiền giữ chỗ 50,000đ. Hệ thống áp dụng **Saga Pattern** để xử lý giao dịch: Đặt lịch -> Đang chờ thanh toán -> Đã thanh toán -> Hoàn tiền nếu hủy sớm / Tịch thu nếu No-show.
+
+### 12. Xung đột luồng khi Dời lịch khám (Rescheduling)
+- **Góc nhìn BA (Nghiệp vụ)**: Bệnh nhân bận đột xuất và muốn chuyển lịch từ Thứ 3 sang Thứ 4.
+- **Vấn đề kỹ thuật**: Luồng code thông thường sẽ viết là: `Hủy lịch Thứ 3` -> `Tạo lịch Thứ 4`. Tuy nhiên, ngay sau khi lệnh Hủy Thứ 3 chạy xong, slot Thứ 4 bất ngờ bị một người khác nhanh tay lấy mất. Kết quả: Bệnh nhân **mất trắng cả 2 ca khám** và nổi giận.
+- **Giải pháp Kiến trúc**: Sử dụng **Ngậm chỗ (Hold Slot)** và **Database Transaction**.
+  - Bọc toàn bộ quy trình trong `using var transaction = await _db.Database.BeginTransactionAsync();`
+  - Đặt Lock (Khóa Redis) slot Thứ 4. Nếu thành công thì mới đánh dấu Hủy slot Thứ 3. Nếu slot Thứ 4 đã có người lấy, lệnh dời lịch sẽ bị Abort (Rollback) và bệnh nhân vẫn giữ được slot Thứ 3 gốc.
+
+### 13. Xử lý Múi giờ (Timezone) trong Khám chữa bệnh Từ xa (Telehealth) [Done]
+- **Góc nhìn BA (Nghiệp vụ)**: Nền tảng mở rộng ra toàn cầu hoặc cho chuyên gia nước ngoài (Khám Online qua Zoom). Bác sĩ ở Mỹ (Múi giờ UTC-4) mở lịch lúc 9h sáng của họ. Bệnh nhân ở Việt Nam (UTC+7) vào xem và hiểu lầm là 9h sáng giờ Việt Nam.
+- **Vấn đề kỹ thuật**: Lưu lịch trực tiếp xuống Database bằng `DateTime.Now` (Múi giờ của Server) sẽ làm toàn bộ ứng dụng bị sai lệch giờ nếu Server chuyển vùng (Vd chuyển từ máy chủ VNG sang máy chủ AWS Singapore).
+- **Giải pháp Kiến trúc**: 
+  - Toàn bộ Backend và Database **bắt buộc** phải sử dụng chuẩn UTC (`DateTime.UtcNow` hoặc kiểu `timestamp with time zone` trong PostgreSQL).
+  - Trách nhiệm chuyển đổi múi giờ được đẩy 100% cho Client (Web/Mobile App). Trình duyệt của người dùng sẽ dùng hàm `Intl.DateTimeFormat` để tự động dịch giờ UTC sang giờ địa phương đang sinh sống.
+
+### 14. Giới hạn tải (Workload Limit / Fatigue Management) cho Bác sĩ
+- **Góc nhìn BA (Nghiệp vụ)**: Một bác sĩ vì muốn kiếm nhiều tiền nên mở toàn bộ 50 Slot (từ 7h sáng tới 22h đêm). Tuy nhiên, năng lực con người chỉ khám được tối đa 30 bệnh nhân/ngày. Nếu cho phép đặt full 50 ca, chất lượng khám sẽ giảm sút trầm trọng, gây ảnh hưởng thương hiệu Phòng khám.
+- **Hậu quả Hệ thống**: Cấu trúc Data chỉ đếm "Slot trống/đầy" chứ không có khái niệm đếm "Sức chứa tối đa trong ngày".
+- **Giải pháp Kiến trúc**: 
+  - Thêm cấu hình `MaxDailyAppointments = 30` vào bảng `DoctorDetails`.
+  - Backend sử dụng Trigger hoặc kiểm tra mềm: Mỗi lần có 1 slot được đặt, đếm tổng số lịch trong ngày đó. Nếu đếm đủ 30, **toàn bộ 20 slot còn trống của ngày hôm đó sẽ tự động bị khóa (Auto-Locked)** với trạng thái `LOCKED_BY_QUOTA` (Khóa do đủ định mức), không cho phép đặt thêm dù thời gian đó rảnh.

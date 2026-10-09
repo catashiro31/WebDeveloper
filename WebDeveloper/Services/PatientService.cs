@@ -12,11 +12,13 @@ namespace WebDeveloper.Services
     {
         private readonly ApplicationDbContext _db;
         private readonly StackExchange.Redis.IConnectionMultiplexer _redis;
+        private readonly IConfiguration _configuration;
 
-        public PatientService(ApplicationDbContext db, StackExchange.Redis.IConnectionMultiplexer redis)
+        public PatientService(ApplicationDbContext db, StackExchange.Redis.IConnectionMultiplexer redis, IConfiguration configuration)
         {
             _db = db;
             _redis = redis;
+            _configuration = configuration;
         }
 
         public async Task<List<RelativeResponse>> GetRelatives(User user)
@@ -211,13 +213,29 @@ namespace WebDeveloper.Services
                 .Include(a => a.Patient)
                 .Include(a => a.Schedule)
                 .FirstOrDefaultAsync(a => a.Id == appointmentId)
-                ?? throw new InvalidOperationException("Không tìm thấy lịch hẹn");
+                ?? throw new WebDeveloper.Exceptions.DomainException("Không tìm thấy lịch hẹn");
 
             if (app.Patient.UserId != user.UserId)
-                throw new InvalidOperationException("Bạn không có quyền");
+                throw new WebDeveloper.Exceptions.DomainException("Bạn không có quyền", "FORBIDDEN", 403);
 
             if (app.BookingStatus != BookingStatus.PENDING && app.BookingStatus != BookingStatus.CONFIRMED)
-                throw new InvalidOperationException("Không thể hủy lịch hẹn ở trạng thái này");
+                throw new WebDeveloper.Exceptions.DomainException("Không thể hủy lịch hẹn ở trạng thái này");
+
+            // 11. Xử lý hủy lịch muộn (Late Cancellation)
+            var timeStr = app.Schedule.TimeSlot.GetDisplayValue();
+            var timeParts = timeStr.Split(':');
+            int hours = int.Parse(timeParts[0]);
+            int minutes = int.Parse(timeParts[1]);
+            
+            var appointmentDate = app.Schedule.DateWorking.ToDateTime(new TimeOnly(hours, minutes));
+            var cancellationWindowHours = _configuration.GetValue<int>("App:CancellationWindow", 12);
+            
+            if (DateTime.UtcNow.AddHours(cancellationWindowHours) > appointmentDate)
+            {
+                throw new WebDeveloper.Exceptions.DomainException(
+                    $"Bạn chỉ được phép hủy lịch trước giờ khám ít nhất {cancellationWindowHours} tiếng. Xin vui lòng liên hệ trực tiếp với cơ sở y tế để được hỗ trợ.", 
+                    "LATE_CANCELLATION", 400);
+            }
 
             app.BookingStatus = BookingStatus.CANCELLED;
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
