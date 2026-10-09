@@ -79,8 +79,8 @@ namespace WebDeveloper.Services
                 d.DoctorId,
                 d.User.FullName,
                 d.User.Email,
-                SpecialtyName = d.Specialty.SpecialtyName,
-                FacilityName = d.Facility.FacilityName,
+                SpecialtyName = d.Specialty?.SpecialtyName,
+                FacilityName = d.Facility?.FacilityName,
                 d.RatingAverage,
                 d.ReviewCount
             }).Cast<object>().ToList();
@@ -102,8 +102,8 @@ namespace WebDeveloper.Services
                 d.DoctorId,
                 d.User.FullName,
                 d.User.Email,
-                SpecialtyName = d.Specialty.SpecialtyName,
-                FacilityName = d.Facility.FacilityName,
+                SpecialtyName = d.Specialty?.SpecialtyName,
+                FacilityName = d.Facility?.FacilityName,
                 d.Degree,
                 d.ExperienceYears
             }).Cast<object>().ToList();
@@ -121,12 +121,17 @@ namespace WebDeveloper.Services
             return new
             {
                 d.DoctorId,
-                d.User.FullName,
-                d.User.Email,
-                d.User.PhoneNumber,
-                d.User.AvatarUrl,
-                SpecialtyName = d.Specialty.SpecialtyName,
-                FacilityName = d.Facility.FacilityName,
+                FullName = d.User.FullName,
+                Email = d.User.Email,
+                PhoneNumber = d.User.PhoneNumber,
+                AvatarUrl = d.User.AvatarUrl,
+                SpecialtyName = d.Specialty?.SpecialtyName,
+                FacilityName = d.Facility?.FacilityName,
+                FacilityAddress = d.Facility?.Address,
+                FacilityProvince = d.Facility?.Province,
+                FacilityLicenseUrl = d.Facility?.LicenseUrl,
+                FacilityVerified = d.Facility?.IsVerified,
+                d.Price,
                 d.Degree,
                 d.ExperienceYears,
                 d.Bio,

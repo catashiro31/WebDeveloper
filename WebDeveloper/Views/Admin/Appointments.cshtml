@@ -1,0 +1,248 @@
+@{
+    ViewData["Title"] = "Quản lý lịch hẹn";
+    Layout = "_AdminLayout";
+}
+
+<style>
+.admin-card {
+    background: #fff;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e2e8f0;
+}
+.header-area {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 32px;
+}
+.page-title {
+    margin: 0;
+    font-size: 28px;
+    font-weight: 800;
+    color: #1e293b;
+}
+.page-desc {
+    margin: 8px 0 0;
+    font-size: 15px;
+    color: #64748b;
+}
+.filter-tabs {
+    display: flex;
+    background: #f1f5f9;
+    padding: 6px;
+    border-radius: 14px;
+    gap: 4px;
+    overflow-x: auto;
+}
+.filter-tab {
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.filter-tab.active {
+    background: #fff;
+    color: #6366f1;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+.premium-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+.premium-table th {
+    padding: 16px 24px;
+    background: #f8fafc;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    border-bottom: 1px solid #f1f5f9;
+}
+.premium-table td {
+    padding: 20px 24px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 14px;
+}
+.premium-table tr:hover {
+    background: #fafbfc;
+}
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid;
+}
+.pagination { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+.pagination button {
+    padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff;
+    border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569;
+}
+.pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; }
+.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+
+<div class="header-area">
+    <div>
+        <h2 class="page-title">Lịch hẹn hệ thống</h2>
+        <p class="page-desc">Quản lý và giám sát tất cả các lượt đăng ký khám bệnh toàn sàn</p>
+    </div>
+    
+    <div class="filter-tabs" id="statusFilters">
+        <button class="filter-tab active" data-status="">Tất cả</button>
+        <button class="filter-tab" data-status="PENDING">Chờ duyệt</button>
+        <button class="filter-tab" data-status="CONFIRMED">Xác nhận</button>
+        <button class="filter-tab" data-status="COMPLETED">Hoàn thành</button>
+        <button class="filter-tab" data-status="CANCELLED">Đã hủy</button>
+        <button class="filter-tab" data-status="NO_SHOW">Vắng mặt</button>
+    </div>
+</div>
+
+<div class="admin-card">
+    <table class="premium-table">
+        <thead>
+            <tr>
+                <th>Bệnh nhân</th>
+                <th>Bác sĩ chuyên khoa</th>
+                <th>Thời gian khám</th>
+                <th>Cơ sở y tế</th>
+                <th>Trạng thái</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr><td colspan="5" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>
+        </tbody>
+    </table>
+    <div class="pagination" id="pagination"></div>
+</div>
+
+@section Scripts {
+    <script>
+        let state = {
+            status: '',
+            page: 0,
+            size: 10,
+            totalPages: 1
+        };
+
+        const getStatusStyle = (status) => {
+            const styles = {
+                'PENDING': { bg: '#fff7ed', color: '#ea580c', border: '#ffedd5', label: 'Chờ duyệt' },
+                'CONFIRMED': { bg: '#eff6ff', color: '#2563eb', border: '#dbeafe', label: 'Đã xác nhận' },
+                'COMPLETED': { bg: '#f0fdf4', color: '#16a34a', border: '#dcfce7', label: 'Hoàn thành' },
+                'CANCELLED': { bg: '#fef2f2', color: '#dc2626', border: '#fee2e2', label: 'Đã hủy' },
+                'NO_SHOW': { bg: '#f8fafc', color: '#64748b', border: '#f1f5f9', label: 'Vắng mặt' }
+            };
+            return styles[status] || { bg: '#f8fafc', color: '#64748b', border: '#f1f5f9', label: status };
+        };
+
+        async function loadAppointments() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
+            
+            let query = `?page=${state.page}&size=${state.size}`;
+            if (state.status) query += `&status=${state.status}`;
+
+            try {
+                const res = await fetch('/api/v1/admin/appointments' + query, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                
+                const list = data.content || [];
+                state.totalPages = data.totalPages || 1;
+
+                if (list.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 80px;">
+                                <div style="font-size: 48px; margin-bottom: 20px;">📅</div>
+                                <div style="color: #64748b; font-weight: 600;">Không có lịch hẹn nào thõa mãn</div>
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbody.innerHTML = list.map(apt => {
+                        const st = getStatusStyle(apt.bookingStatus || apt.status);
+                        return `
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">${apt.patientName || 'N/A'}</div>
+                                    <div style="font-size: 12px; color: #64748b;">📞 ${apt.patientPhone || 'N/A'}</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">BS. ${apt.doctorName || 'N/A'}</div>
+                                    <div style="font-size: 12px; color: #4f46e5; font-weight: 700;">${apt.specialtyName || apt.specialty || ''}</div>
+                                </td>
+                                <td>
+                                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">${apt.dateWorking || apt.appointmentDate}</div>
+                                    <div style="font-size: 12px; color: #64748b;">${apt.timeSlot || apt.time}</div>
+                                </td>
+                                <td style="color: #475569; font-size: 13px; font-weight: 500;">
+                                    <div style="font-weight: 700;">${apt.facilityName || 'N/A'}</div>
+                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">${apt.facilityAddress || ''}</div>
+                                </td>
+                                <td>
+                                    <span class="status-pill" style="background: ${st.bg}; color: ${st.color}; border-color: ${st.border};">
+                                        ${st.label}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+                renderPagination();
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Lỗi tải dữ liệu</td></tr>';
+            }
+        }
+
+        function renderPagination() {
+            const pagi = document.getElementById('pagination');
+            if (state.totalPages <= 1) {
+                pagi.innerHTML = '';
+                return;
+            }
+            
+            let html = `<button ${state.page === 0 ? 'disabled' : ''} onclick="changePage(${state.page - 1})">Trang trước</button>`;
+            for(let i = 0; i < state.totalPages; i++) {
+                if (i >= state.page - 2 && i <= state.page + 2) {
+                    html += `<button class="${state.page === i ? 'active' : ''}" onclick="changePage(${i})">${i + 1}</button>`;
+                }
+            }
+            html += `<button ${state.page === state.totalPages - 1 ? 'disabled' : ''} onclick="changePage(${state.page + 1})">Trang sau</button>`;
+            pagi.innerHTML = html;
+        }
+
+        window.changePage = (p) => {
+            state.page = p;
+            loadAppointments();
+        };
+
+        // Filter clicks
+        document.querySelectorAll('.filter-tab').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                state.status = e.target.getAttribute('data-status');
+                state.page = 0;
+                loadAppointments();
+            });
+        });
+
+        loadAppointments();
+    </script>
+}

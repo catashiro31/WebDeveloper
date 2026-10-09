@@ -94,7 +94,7 @@ namespace WebDeveloper.Services
             {
                 DoctorId = d.DoctorId,
                 DoctorName = d.User.FullName,
-                SpecialtyName = d.Specialty.SpecialtyName,
+                SpecialtyName = d.Specialty?.SpecialtyName,
                 DoctorEmail = d.User.Email,
                 DoctorPhone = d.User.PhoneNumber,
                 AvatarUrl = d.User.AvatarUrl,
@@ -123,7 +123,7 @@ namespace WebDeveloper.Services
             {
                 Id = d.DoctorId,
                 FullName = d.User.FullName,
-                SpecialtyName = d.Specialty.SpecialtyName,
+                SpecialtyName = d.Specialty?.SpecialtyName,
                 SpecialtyId = d.SpecialtyId,
                 Degree = d.Degree,
                 ExperienceYears = d.ExperienceYears,

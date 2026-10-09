@@ -149,7 +149,6 @@
 
 @section Scripts {
     <script>
-        const token = localStorage.getItem('token');
         let facilitiesList = [];
         let editingFacility = null;
         let imageFile = null;
@@ -160,7 +159,7 @@
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('facilitiesContainer').style.display = 'none';
 
-            fetch('/api/v1/admin/facilities', { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch('/api/v1/portal/facilities', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
@@ -311,7 +310,7 @@
             btn.disabled = true; btn.innerText = 'Đang nạp...';
 
             const formData = new FormData();
-            formData.append('name', document.getElementById('f_name').value.trim());
+            formData.append('FacilityName', document.getElementById('f_name').value.trim());
             formData.append('province', document.getElementById('f_province').value);
             formData.append('address', document.getElementById('f_address').value.trim());
             formData.append('mapUrl', document.getElementById('f_mapUrl').value.trim());
@@ -319,7 +318,7 @@
             if (imageFile) formData.append('file', imageFile);
             if (licenseFile) formData.append('licenseFile', licenseFile);
 
-            const url = editingFacility ? `/api/v1/admin/facilities/${document.getElementById('f_id').value}` : `/api/v1/admin/facilities`;
+            const url = editingFacility ? `/api/v1/admin/facility/${document.getElementById('f_id').value}` : `/api/v1/admin/facility`;
             const method = editingFacility ? 'PUT' : 'POST';
 
             fetch(url, {
@@ -340,7 +339,7 @@
 
         window.deleteFacility = function(id) {
             if (!confirm("Xóa cơ sở y tế này? Hành động không thể hoàn tác.")) return;
-            fetch(`/api/v1/admin/facilities/${id}`, {
+            fetch(`/api/v1/admin/facility/${id}`, {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
@@ -354,8 +353,8 @@
         };
 
         window.verifyFacility = function(id) {
-            fetch(`/api/v1/admin/facilities/${id}/verify`, {
-                method: 'PUT',
+            fetch(`/api/v1/admin/facility/${id}/verify`, {
+                method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(async res => {

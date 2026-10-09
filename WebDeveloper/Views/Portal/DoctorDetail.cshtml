@@ -600,7 +600,7 @@
             
             try {
                 const dateStr = formatDate(allDays[selectedDayIdx]);
-                const res = await fetch(`/api/v1/portal/doctor/${docId}/slots?date=${dateStr}`);
+                const res = await fetch(`/api/v1/portal/doctors/${docId}/slots?date=${dateStr}`);
                 const data = await res.json();
                 
                 slots = (Array.isArray(data) ? data : []).filter(s => s.status === 'AVAILABLE' || !s.isBooked);

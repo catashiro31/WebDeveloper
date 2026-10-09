@@ -37,5 +37,13 @@ namespace WebDeveloper.Controllers
         {
             return View();
         }
+
+        [HttpGet("ResetPassword")]
+        public IActionResult ResetPassword([FromQuery] string email, [FromQuery] string code)
+        {
+            ViewBag.Email = email;
+            ViewBag.Code = code;
+            return View();
+        }
     }
 }

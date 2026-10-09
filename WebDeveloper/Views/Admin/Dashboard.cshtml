@@ -94,7 +94,6 @@
 
 @section Scripts {
     <script>
-        const token = localStorage.getItem('token');
         if (!token) window.location.href = '/Auth/Login';
 
         fetch('/api/v1/admin/stats', {

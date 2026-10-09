@@ -33,8 +33,8 @@
 
 @section Scripts {
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/Auth/Login';
+        
+        
 
         const container = document.getElementById('reviewsContainer');
 
@@ -47,6 +47,7 @@
         }
 
         function fetchReviews() {
+            if (user && user.verificationStatus !== 'APPROVED') return;
             fetch('/api/v1/doctor/reviews?page=0&size=50', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
@@ -124,3 +125,4 @@
         fetchReviews();
     </script>
 }
+

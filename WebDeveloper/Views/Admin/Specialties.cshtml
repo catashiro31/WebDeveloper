@@ -1,0 +1,219 @@
+@{
+    ViewData["Title"] = "Quản lý Chuyên khoa";
+    Layout = "_AdminLayout";
+}
+
+<style>
+.admin-card {
+    background: #fff; border-radius: 24px; padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;
+}
+.page-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px; }
+.page-title { margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; }
+.page-desc { margin: 8px 0 0; font-size: 15px; color: #64748b; }
+.btn-primary { 
+    background: linear-gradient(135deg, #6366f1, #8b5cf6); 
+    color: #fff; border: none; padding: 12px 24px; 
+    border-radius: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 16px rgba(99,102,241,0.2); }
+
+.premium-table { width: 100%; border-collapse: collapse; text-align: left; }
+.premium-table th {
+    padding: 16px 24px; background: #f8fafc; font-size: 11px; font-weight: 700;
+    color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #f1f5f9;
+}
+.premium-table td { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+.premium-table tr:hover { background: #fafbfc; }
+
+.btn-action {
+    padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px;
+    cursor: pointer; border: none; transition: all 0.2s; margin-right: 8px;
+}
+.btn-edit { background: #e0e7ff; color: #4f46e5; }
+.btn-edit:hover { background: #c7d2fe; }
+.btn-delete { background: #fee2e2; color: #ef4444; }
+.btn-delete:hover { background: #fca5a5; }
+
+/* Modal styles */
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 1000;
+}
+.modal-content {
+    background: #fff; border-radius: 24px; width: 100%; max-width: 500px;
+    padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
+.form-input {
+    width: 100%; padding: 12px 16px; border: 1.5px solid #e2e8f0;
+    border-radius: 12px; font-size: 14px; outline: none; transition: all 0.2s;
+    box-sizing: border-box;
+}
+.form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+</style>
+
+<div class="page-header">
+    <div>
+        <h2 class="page-title">Quản lý Chuyên khoa</h2>
+        <p class="page-desc">Danh sách và thông tin các chuyên khoa y tế trên hệ thống</p>
+    </div>
+    <button class="btn-primary" onclick="openModal()">+ Thêm chuyên khoa</button>
+</div>
+
+<div class="admin-card">
+    <table class="premium-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Tên chuyên khoa</th>
+                <th>Mô tả</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="specModal">
+    <div class="modal-content">
+        <h3 id="modalTitle" style="margin: 0 0 24px; font-size: 20px; font-weight: 800; color: #1e293b;">Thêm chuyên khoa</h3>
+        <input type="hidden" id="specId" />
+        
+        <div class="form-group">
+            <label class="form-label">Tên chuyên khoa</label>
+            <input type="text" id="specName" class="form-input" placeholder="Ví dụ: Tim mạch" />
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label">Mô tả chi tiết</label>
+            <textarea id="specDesc" class="form-input" rows="4" placeholder="Mô tả về chuyên khoa này..."></textarea>
+        </div>
+        
+        <div style="display: flex; gap: 12px; margin-top: 32px;">
+            <button class="form-input" style="flex: 1; cursor: pointer; background: #f1f5f9; border: none; font-weight: 600;" onclick="closeModal()">Hủy bỏ</button>
+            <button class="btn-primary" style="flex: 1;" onclick="saveSpecialty()">Lưu lại</button>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let specialties = [];
+
+        async function loadSpecialties() {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
+            
+            try {
+                const res = await fetch('/api/v1/portal/specialties');
+                specialties = await res.json();
+
+                if (specialties.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #64748b;">Chưa có dữ liệu</td></tr>`;
+                } else {
+                    tbody.innerHTML = specialties.map(s => `
+                        <tr>
+                            <td>
+                                <div style="font-weight: 600; color: #64748b;">#${s.id || s.specialtyId}</div>
+                            </td>
+                            <td>
+                                <div style="font-weight: 700; color: #1e293b;">${s.name || s.specialtyName}</div>
+                            </td>
+                            <td style="max-width: 300px;">
+                                <div style="color: #475569; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.description || '-'}</div>
+                            </td>
+                            <td>
+                                <button class="btn-action btn-edit" onclick="openModal(${s.id || s.specialtyId})">Sửa</button>
+                                <button class="btn-action btn-delete" onclick="deleteSpecialty(${s.id || s.specialtyId})">Xóa</button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Lỗi tải dữ liệu</td></tr>';
+            }
+        }
+
+        function openModal(id = null) {
+            document.getElementById('specModal').style.display = 'flex';
+            if (id) {
+                document.getElementById('modalTitle').innerText = "Cập nhật chuyên khoa";
+                const spec = specialties.find(s => (s.id || s.specialtyId) === id);
+                document.getElementById('specId').value = id;
+                document.getElementById('specName').value = spec.name || spec.specialtyName || '';
+                document.getElementById('specDesc').value = spec.description || '';
+            } else {
+                document.getElementById('modalTitle').innerText = "Thêm chuyên khoa";
+                document.getElementById('specId').value = '';
+                document.getElementById('specName').value = '';
+                document.getElementById('specDesc').value = '';
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('specModal').style.display = 'none';
+        }
+
+        async function saveSpecialty() {
+            const id = document.getElementById('specId').value;
+            const payload = {
+                specialtyName: document.getElementById('specName').value,
+                description: document.getElementById('specDesc').value
+            };
+
+            if(!payload.specialtyName) {
+                Toastify({ text: "Vui lòng nhập tên chuyên khoa", style: { background: "#ef4444" } }).showToast();
+                return;
+            }
+
+            try {
+                const url = id ? `/api/v1/admin/specialty/${id}` : '/api/v1/admin/specialty';
+                const method = id ? 'PUT' : 'POST';
+
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    Toastify({ text: "Lưu thành công", style: { background: "#10b981" } }).showToast();
+                    closeModal();
+                    loadSpecialties();
+                } else {
+                    const text = await res.text();
+                    Toastify({ text: "Lỗi: " + text, style: { background: "#ef4444" } }).showToast();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        window.deleteSpecialty = async (id) => {
+            if (!confirm('Bạn có chắc chắn muốn xóa chuyên khoa này?')) return;
+            try {
+                const res = await fetch(`/api/v1/admin/specialty/${id}`, { 
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    Toastify({ text: "Đã xóa", style: { background: "#10b981" } }).showToast();
+                    loadSpecialties();
+                } else {
+                    const text = await res.text();
+                    Toastify({ text: "Không thể xóa: " + text, style: { background: "#ef4444" } }).showToast();
+                }
+            } catch(e) { console.error(e); }
+        };
+
+        loadSpecialties();
+    </script>
+}

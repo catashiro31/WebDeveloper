@@ -112,7 +112,7 @@
 
             setTimeout(() => {
                 fetch(`/api/v1/auth/verify?email=${encodeURIComponent(email)}&code=${encodeURIComponent(code)}`, {
-                    method: 'POST'
+                    method: 'GET'
                 })
                 .then(async res => {
                     if (res.ok) {

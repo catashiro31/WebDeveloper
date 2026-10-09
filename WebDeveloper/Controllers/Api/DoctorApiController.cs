@@ -31,7 +31,7 @@ namespace WebDeveloper.Controllers.Api
         }
 
         [HttpPost("profile")]
-        [Authorize(Roles = "PATIENT")]
+        [Authorize(Roles = "DOCTOR,PATIENT")]
         public async Task<IActionResult> RegisterDoctor([FromForm] DoctorProfileRequest req)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
@@ -77,6 +77,14 @@ namespace WebDeveloper.Controllers.Api
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             return Ok(await _doctorService.GetAppointments(user, page, size));
+        }
+
+        [HttpGet("appointments/overdue")]
+        [Authorize(Roles = "DOCTOR")]
+        public async Task<IActionResult> GetOverdueAppointments()
+        {
+            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
+            return Ok(await _doctorService.GetOverdueConfirmedAppointments(user));
         }
 
         [HttpPut("appointment/{id}/status")]

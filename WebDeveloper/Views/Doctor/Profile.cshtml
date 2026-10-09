@@ -1,4 +1,4 @@
-@{
+﻿@{
     ViewData["Title"] = "Hồ sơ bác sĩ";
     Layout = "_DoctorLayout";
 }
@@ -171,10 +171,7 @@
 
 @section Scripts {
     <script>
-        const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
-        if (!token) window.location.href = '/Auth/Login';
-        let user = null; try { user = JSON.parse(userStr); } catch(e){}
+        
 
         let profileData = null;
         let facilitiesList = [];
@@ -361,3 +358,4 @@
         init();
     </script>
 }
+

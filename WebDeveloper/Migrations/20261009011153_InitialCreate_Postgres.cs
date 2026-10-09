@@ -1,12 +1,13 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
 namespace WebDeveloper.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialCreate : Migration
+    public partial class InitialCreate_Postgres : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,17 +16,17 @@ namespace WebDeveloper.Migrations
                 name: "facilities",
                 columns: table => new
                 {
-                    facility_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    facility_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    address = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    image_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    license_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    map_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    province = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    is_verified = table.Column<bool>(type: "bit", nullable: false),
-                    is_active = table.Column<bool>(type: "bit", nullable: false)
+                    facility_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    facility_name = table.Column<string>(type: "text", nullable: true),
+                    address = table.Column<string>(type: "text", nullable: true),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    image_url = table.Column<string>(type: "text", nullable: true),
+                    license_url = table.Column<string>(type: "text", nullable: true),
+                    map_url = table.Column<string>(type: "text", nullable: true),
+                    province = table.Column<string>(type: "text", nullable: true),
+                    is_verified = table.Column<bool>(type: "boolean", nullable: false),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -36,11 +37,11 @@ namespace WebDeveloper.Migrations
                 name: "specialties",
                 columns: table => new
                 {
-                    specialty_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    specialty_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    description = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    is_active = table.Column<bool>(type: "bit", nullable: true)
+                    specialty_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    specialty_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    description = table.Column<string>(type: "text", nullable: true),
+                    is_active = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -52,10 +53,10 @@ namespace WebDeveloper.Migrations
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    token = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
-                    expiry_date = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    token = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    expiry_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -66,20 +67,20 @@ namespace WebDeveloper.Migrations
                 name: "users",
                 columns: table => new
                 {
-                    user_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    email = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    password_hash = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    full_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    phone_number = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
-                    role = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    is_active = table.Column<bool>(type: "bit", nullable: true),
-                    avatar_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    verification_code = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    code_expiry = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    reason_banned = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    user_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    email = table.Column<string>(type: "text", nullable: false),
+                    password_hash = table.Column<string>(type: "text", nullable: true),
+                    full_name = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: true),
+                    phone_number = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true),
+                    role = table.Column<string>(type: "text", nullable: true),
+                    is_active = table.Column<bool>(type: "boolean", nullable: true),
+                    avatar_url = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    verification_code = table.Column<string>(type: "text", nullable: true),
+                    code_expiry = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    reason_banned = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -90,21 +91,21 @@ namespace WebDeveloper.Migrations
                 name: "doctor_details",
                 columns: table => new
                 {
-                    doctor_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<int>(type: "int", nullable: false),
-                    specialty_id = table.Column<int>(type: "int", nullable: false),
-                    facility_id = table.Column<int>(type: "int", nullable: false),
-                    bio = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    degree = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    experience_years = table.Column<int>(type: "int", nullable: true),
-                    price = table.Column<double>(type: "float", nullable: true),
-                    id_card_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    certificate_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    verification_status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    rating_average = table.Column<double>(type: "float", nullable: true),
-                    review_count = table.Column<int>(type: "int", nullable: true),
-                    reason_reject = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    doctor_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    user_id = table.Column<int>(type: "integer", nullable: false),
+                    specialty_id = table.Column<int>(type: "integer", nullable: false),
+                    facility_id = table.Column<int>(type: "integer", nullable: false),
+                    bio = table.Column<string>(type: "text", nullable: true),
+                    degree = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    experience_years = table.Column<int>(type: "integer", nullable: true),
+                    price = table.Column<double>(type: "double precision", nullable: true),
+                    id_card_url = table.Column<string>(type: "text", nullable: true),
+                    certificate_url = table.Column<string>(type: "text", nullable: true),
+                    verification_status = table.Column<string>(type: "text", nullable: false),
+                    rating_average = table.Column<double>(type: "double precision", nullable: true),
+                    review_count = table.Column<int>(type: "integer", nullable: true),
+                    reason_reject = table.Column<string>(type: "text", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -131,16 +132,16 @@ namespace WebDeveloper.Migrations
                 name: "patient_profiles",
                 columns: table => new
                 {
-                    patient_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<int>(type: "int", nullable: false),
-                    full_name = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    patient_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    user_id = table.Column<int>(type: "integer", nullable: false),
+                    full_name = table.Column<string>(type: "text", nullable: true),
                     date_of_birth = table.Column<DateOnly>(type: "date", nullable: true),
-                    gender = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    phone_number = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
-                    address = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    relationship = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    is_active = table.Column<bool>(type: "bit", nullable: false)
+                    gender = table.Column<string>(type: "text", nullable: true),
+                    phone_number = table.Column<string>(type: "character varying(10)", maxLength: 10, nullable: true),
+                    address = table.Column<string>(type: "text", nullable: true),
+                    relationship = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
+                    is_active = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -157,14 +158,14 @@ namespace WebDeveloper.Migrations
                 name: "doctor_schedules",
                 columns: table => new
                 {
-                    schedule_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    doctor_id = table.Column<int>(type: "int", nullable: false),
-                    facility_id = table.Column<int>(type: "int", nullable: true),
+                    schedule_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    doctor_id = table.Column<int>(type: "integer", nullable: false),
+                    facility_id = table.Column<int>(type: "integer", nullable: true),
                     date_working = table.Column<DateOnly>(type: "date", nullable: false),
-                    time_slot = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    slot_status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    version = table.Column<int>(type: "int", nullable: true)
+                    time_slot = table.Column<string>(type: "text", nullable: false),
+                    slot_status = table.Column<string>(type: "text", nullable: false),
+                    version = table.Column<int>(type: "integer", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -186,15 +187,15 @@ namespace WebDeveloper.Migrations
                 name: "doctor_transfer_requests",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    doctor_id = table.Column<int>(type: "int", nullable: false),
-                    target_facility_id = table.Column<int>(type: "int", nullable: false),
-                    status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    reason = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    admin_note = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    processed_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    doctor_id = table.Column<int>(type: "integer", nullable: false),
+                    target_facility_id = table.Column<int>(type: "integer", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    reason = table.Column<string>(type: "text", nullable: true),
+                    admin_note = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    processed_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -215,14 +216,14 @@ namespace WebDeveloper.Migrations
                 name: "appointments",
                 columns: table => new
                 {
-                    appointment_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    patient_id = table.Column<int>(type: "int", nullable: false),
-                    schedule_id = table.Column<int>(type: "int", nullable: false),
-                    reason = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    booking_status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    appointment_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    patient_id = table.Column<int>(type: "integer", nullable: false),
+                    schedule_id = table.Column<int>(type: "integer", nullable: false),
+                    reason = table.Column<string>(type: "text", nullable: true),
+                    booking_status = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    updated_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -243,13 +244,13 @@ namespace WebDeveloper.Migrations
                 name: "medical_results",
                 columns: table => new
                 {
-                    result_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    appointment_id = table.Column<int>(type: "int", nullable: false),
-                    diagnosis = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    prescription_url = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    doctor_notes = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    result_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    appointment_id = table.Column<int>(type: "integer", nullable: false),
+                    diagnosis = table.Column<string>(type: "text", nullable: true),
+                    prescription_url = table.Column<string>(type: "text", nullable: true),
+                    doctor_notes = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -266,13 +267,13 @@ namespace WebDeveloper.Migrations
                 name: "review",
                 columns: table => new
                 {
-                    review_id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    appointment_id = table.Column<int>(type: "int", nullable: false),
-                    rating = table.Column<int>(type: "int", nullable: true),
-                    comment = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    is_visible = table.Column<bool>(type: "bit", nullable: true)
+                    review_id = table.Column<int>(type: "integer", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
+                    appointment_id = table.Column<int>(type: "integer", nullable: false),
+                    rating = table.Column<int>(type: "integer", nullable: true),
+                    comment = table.Column<string>(type: "text", nullable: true),
+                    created_at = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    is_visible = table.Column<bool>(type: "boolean", nullable: true)
                 },
                 constraints: table =>
                 {

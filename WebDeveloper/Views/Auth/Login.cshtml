@@ -212,6 +212,7 @@
 
                     // Save Token to Cookie so ASP.NET Core MVC can read it
                     document.cookie = "jwtToken=" + data.token + "; path=/; max-age=" + (3600 * 24 * 7);
+                    document.cookie = "user_info=" + encodeURIComponent(JSON.stringify(data.user)) + "; path=/; max-age=" + (3600 * 24 * 7);
 
                     Toastify({
                         text: "Đăng nhập thành công!",
@@ -219,9 +220,17 @@
                     }).showToast();
 
                     setTimeout(() => {
-                        if (data.user.role === 'ADMIN') window.location.href = '/Admin/Dashboard';
-                        else if (data.user.role === 'DOCTOR') window.location.href = '/Doctor/Appointments';
-                        else window.location.href = '/';
+                        if (data.user.role === 'ADMIN') {
+                            window.location.href = '/Admin/Dashboard';
+                        } else if (data.user.role === 'DOCTOR') {
+                            if (!data.user.verificationStatus || data.user.verificationStatus === 'UNREGISTERED') {
+                                window.location.href = '/Doctor/Profile';
+                            } else {
+                                window.location.href = '/Doctor/Appointments';
+                            }
+                        } else {
+                            window.location.href = '/';
+                        }
                     }, 1000);
                 } else {
                     Toastify({

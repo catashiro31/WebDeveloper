@@ -41,6 +41,14 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Mật khẩu không chính xác!");
 
             var token = _jwt.CreateToken(user);
+            
+            string? verificationStatus = null;
+            if (user.Role == WebDeveloper.Models.Enums.RoleStatus.DOCTOR)
+            {
+                var doctorDetail = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId);
+                verificationStatus = doctorDetail?.VerificationStatus.ToString() ?? "UNREGISTERED";
+            }
+
             return new SignInResponse
             {
                 Token = token,
@@ -50,7 +58,8 @@ namespace WebDeveloper.Services
                     FullName = user.FullName ?? "",
                     Role = user.Role.ToString() ?? "",
                     PhoneNumber = user.PhoneNumber,
-                    AvatarUrl = user.AvatarUrl
+                    AvatarUrl = user.AvatarUrl,
+                    VerificationStatus = verificationStatus
                 }
             };
         }
@@ -142,16 +151,35 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Tài khoản đã bị khóa. Không thể đặt lại mật khẩu!");
             }
 
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            var random = new Random();
-            var newPassword = new string(Enumerable.Repeat(chars, 8).Select(s => s[random.Next(s.Length)]).ToArray());
-
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(newPassword);
+            var resetCode = Guid.NewGuid().ToString();
+            user.VerificationCode = resetCode; // Reuse verification code field
+            user.CodeExpiry = DateTime.UtcNow.AddMinutes(15);
+            
             await _db.SaveChangesAsync();
 
-            await _emailService.SendPasswordResetEmailAsync(user.Email, user.FullName ?? "", newPassword);
+            await _emailService.SendPasswordResetLinkAsync(user.Email, user.FullName ?? "", resetCode);
 
-            return "Mật khẩu mới đã được gửi đến email của bạn!";
+            return "Link khôi phục mật khẩu đã được gửi đến email của bạn. Vui lòng kiểm tra hộp thư!";
+        }
+
+        public async Task<string> ResetPassword(ResetPasswordRequest req)
+        {
+            var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == req.Email)
+                ?? throw new InvalidOperationException("Email không hợp lệ!");
+
+            if (user.VerificationCode == null || user.VerificationCode != req.Code)
+                throw new InvalidOperationException("Mã khôi phục không hợp lệ hoặc đã được sử dụng!");
+
+            if (user.CodeExpiry == null || DateTime.UtcNow > user.CodeExpiry)
+                throw new InvalidOperationException("Đường link khôi phục đã hết hạn! Vui lòng yêu cầu lại.");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+            user.VerificationCode = null; // Clear the code after successful reset
+            user.CodeExpiry = null;
+
+            await _db.SaveChangesAsync();
+
+            return "Mật khẩu đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới!";
         }
     }
 

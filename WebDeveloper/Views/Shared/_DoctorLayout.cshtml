@@ -61,7 +61,7 @@
         </div>
         <div style="display: flex; align-items: center; gap: 16px;">
             <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px;">
-                <span style="font-weight: 500;">BS. @userName</span>
+                <span id="headerDoctorName" style="font-weight: 500;">BS. @userName</span>
                 <button onclick="logout()" style="padding: 6px 12px; border-radius: 6px; border: none; background: #ef4444; color: white; cursor: pointer; font-size: 13px;">Đăng xuất</button>
             </div>
         </div>
@@ -126,6 +126,7 @@
             localStorage.removeItem('token');
             localStorage.removeItem('user');
             document.cookie = "jwtToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+            document.cookie = "user_info=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             window.location.href = '/Auth/Login';
         }
 
@@ -143,6 +144,17 @@
                 const status = profile.verificationStatus || (user ? user.verificationStatus : 'PENDING');
                 const isApproved = status === 'APPROVED';
                 
+                const fullName = profile.fullName || (user ? user.fullName : 'Bác sĩ');
+                document.getElementById('doctorName').innerText = 'BS. ' + fullName;
+                const headerName = document.getElementById('headerDoctorName');
+                if (headerName) headerName.innerText = 'BS. ' + fullName;
+
+                const avatarUrl = profile.avatarUrl || (user ? user.avatarUrl : null);
+                if (avatarUrl) {
+                    document.getElementById('doctorAvatar').style.background = `url('${avatarUrl}') center/cover`;
+                    document.getElementById('doctorAvatar').innerHTML = '';
+                }
+
                 document.getElementById('doctorSpecialty').innerText = profile.specialty?.specialtyName || profile.specialtyName || 'Chuyên khoa';
                 if (profile.facility?.facilityName || profile.facilityName) {
                     document.getElementById('doctorFacility').innerText = `📍 ${profile.facility?.facilityName || profile.facilityName}`;

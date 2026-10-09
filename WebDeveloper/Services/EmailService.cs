@@ -51,7 +51,7 @@ namespace WebDeveloper.Services
         public async Task SendSignUpConfirmationAsync(string email, string fullName, string code)
         {
             var subject = "DocBooking - Xác nhận đăng ký tài khoản";
-            var verificationLink = $"{_config["App:ClientUrl"]}/verify?email={email}&code={code}";
+            var verificationLink = $"{_config["App:ClientUrl"]}/Auth/VerifyAccount?email={email}&code={code}";
             var body = $"<h3>Xin chào {fullName},</h3>" +
                        $"<p>Cảm ơn bạn đã đăng ký tài khoản tại DocBooking.</p>" +
                        $"<p>Vui lòng click vào link bên dưới để xác thực tài khoản của bạn:</p>" +
@@ -60,13 +60,17 @@ namespace WebDeveloper.Services
             await SendEmailAsync(email, subject, body);
         }
 
-        public async Task SendPasswordResetEmailAsync(string email, string fullName, string newPassword)
+
+
+        public async Task SendPasswordResetLinkAsync(string email, string fullName, string code)
         {
-            var subject = "DocBooking - Đặt lại mật khẩu";
+            var subject = "DocBooking - Yêu cầu đặt lại mật khẩu";
+            var resetLink = $"{_config["App:ClientUrl"]}/Auth/ResetPassword?email={email}&code={code}";
             var body = $"<h3>Xin chào {fullName},</h3>" +
-                       $"<p>Bạn đã yêu cầu đặt lại mật khẩu. Mật khẩu mới của bạn là:</p>" +
-                       $"<h2 style='color: blue;'>{newPassword}</h2>" +
-                       $"<p>Vui lòng đăng nhập và đổi lại mật khẩu ngay sau khi truy cập thành công.</p>" +
+                       $"<p>Bạn (hoặc ai đó) vừa yêu cầu đặt lại mật khẩu cho tài khoản DocBooking.</p>" +
+                       $"<p>Vui lòng click vào link bên dưới để đặt lại mật khẩu (link sẽ hết hạn sau 15 phút):</p>" +
+                       $"<p><a href='{resetLink}'>{resetLink}</a></p>" +
+                       $"<p>Nếu bạn không yêu cầu, vui lòng bỏ qua email này.</p>" +
                        "<p>Trân trọng,<br/>DocBooking Team</p>";
             await SendEmailAsync(email, subject, body);
         }

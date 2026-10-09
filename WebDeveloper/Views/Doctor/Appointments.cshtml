@@ -94,8 +94,8 @@
 
 @section Scripts {
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/Auth/Login';
+        
+        
 
         const container = document.getElementById('appointmentsContainer');
         let allAppointments = [];
@@ -131,6 +131,8 @@
         };
 
         function fetchAppointments() {
+            if (user && user.verificationStatus !== 'APPROVED') return;
+            
             container.innerHTML = `
                 <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
                 <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
@@ -329,3 +331,4 @@
         fetchAppointments();
     </script>
 }
+

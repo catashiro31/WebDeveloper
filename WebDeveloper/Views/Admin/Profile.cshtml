@@ -1,6 +1,6 @@
 @{
     ViewData["Title"] = "Thông tin cá nhân";
-    Layout = "_DoctorLayout";
+    Layout = "_AdminLayout";
 }
 
 <div class="reveal">
@@ -51,8 +51,7 @@
 
 @section Scripts {
     <script>
-        
-        
+        const userStr = localStorage.getItem('user');
         if (!token || !userStr) {
             window.location.href = '/Auth/Login';
         }
@@ -140,10 +139,8 @@
                     showMessage("Cập nhật thông tin thành công!", "success");
                     
                     // Update layout avatar and name
-                    const layoutName = document.getElementById('doctorName');
-                    if (layoutName) layoutName.innerText = 'BS. ' + updatedUser.fullName;
-                    const headerName = document.querySelector('header span');
-                    if (headerName && headerName.innerText.includes('BS.')) headerName.innerText = 'BS. ' + updatedUser.fullName;
+                    const layoutName = document.querySelector('header span');
+                    if (layoutName) layoutName.innerText = updatedUser.fullName;
                 } else {
                     const msg = await res.text();
                     showMessage(msg || "Đã xảy ra lỗi khi cập nhật", "error");
@@ -158,4 +155,3 @@
         };
     </script>
 }
-

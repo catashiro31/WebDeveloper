@@ -109,9 +109,9 @@
                 return;
             }
 
-            const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+            const phoneRegex = /^[0-9]{10}$/;
             if (phone && !phoneRegex.test(phone)) {
-                showMessage("Số điện thoại không hợp lệ.", "error");
+                showMessage("Số điện thoại phải gồm 10 chữ số, ví dụ: 0912345678", "error");
                 return;
             }
 

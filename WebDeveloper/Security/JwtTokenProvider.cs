@@ -31,8 +31,14 @@ namespace WebDeveloper.Security
             {
                 new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new(ClaimTypes.Email, user.Email),
-                new(ClaimTypes.Role, user.Role?.ToString() ?? "")
+                new(ClaimTypes.Role, user.Role?.ToString() ?? ""),
+                new(ClaimTypes.Name, user.FullName ?? "Người dùng")
             };
+            
+            if (!string.IsNullOrEmpty(user.AvatarUrl))
+            {
+                claims.Add(new Claim("AvatarUrl", user.AvatarUrl));
+            }
 
             var credentials = new SigningCredentials(GetSigningKey(), SecurityAlgorithms.HmacSha512);
 

@@ -120,7 +120,6 @@
 
 @section Scripts {
     <script>
-        const token = localStorage.getItem('token');
         let viewMode = 'all';
         let currentPage = 0;
         let totalPages = 1;
@@ -155,7 +154,7 @@
             document.getElementById('doctorsContainer').style.display = 'none';
             document.getElementById('pagination').style.display = 'none';
 
-            let url = viewMode === 'pending' ? '/api/v1/admin/doctors/pending' : `/api/v1/admin/doctors?page=${currentPage}&size=10`;
+            let url = viewMode === 'pending' ? '/api/v1/admin/doctor-pending' : `/api/v1/admin/doctor-all?page=${currentPage}&size=10`;
 
             fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
@@ -229,7 +228,7 @@
             document.getElementById('detailLoading').style.display = 'block';
             document.getElementById('detailContent').style.display = 'none';
 
-            fetch(`/api/v1/admin/doctors/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch(`/api/v1/admin/doctor/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
                 document.getElementById('detailLoading').style.display = 'none';
@@ -303,7 +302,7 @@
 
         window.approveDoctor = function(id) {
             if (!confirm("Phê duyệt bác sĩ này?")) return;
-            fetch(`/api/v1/admin/doctors/${id}/approve`, {
+            fetch(`/api/v1/admin/${id}/approve`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
@@ -331,7 +330,7 @@
             const btn = document.getElementById('submitRejectBtn');
             btn.disabled = true; btn.innerText = 'Đang gửi...';
 
-            fetch(`/api/v1/admin/doctors/${currentDoctorId}/reject?reason=${encodeURIComponent(reason)}`, {
+            fetch(`/api/v1/admin/${currentDoctorId}/reject?reason=${encodeURIComponent(reason)}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })

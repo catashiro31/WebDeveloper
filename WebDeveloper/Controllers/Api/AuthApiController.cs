@@ -85,5 +85,19 @@ namespace WebDeveloper.Controllers.Api
                 return BadRequest(new { Message = ex.Message });
             }
         }
+
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequest req)
+        {
+            try
+            {
+                var result = await _authService.ResetPassword(req);
+                return Ok(new { Message = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
     }
 }

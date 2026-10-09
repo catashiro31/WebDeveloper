@@ -21,12 +21,13 @@
 
 @section Scripts {
     <script>
-        const token = localStorage.getItem('token');
-        if (!token) window.location.href = '/Auth/Login';
+        
+        
 
         const container = document.getElementById('appointmentsContainer');
 
         function fetchOverdue() {
+            if (user && user.verificationStatus !== 'APPROVED') return;
             fetch('/api/v1/doctor/appointments/overdue', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
@@ -102,3 +103,4 @@
         fetchOverdue();
     </script>
 }
+

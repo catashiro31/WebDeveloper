@@ -79,11 +79,28 @@ namespace WebDeveloper.Services
 
         public async Task<string> RegisterDoctor(User user, DoctorProfileRequest req)
         {
-            if (await _db.DoctorDetails.AnyAsync(d => d.UserId == user.UserId))
-                throw new InvalidOperationException("Bạn đã gửi hồ sơ đăng ký rồi!");
+            var existingDoctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId);
 
-            _fileUpload.ValidateFile(req.IdCardImage, "Ảnh CCCD", "image/jpeg", "image/png");
-            _fileUpload.ValidateFile(req.CertificatePdf, "Chứng chỉ", "application/pdf");
+            if (existingDoctor != null)
+            {
+                if (existingDoctor.VerificationStatus == VerificationStatus.PENDING)
+                    throw new InvalidOperationException("Hồ sơ của bạn đang trong quá trình xét duyệt. Vui lòng chờ phản hồi từ Admin!");
+                if (existingDoctor.VerificationStatus == VerificationStatus.APPROVED)
+                    throw new InvalidOperationException("Hồ sơ bác sĩ của bạn đã được duyệt và đang hoạt động. Bạn không cần nộp lại hồ sơ xác minh!");
+                
+                // If REJECTED, allow resubmission
+            }
+
+            if (existingDoctor == null)
+            {
+                _fileUpload.ValidateFile(req.IdCardImage, "Ảnh CCCD", "image/jpeg", "image/png");
+                _fileUpload.ValidateFile(req.CertificatePdf, "Chứng chỉ", "application/pdf");
+            }
+            else
+            {
+                if (req.IdCardImage != null) _fileUpload.ValidateFile(req.IdCardImage, "Ảnh CCCD", "image/jpeg", "image/png");
+                if (req.CertificatePdf != null) _fileUpload.ValidateFile(req.CertificatePdf, "Chứng chỉ", "application/pdf");
+            }
 
             if (req.FacilityId == null && string.IsNullOrWhiteSpace(req.NewFacilityName))
                 throw new InvalidOperationException("Vui lòng chọn cơ sở y tế có sẵn hoặc tạo mới!");
@@ -119,31 +136,52 @@ namespace WebDeveloper.Services
                 await _db.SaveChangesAsync();
             }
 
-            var doctor = new DoctorDetail
+            if (existingDoctor != null)
             {
-                UserId = user.UserId,
-                SpecialtyId = req.SpecialtyId,
-                FacilityId = facility.FacilityId,
-                Bio = req.Bio,
-                Degree = req.Degree,
-                ExperienceYears = req.ExperienceYears,
-                Price = req.Price,
-                VerificationStatus = VerificationStatus.PENDING,
-                IdCardUrl = await _fileUpload.UploadFileAsync(req.IdCardImage),
-                CertificateUrl = await _fileUpload.UploadFileAsync(req.CertificatePdf)
-            };
+                existingDoctor.SpecialtyId = req.SpecialtyId;
+                existingDoctor.FacilityId = facility.FacilityId;
+                existingDoctor.Bio = req.Bio;
+                existingDoctor.Degree = req.Degree;
+                existingDoctor.ExperienceYears = req.ExperienceYears;
+                existingDoctor.Price = req.Price;
+                existingDoctor.VerificationStatus = VerificationStatus.PENDING;
+                
+                if (req.IdCardImage != null)
+                    existingDoctor.IdCardUrl = await _fileUpload.UploadFileAsync(req.IdCardImage);
+                if (req.CertificatePdf != null)
+                    existingDoctor.CertificateUrl = await _fileUpload.UploadFileAsync(req.CertificatePdf);
 
-            _db.DoctorDetails.Add(doctor);
-            
-            // Change user role
-            var dbUser = await _db.Users.FindAsync(user.UserId);
-            if (dbUser != null)
-            {
-                dbUser.Role = RoleStatus.DOCTOR;
+                await _db.SaveChangesAsync();
+                return "Đã gửi lại hồ sơ xác minh bác sĩ. Vui lòng chờ Admin duyệt!";
             }
+            else
+            {
+                var doctor = new DoctorDetail
+                {
+                    UserId = user.UserId,
+                    SpecialtyId = req.SpecialtyId,
+                    FacilityId = facility.FacilityId,
+                    Bio = req.Bio,
+                    Degree = req.Degree,
+                    ExperienceYears = req.ExperienceYears,
+                    Price = req.Price,
+                    VerificationStatus = VerificationStatus.PENDING,
+                    IdCardUrl = await _fileUpload.UploadFileAsync(req.IdCardImage),
+                    CertificateUrl = await _fileUpload.UploadFileAsync(req.CertificatePdf)
+                };
 
-            await _db.SaveChangesAsync();
-            return "Hồ sơ của bạn đã được gửi và đang chờ Admin duyệt!";
+                _db.DoctorDetails.Add(doctor);
+                
+                // Change user role
+                var dbUser = await _db.Users.FindAsync(user.UserId);
+                if (dbUser != null)
+                {
+                    dbUser.Role = RoleStatus.DOCTOR;
+                }
+
+                await _db.SaveChangesAsync();
+                return "Hồ sơ của bạn đã được gửi và đang chờ Admin duyệt!";
+            }
         }
 
         public async Task<DoctorProfileResponse> ChangeProfile(User user, ChangeProfileRequest req)
@@ -408,6 +446,37 @@ namespace WebDeveloper.Services
             return PagedResult<DoctorReviewResponse>.Create(dtos, page, size, total);
         }
 
+        public async Task<List<DoctorAppointmentResponse>> GetOverdueConfirmedAppointments(User user)
+        {
+            // Vietnam time logic: UTC + 7
+            var now = DateTime.UtcNow.AddHours(7);
+            var today = DateOnly.FromDateTime(now);
+            
+            // Get appointments that are CONFIRMED and the date has passed
+            var query = _db.Appointments
+                .Include(a => a.Schedule).ThenInclude(s => s.Doctor)
+                .Include(a => a.Patient).ThenInclude(p => p.User)
+                .Where(a => a.Schedule.Doctor.UserId == user.UserId
+                            && a.BookingStatus == BookingStatus.CONFIRMED
+                            && a.Schedule.DateWorking < today)
+                .OrderByDescending(a => a.Schedule.DateWorking);
+
+            var items = await query.ToListAsync();
+            
+            return items.Select(a => new DoctorAppointmentResponse
+            {
+                AppointmentId = a.Id,
+                PatientName = a.Patient.User?.FullName ?? a.Patient.FullName,
+                PatientPhoneNumber = a.Patient.PhoneNumber,
+                PatientGender = a.Patient.Gender?.ToString(),
+                DateWorking = a.Schedule.DateWorking,
+                TimeSlot = a.Schedule.TimeSlot.GetDisplayValue(),
+                Reason = a.Reason,
+                BookingStatus = a.BookingStatus.ToString(),
+                CreatedAt = a.CreatedAt
+            }).ToList();
+        }
+
         public async Task<string> CreateTransferRequest(User user, TransferRequestDto req)
         {
             var doctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId)
@@ -462,8 +531,8 @@ namespace WebDeveloper.Services
                 id = t.Id,
                 doctorId = t.DoctorId,
                 doctorName = t.Doctor.User.FullName,
-                currentFacilityName = t.Doctor.Facility.FacilityName,
-                targetFacilityName = t.TargetFacility.FacilityName,
+                currentFacilityName = t.Doctor.Facility?.FacilityName,
+                targetFacilityName = t.TargetFacility?.FacilityName,
                 reason = t.Reason,
                 status = t.Status.ToString(),
                 createdAt = t.CreatedAt,
