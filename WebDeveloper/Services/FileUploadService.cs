@@ -36,6 +36,28 @@ namespace WebDeveloper.Services
             return result.SecureUrl?.ToString();
         }
 
+        public WebDeveloper.Models.DTOs.Upload.CloudinarySignatureResponse GenerateUploadSignature()
+        {
+            var timestamp = Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds).ToString();
+            
+            var parameters = new SortedDictionary<string, object>
+            {
+                { "timestamp", timestamp },
+                { "folder", "docbooking" }
+            };
+
+            var signature = _cloudinary.Api.SignParameters(parameters);
+
+            var account = _cloudinary.Api.Account;
+            return new WebDeveloper.Models.DTOs.Upload.CloudinarySignatureResponse
+            {
+                Signature = signature,
+                Timestamp = timestamp,
+                ApiKey = account.ApiKey,
+                CloudName = account.Cloud
+            };
+        }
+
         public void ValidateFile(IFormFile? file, string fieldName, params string[] supportedTypes)
         {
             if (file == null || file.Length == 0) return;

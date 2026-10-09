@@ -43,5 +43,12 @@ namespace WebDeveloper.Controllers.Api
             await _userService.ChangePassword(user, req);
             return Ok(new { Message = "Đổi mật khẩu thành công!" });
         }
+
+        [HttpGet("upload-signature")]
+        public IActionResult GetUploadSignature([FromServices] IFileUploadService fileUploadService)
+        {
+            var signature = fileUploadService.GenerateUploadSignature();
+            return Ok(signature);
+        }
     }
 }

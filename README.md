@@ -72,7 +72,7 @@ Trong hệ thống đặt lịch y tế trực tuyến, có nhiều bài toán p
 - **Giải pháp mở rộng**: 
   - Nếu sau này hệ thống phình to, có thể tách hẳn Server cấp quyền ra thành **Identity Provider** (chuẩn OAuth2/OpenID Connect) thông qua Keycloak hoặc Duende IdentityServer.
 
-### 3. Xử Lý Lưu Trữ File (Ảnh CCCD, Chứng Chỉ, Kết quả)
+### 3. Xử Lý Lưu Trữ File (Ảnh CCCD, Chứng Chỉ, Kết quả) [Done]
 - **Vấn đề**: File lưu trực tiếp vào server có thể làm quá tải ổ cứng server và nghẽn băng thông.
 - **Cách xử lý hiện tại**: Backend nhận file qua API rồi tự đẩy lên **Cloudinary** (Đồng bộ).
 - **Giải pháp tối ưu / Hiện đại**: Việc để file đi qua luồng của Backend sẽ làm chậm Server. Các hệ thống hiện đại áp dụng mô hình **Pre-signed URL (vd: AWS S3)**. Backend chỉ sinh ra một "đường link tạm thời có chữ ký". Client (Web/App) sẽ dùng link này để upload file **TRỰC TIẾP** từ máy khách lên S3/Cloudinary, giảm tải 100% băng thông tải file cho Backend.

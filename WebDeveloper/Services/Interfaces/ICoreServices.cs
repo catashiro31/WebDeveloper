@@ -25,6 +25,7 @@ namespace WebDeveloper.Services.Interfaces
     {
         Task<string?> UploadFileAsync(IFormFile? file);
         void ValidateFile(IFormFile? file, string fieldName, params string[] supportedTypes);
+        WebDeveloper.Models.DTOs.Upload.CloudinarySignatureResponse GenerateUploadSignature();
     }
 
     public interface IEmailService
