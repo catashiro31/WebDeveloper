@@ -300,6 +300,7 @@ namespace WebDeveloper.Services
             var appointmentsQuery = _db.Appointments
                 .Include(a => a.Schedule)
                 .Include(a => a.Patient).ThenInclude(p => p.User)
+                .AsSplitQuery()
                 .Where(a => a.Schedule.Doctor.UserId == user.UserId)
                 .OrderByDescending(a => a.Schedule.DateWorking)
                 .ThenBy(a => a.Schedule.TimeSlot);

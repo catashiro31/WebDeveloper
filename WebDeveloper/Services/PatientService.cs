@@ -204,6 +204,7 @@ namespace WebDeveloper.Services
                 .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.Facility)
                 .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.User)
                 .Include(a => a.Patient)
+                .AsSplitQuery()
                 .Where(a => a.Patient.UserId == user.UserId);
 
             if (status.HasValue)

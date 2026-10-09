@@ -374,6 +374,7 @@ namespace WebDeveloper.Services
                 .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.User)
                 .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.Specialty)
                 .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.Facility)
+                .AsSplitQuery()
                 .AsQueryable();
 
             if (dateFrom.HasValue) query = query.Where(a => a.CreatedAt >= dateFrom.Value.ToDateTime(TimeOnly.MinValue));
