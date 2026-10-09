@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  webapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: docbooking_api
+    restart: always
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres_db;Database=Docbooking;Username=postgres;Password=your_strong_password
+      - ConnectionStrings__Redis=redis_cache:6379
+    depends_on:
+      - postgres_db
+      - redis_cache
+    networks:
+      - docbooking_network
+
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: docbooking_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: your_strong_password
+      POSTGRES_DB: Docbooking
+    ports:
+      - "5432:5432" # Có thể đóng lại (xóa dòng này) nếu không muốn truy cập từ ngoài VPS
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - docbooking_network
+
+  redis_cache:
+    image: redis:7-alpine
+    container_name: docbooking_redis
+    restart: always
+    ports:
+      - "6379:6379" # Có thể đóng lại nếu không cần truy cập từ ngoài
+    volumes:
+      - redisdata:/data
+    networks:
+      - docbooking_network
+
+networks:
+  docbooking_network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  redisdata:
