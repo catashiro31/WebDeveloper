@@ -84,7 +84,7 @@ Trong hệ thống đặt lịch y tế trực tuyến, có nhiều bài toán p
   - Quét DB liên tục (Polling) là mô hình tốn kém. Hệ thống lớn áp dụng mô hình Event-Driven với **Message Queue (RabbitMQ / Kafka)** dùng cơ chế **Delayed Message**. Ví dụ: Vừa tạo lịch xong, bắn 1 message hẹn đúng 30p sau mới kích hoạt. Sau 30p, hệ thống nhận tin nhắn và đi hủy lịch, không cần query DB lặp đi lặp lại.
   - Nếu dùng Job, sẽ sử dụng framework **Hangfire** hoặc **Quartz.NET** để quản lý tiến trình chạy ẩn có Dashboard giám sát và cơ chế tự động thử lại (Retry) khi fail.
 
-### 5. Chuẩn Hóa Lỗi & Giấu Mã Lỗi Hệ Thống
+### 5. Chuẩn Hóa Lỗi & Giấu Mã Lỗi Hệ Thống [Done]
 - **Vấn đề**: Lỗi văng ra mang theo Stack Trace chi tiết làm lộ cấu trúc Database cho Hacker.
 - **Cách xử lý hiện tại**: Bắt Exception bằng `GlobalExceptionMiddleware` và trả về mã lỗi 400 nếu bắt gặp `InvalidOperationException`.
 - **Giải pháp tối ưu / Hiện đại**: 
