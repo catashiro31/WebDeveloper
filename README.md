@@ -135,7 +135,7 @@ Nếu đưa hệ thống này lên môi trường thực tế (Production) với
 - **Hậu quả**: Hiện tại Token JWT tuy có đọc từ Cookie, nhưng mặc định các hệ thống SPA (React/Angular) lại lưu ở `LocalStorage`. Bất kỳ script độc hại nào (XSS - Cross Site Scripting) nhúng vào web đều có thể lấy trộm JWT và mạo danh bác sĩ/admin vĩnh viễn.
 - **Giải pháp hiện nay**: Backend phải thiết lập Token trả về dưới dạng **`HttpOnly; Secure; SameSite` Cookies**. Khi đó Javascript ở trình duyệt không thể đọc được Token, chặn đứng 100% rủi ro bị đánh cắp qua XSS. 
 
-### 9. Không Caching Database (Khủng hoảng lượng truy cập)
+### 9. Không Caching Database (Khủng hoảng lượng truy cập) [Done]
 - **Hậu quả**: Dữ liệu như "Danh sách Chuyên Khoa", "Danh sách Cơ sở Y Tế" gần như không bao giờ đổi. Nếu 10,000 người vào trang chủ, hệ thống sẽ chọc xuống PostgreSQL 10,000 lần cùng một câu Query y hệt nhau, gây lãng phí tài nguyên khủng khiếp.
 - **Giải pháp hiện nay**: Bắt buộc phải áp dụng **Distributed Caching (Redis/Memcached)**. Khi có người request danh sách Chuyên khoa lần đầu, kết quả sẽ lưu vào RAM (Redis). 9,999 người vào sau sẽ lấy thẳng từ RAM với tốc độ 1ms mà DB không hề hay biết.
 

@@ -71,7 +71,8 @@ builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IPublicService, PublicService>();
 
-// 5. Add Background Services
+// 5. Add Background Services & Caching
+builder.Services.AddMemoryCache();
 builder.Services.AddHostedService<AppointmentCleanupService>();
 
 builder.Services.AddControllersWithViews();

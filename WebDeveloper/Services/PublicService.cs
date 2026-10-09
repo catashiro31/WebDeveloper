@@ -5,16 +5,19 @@ using WebDeveloper.Models.DTOs.Doctor;
 using WebDeveloper.Models.DTOs.Portal;
 using WebDeveloper.Models.Enums;
 using WebDeveloper.Services.Interfaces;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace WebDeveloper.Services
 {
     public class PublicService : IPublicService
     {
         private readonly ApplicationDbContext _db;
+        private readonly IMemoryCache _cache;
 
-        public PublicService(ApplicationDbContext db)
+        public PublicService(ApplicationDbContext db, IMemoryCache cache)
         {
             _db = db;
+            _cache = cache;
         }
 
         public async Task<PortalStatsResponse> GetPortalStats()
@@ -34,30 +37,40 @@ namespace WebDeveloper.Services
 
         public async Task<List<FacilityResponse>> GetAllFacilities()
         {
-            var items = await _db.Facilities.Where(f => f.IsActive).ToListAsync();
-            return items.Select(f => new FacilityResponse
+            return await _cache.GetOrCreateAsync("ALL_FACILITIES", async entry =>
             {
-                Id = f.FacilityId,
-                Name = f.FacilityName,
-                Address = f.Address,
-                Description = f.Description,
-                ImageUrl = f.ImageUrl,
-                LicenseUrl = f.LicenseUrl,
-                MapUrl = f.MapUrl,
-                Province = f.Province,
-                Verified = f.IsVerified
-            }).ToList();
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12); // Cache for 12 hours
+                
+                var items = await _db.Facilities.Where(f => f.IsActive).ToListAsync();
+                return items.Select(f => new FacilityResponse
+                {
+                    Id = f.FacilityId,
+                    Name = f.FacilityName,
+                    Address = f.Address,
+                    Description = f.Description,
+                    ImageUrl = f.ImageUrl,
+                    LicenseUrl = f.LicenseUrl,
+                    MapUrl = f.MapUrl,
+                    Province = f.Province,
+                    Verified = f.IsVerified
+                }).ToList();
+            });
         }
 
         public async Task<List<SpecialtyResponse>> GetAllSpecialties()
         {
-            var items = await _db.Specialties.Where(s => s.IsActive == true).ToListAsync();
-            return items.Select(s => new SpecialtyResponse
+            return await _cache.GetOrCreateAsync("ALL_SPECIALTIES", async entry =>
             {
-                Id = s.SpecialtyId,
-                Name = s.SpecialtyName,
-                Description = s.Description
-            }).ToList();
+                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12); // Cache for 12 hours
+                
+                var items = await _db.Specialties.Where(s => s.IsActive).ToListAsync();
+                return items.Select(s => new SpecialtyResponse
+                {
+                    Id = s.SpecialtyId,
+                    Name = s.SpecialtyName,
+                    Description = s.Description
+                }).ToList();
+            });
         }
 
         public async Task<PagedResult<DoctorCardResponse>> GetDoctors(string? keyword, int? specId, int? facilityId, string? province, double? minPrice, double? maxPrice, string? sortBy, int page, int size)
