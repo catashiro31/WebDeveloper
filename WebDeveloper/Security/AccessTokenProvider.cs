@@ -29,6 +29,7 @@ namespace WebDeveloper.Security
             var expirationMinutes = int.Parse(_config["Jwt:ExpirationMinutes"] ?? "15"); // Short lived Access Token (15m)
             var claims = new List<Claim>
             {
+                new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                 new(ClaimTypes.Email, user.Email),
                 new(ClaimTypes.Role, user.Role?.ToString() ?? ""),

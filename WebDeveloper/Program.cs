@@ -44,8 +44,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 var token = context.Request.Cookies["accessToken"];
                 if (!string.IsNullOrEmpty(token))
                 {
-                    context.Token = token;
-                    return;
+                    var provider = context.HttpContext.RequestServices.GetRequiredService<AccessTokenProvider>();
+                    var expiry = provider.GetExpiryDateFromToken(token);
+                    if (expiry == null || expiry > DateTime.UtcNow ||
+                        context.Request.Path.StartsWithSegments("/api/v1/auth"))
+                    {
+                        context.Token = token;
+                        return;
+                    }
                 }
 
                 // An access cookie expires after 15 minutes. Restore the browser
@@ -58,19 +64,17 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 try
                 {
                     var auth = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
-                    var refreshed = await auth.RefreshToken(refreshToken);
+                    // Concurrent page/API requests share the same browser session.
+                    // Only the explicit refresh endpoint rotates its refresh token.
+                    var refreshed = await auth.RefreshToken(refreshToken, rotateRefreshToken: false);
                     var secure = !context.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment();
                     context.Response.Cookies.Append("accessToken", refreshed.Token, new CookieOptions
                     {
                         HttpOnly = true, Secure = secure, SameSite = SameSiteMode.Strict,
                         Expires = DateTimeOffset.UtcNow.AddMinutes(15)
                     });
-                    context.Response.Cookies.Append("refreshToken", refreshed.RefreshToken, new CookieOptions
-                    {
-                        HttpOnly = true, Secure = secure, SameSite = SameSiteMode.Strict,
-                        Expires = DateTimeOffset.UtcNow.AddDays(7)
-                    });
                     context.Token = refreshed.Token;
+                    context.HttpContext.Items["AuthenticatedAccessToken"] = refreshed.Token;
                 }
                 catch (InvalidOperationException)
                 {

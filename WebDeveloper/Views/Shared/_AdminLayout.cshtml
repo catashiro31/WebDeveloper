@@ -101,13 +101,13 @@
     @await Html.PartialAsync("_AuthState")
     <script>
         const token = localStorage.getItem('token');
-        const userStr = localStorage.getItem('user');
+        const adminUserStr = localStorage.getItem('user');
         
-        if (!token || !userStr) {
+        if (!token || !adminUserStr) {
             window.location.href = '/Auth/Login';
         } else {
             try {
-                const user = JSON.parse(userStr);
+                const user = JSON.parse(adminUserStr);
                 if (user.role !== 'ADMIN') {
                     window.location.href = '/Auth/Login';
                 }

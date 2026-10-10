@@ -38,7 +38,7 @@ namespace WebDeveloper.Security
             {
                 // Authentication accepts a cookie or a bearer header. Apply revocation
                 // and account checks to the token that authenticated this request.
-                var token = context.Request.Cookies["accessToken"];
+                var token = context.Items["AuthenticatedAccessToken"] as string ?? context.Request.Cookies["accessToken"];
                 if (string.IsNullOrEmpty(token))
                 {
                     var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();

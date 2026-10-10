@@ -70,19 +70,28 @@ namespace WebDeveloper.Services
             };
         }
 
-        public async Task<SignInResponse> RefreshToken(string refreshToken)
+        public async Task<SignInResponse> RefreshToken(string refreshToken, bool rotateRefreshToken = true)
         {
-            var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+            var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
-            if (user == null || user.IsActive != true || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            if (user == null || user.IsActive != true || user.RefreshTokenExpiryTime == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 throw new InvalidOperationException("Refresh token không hợp lệ hoặc đã hết hạn.");
 
             var newAccessToken = _jwt.CreateToken(user);
-            var newRefreshToken = _jwt.GenerateRefreshToken();
-
-            user.RefreshToken = newRefreshToken;
-            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-            await _db.SaveChangesAsync();
+            var newRefreshToken = refreshToken;
+            if (rotateRefreshToken)
+            {
+                newRefreshToken = _jwt.GenerateRefreshToken();
+                var now = DateTime.UtcNow;
+                var updated = await _db.Users
+                    .Where(u => u.UserId == user.UserId && u.RefreshToken == refreshToken &&
+                        u.IsActive == true && u.RefreshTokenExpiryTime > now)
+                    .ExecuteUpdateAsync(setters => setters
+                        .SetProperty(u => u.RefreshToken, newRefreshToken)
+                        .SetProperty(u => u.RefreshTokenExpiryTime, now.AddDays(7)));
+                if (updated != 1)
+                    throw new InvalidOperationException("Refresh token không hợp lệ hoặc đã hết hạn.");
+            }
 
             string? verificationStatus = null;
             if (user.Role == WebDeveloper.Models.Enums.RoleStatus.DOCTOR)
@@ -149,7 +158,8 @@ namespace WebDeveloper.Services
 
         public async Task SignOut(string? token, string? refreshToken)
         {
-            if (!string.IsNullOrEmpty(token) && _jwt.GetUserIdFromToken(token) != null)
+            if (!string.IsNullOrEmpty(token) && _jwt.GetUserIdFromToken(token) != null &&
+                !await _db.TokenBlacklists.AnyAsync(t => t.Token == token))
             {
                 _db.TokenBlacklists.Add(new TokenBlacklist
                 {

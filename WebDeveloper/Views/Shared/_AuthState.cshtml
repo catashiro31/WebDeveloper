@@ -1,13 +1,28 @@
 @using System.Security.Claims
 @using System.Text.Json
+@using Microsoft.EntityFrameworkCore
+@inject WebDeveloper.Data.ApplicationDbContext Db
 @{
     var signedIn = User.Identity?.IsAuthenticated == true;
+    WebDeveloper.Models.Entities.User? account = null;
+    string? verificationStatus = null;
+    if (signedIn && int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
+    {
+        account = await Db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+        if (User.IsInRole("DOCTOR"))
+        {
+            var doctor = await Db.DoctorDetails.AsNoTracking().FirstOrDefaultAsync(d => d.UserId == userId);
+            verificationStatus = doctor?.VerificationStatus.ToString() ?? "UNREGISTERED";
+        }
+    }
     var browserUser = JsonSerializer.Serialize(new
     {
         email = User.FindFirst(ClaimTypes.Email)?.Value ?? "",
-        fullName = User.FindFirst(ClaimTypes.Name)?.Value ?? "",
+        fullName = account?.FullName ?? User.FindFirst(ClaimTypes.Name)?.Value ?? "",
         role = User.FindFirst(ClaimTypes.Role)?.Value ?? "",
-        avatarUrl = User.FindFirst("AvatarUrl")?.Value
+        avatarUrl = account?.AvatarUrl ?? User.FindFirst("AvatarUrl")?.Value,
+        phoneNumber = account?.PhoneNumber,
+        verificationStatus
     });
 }
 <script>
