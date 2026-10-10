@@ -2,6 +2,8 @@
 
 Hệ thống backend cung cấp các API cho ứng dụng đặt lịch khám bệnh trực tuyến. Dự án được xây dựng bằng **ASP.NET Core 10 Web API**, kết nối với cơ sở dữ liệu **PostgreSQL** qua **Entity Framework Core**.
 
+Nếu đăng nhập thành công nhưng không giữ phiên khi triển khai, xem [cấu hình cookie cho HTTP/HTTPS](docs/login-deployment.md).
+
 ## Kiến trúc hệ thống
 Hệ thống được thiết kế theo mô hình **MVC (Model-View-Controller) kết hợp Web API**, đồng thời tổ chức code theo cấu trúc **N-Tier (N-Layer)** để tách biệt các thành phần:
 

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WebDeveloper.Models.DTOs.Auth;
 using WebDeveloper.Services.Interfaces;
+using WebDeveloper.Security;
 
 namespace WebDeveloper.Controllers.Api
 {
@@ -10,12 +11,12 @@ namespace WebDeveloper.Controllers.Api
     public class AuthApiController : ControllerBase
     {
         private readonly IAuthService _authService;
-        private readonly IWebHostEnvironment _environment;
+        private readonly AuthCookieSettings _cookieSettings;
 
-        public AuthApiController(IAuthService authService, IWebHostEnvironment environment)
+        public AuthApiController(IAuthService authService, AuthCookieSettings cookieSettings)
         {
             _authService = authService;
-            _environment = environment;
+            _cookieSettings = cookieSettings;
         }
 
         [HttpPost("signin")]
@@ -28,7 +29,7 @@ namespace WebDeveloper.Controllers.Api
                 var accessCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = !_environment.IsDevelopment(),
+                    Secure = _cookieSettings.Secure,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddMinutes(15) 
                 };
@@ -37,7 +38,7 @@ namespace WebDeveloper.Controllers.Api
                 var refreshCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = !_environment.IsDevelopment(),
+                    Secure = _cookieSettings.Secure,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddDays(7)
                 };
@@ -72,7 +73,7 @@ namespace WebDeveloper.Controllers.Api
                 var accessCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = !_environment.IsDevelopment(),
+                    Secure = _cookieSettings.Secure,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddMinutes(15)
                 };
@@ -81,7 +82,7 @@ namespace WebDeveloper.Controllers.Api
                 var refreshCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = !_environment.IsDevelopment(),
+                    Secure = _cookieSettings.Secure,
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddDays(7)
                 };

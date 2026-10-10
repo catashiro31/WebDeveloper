@@ -188,6 +188,10 @@
             }
         }
 
+        if (new URLSearchParams(window.location.search).get('reason') === 'session') {
+            showLoginMessage("Phiên đăng nhập chưa có hoặc đã hết hạn. Vui lòng đăng nhập lại.", true);
+        }
+
         document.getElementById('togglePassword').addEventListener('click', function() {
             const pwd = document.getElementById('password');
             if (pwd.type === 'password') {
@@ -209,6 +213,7 @@
             try {
                 const response = await fetch('/api/v1/auth/signin', {
                     method: 'POST',
+                    credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
@@ -216,6 +221,20 @@
                 const data = await response.json();
 
                 if (response.ok) {
+                    // Confirm that the browser sends the HttpOnly cookie back before
+                    // navigating to a protected MVC page or claiming login succeeded.
+                    const session = await fetch('/api/v1/user/profile', {
+                        credentials: 'same-origin',
+                        cache: 'no-store'
+                    });
+                    if (!session.ok) {
+                        showLoginMessage(session.status === 401
+                            ? "Trình duyệt chưa gửi được phiên đăng nhập. Hãy kiểm tra quyền cho phép cookie và địa chỉ HTTPS của trang."
+                            : "Không thể kiểm tra phiên đăng nhập. Vui lòng thử lại.", true);
+                        btn.disabled = false;
+                        btn.textContent = 'Tiếp tục';
+                        return;
+                    }
                     try {
                         localStorage.setItem('token', data.token);
                         localStorage.setItem('user', JSON.stringify(data.user));

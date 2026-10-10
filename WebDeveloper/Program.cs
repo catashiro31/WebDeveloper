@@ -23,6 +23,7 @@ builder.Services.AddSingleton<StackExchange.Redis.IConnectionMultiplexer>(sp =>
 
 // 2. Add JWT Configuration & Authentication
 builder.Services.AddSingleton<AccessTokenProvider>();
+builder.Services.AddSingleton<AuthCookieSettings>();
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -67,7 +68,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     // Concurrent page/API requests share the same browser session.
                     // Only the explicit refresh endpoint rotates its refresh token.
                     var refreshed = await auth.RefreshToken(refreshToken, rotateRefreshToken: false);
-                    var secure = !context.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment();
+                    var secure = context.HttpContext.RequestServices.GetRequiredService<AuthCookieSettings>().Secure;
                     context.Response.Cookies.Append("accessToken", refreshed.Token, new CookieOptions
                     {
                         HttpOnly = true, Secure = secure, SameSite = SameSiteMode.Strict,
@@ -84,6 +85,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             OnChallenge = context =>
             {
                 context.HandleResponse();
+                if (!context.Request.Path.StartsWithSegments("/api"))
+                {
+                    context.Response.Redirect("/Auth/Login?reason=session");
+                    return Task.CompletedTask;
+                }
                 context.Response.StatusCode = 401;
                 context.Response.ContentType = "application/json";
                 return context.Response.WriteAsync("{\"error\": \"Bạn cần đăng nhập để truy cập tài nguyên này.\"}");
