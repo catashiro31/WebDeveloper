@@ -98,6 +98,7 @@
         </main>
     </div>
 
+    @await Html.PartialAsync("_AuthState")
     <script>
         const token = localStorage.getItem('token');
         const userStr = localStorage.getItem('user');

@@ -39,14 +39,43 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         // Config for Token from Cookie and 401 handling
         options.Events = new JwtBearerEvents
         {
-            OnMessageReceived = context =>
+            OnMessageReceived = async context =>
             {
                 var token = context.Request.Cookies["accessToken"];
                 if (!string.IsNullOrEmpty(token))
                 {
                     context.Token = token;
+                    return;
                 }
-                return Task.CompletedTask;
+
+                // An access cookie expires after 15 minutes. Restore the browser
+                // session from its HttpOnly refresh cookie on the next request.
+                var refreshToken = context.Request.Cookies["refreshToken"];
+                if (string.IsNullOrEmpty(refreshToken) ||
+                    context.Request.Path.StartsWithSegments("/api/v1/auth"))
+                    return;
+
+                try
+                {
+                    var auth = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+                    var refreshed = await auth.RefreshToken(refreshToken);
+                    var secure = !context.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>().IsDevelopment();
+                    context.Response.Cookies.Append("accessToken", refreshed.Token, new CookieOptions
+                    {
+                        HttpOnly = true, Secure = secure, SameSite = SameSiteMode.Strict,
+                        Expires = DateTimeOffset.UtcNow.AddMinutes(15)
+                    });
+                    context.Response.Cookies.Append("refreshToken", refreshed.RefreshToken, new CookieOptions
+                    {
+                        HttpOnly = true, Secure = secure, SameSite = SameSiteMode.Strict,
+                        Expires = DateTimeOffset.UtcNow.AddDays(7)
+                    });
+                    context.Token = refreshed.Token;
+                }
+                catch (InvalidOperationException)
+                {
+                    // Invalid or expired refresh token: continue as a guest.
+                }
             },
             OnChallenge = context =>
             {

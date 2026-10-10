@@ -10,10 +10,12 @@ namespace WebDeveloper.Controllers.Api
     public class AuthApiController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly IWebHostEnvironment _environment;
 
-        public AuthApiController(IAuthService authService)
+        public AuthApiController(IAuthService authService, IWebHostEnvironment environment)
         {
             _authService = authService;
+            _environment = environment;
         }
 
         [HttpPost("signin")]
@@ -26,7 +28,7 @@ namespace WebDeveloper.Controllers.Api
                 var accessCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = !_environment.IsDevelopment(),
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddMinutes(15) 
                 };
@@ -35,7 +37,7 @@ namespace WebDeveloper.Controllers.Api
                 var refreshCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = !_environment.IsDevelopment(),
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddDays(7)
                 };
@@ -70,7 +72,7 @@ namespace WebDeveloper.Controllers.Api
                 var accessCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = !_environment.IsDevelopment(),
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddMinutes(15)
                 };
@@ -79,7 +81,7 @@ namespace WebDeveloper.Controllers.Api
                 var refreshCookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
-                    Secure = true,
+                    Secure = !_environment.IsDevelopment(),
                     SameSite = SameSiteMode.Strict,
                     Expires = DateTime.UtcNow.AddDays(7)
                 };
@@ -108,7 +110,6 @@ namespace WebDeveloper.Controllers.Api
         }
 
         [HttpPost("signout")]
-        [Authorize]
         public async Task<IActionResult> SignOutApp()
         {
             // Try to get token from Cookie first, then fallback to Header
@@ -123,15 +124,11 @@ namespace WebDeveloper.Controllers.Api
                 }
             }
 
-            if (!string.IsNullOrEmpty(token))
-            {
-                await _authService.SignOut(token);
-                Response.Cookies.Delete("accessToken");
-                Response.Cookies.Delete("refreshToken");
-                return Ok(new { Message = "Đăng xuất thành công" });
-            }
-            
-            return BadRequest(new { Message = "Token không hợp lệ" });
+            await _authService.SignOut(token, Request.Cookies["refreshToken"]);
+            Response.Cookies.Delete("accessToken");
+            Response.Cookies.Delete("refreshToken");
+            Response.Cookies.Delete("user_info");
+            return Ok(new { Message = "Đăng xuất thành công" });
         }
 
         [HttpGet("verify")]

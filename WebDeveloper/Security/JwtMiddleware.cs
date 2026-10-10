@@ -21,7 +21,7 @@ namespace WebDeveloper.Security
         {
             // Bỏ qua các endpoint public
             var path = context.Request.Path.Value ?? "";
-            if (path.StartsWith("/api/v1/auth/") && !path.EndsWith("/signout"))
+            if (path.StartsWith("/api/v1/auth/"))
             {
                 await _next(context);
                 return;
@@ -36,12 +36,18 @@ namespace WebDeveloper.Security
             // Kiểm tra nếu user đã authenticated (JWT Bearer đã validate)
             if (context.User.Identity?.IsAuthenticated == true)
             {
-                // Lấy token từ header
-                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-                if (authHeader != null && authHeader.StartsWith("Bearer "))
+                // Authentication accepts a cookie or a bearer header. Apply revocation
+                // and account checks to the token that authenticated this request.
+                var token = context.Request.Cookies["accessToken"];
+                if (string.IsNullOrEmpty(token))
                 {
-                    var token = authHeader["Bearer ".Length..];
+                    var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                    if (authHeader != null && authHeader.StartsWith("Bearer "))
+                        token = authHeader["Bearer ".Length..];
+                }
 
+                if (!string.IsNullOrEmpty(token))
+                {
                     // Kiểm tra token blacklist
                     var isBlacklisted = await db.TokenBlacklists.AnyAsync(t => t.Token == token);
                     if (isBlacklisted)

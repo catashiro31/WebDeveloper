@@ -1,23 +1,9 @@
 @{
     Layout = null;
-    var userJson = Context.Request.Cookies["user_info"];
-    var userName = "Bác sĩ";
-    var userEmail = "";
-    var userAvatar = "";
-    var role = "";
-
-    if (!string.IsNullOrEmpty(userJson))
-    {
-        try
-        {
-            var userObj = System.Text.Json.JsonDocument.Parse(Uri.UnescapeDataString(userJson)).RootElement;
-            if (userObj.TryGetProperty("fullName", out var fn)) userName = fn.GetString();
-            if (userObj.TryGetProperty("email", out var em)) userEmail = em.GetString();
-            if (userObj.TryGetProperty("avatarUrl", out var av)) userAvatar = av.GetString();
-            if (userObj.TryGetProperty("role", out var r)) role = r.GetString();
-        }
-        catch { }
-    }
+    var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Bác sĩ";
+    var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "";
+    var userAvatar = User.FindFirst("AvatarUrl")?.Value ?? "";
+    var role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value ?? "";
 
     var currentAction = ViewContext.RouteData.Values["Action"]?.ToString()?.ToLower();
 }
@@ -121,6 +107,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    @await Html.PartialAsync("_AuthState")
     <script>
         function logout() {
             localStorage.removeItem('token');

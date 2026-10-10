@@ -8,7 +8,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<SignInResponse> SignIn(SignInRequest request);
         Task<SignInResponse> RefreshToken(string refreshToken);
         Task<string> SignUp(SignUpRequest request);
-        Task SignOut(string token);
+        Task SignOut(string? token, string? refreshToken);
         Task<string> VerifyAccount(string email, string code);
         Task<string> ForgotPassword(string email);
         Task<string> ResetPassword(ResetPasswordRequest request);

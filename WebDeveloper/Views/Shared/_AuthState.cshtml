@@ -1,0 +1,27 @@
+@using System.Security.Claims
+@using System.Text.Json
+@{
+    var signedIn = User.Identity?.IsAuthenticated == true;
+    var browserUser = JsonSerializer.Serialize(new
+    {
+        email = User.FindFirst(ClaimTypes.Email)?.Value ?? "",
+        fullName = User.FindFirst(ClaimTypes.Name)?.Value ?? "",
+        role = User.FindFirst(ClaimTypes.Role)?.Value ?? "",
+        avatarUrl = User.FindFirst("AvatarUrl")?.Value
+    });
+}
+<script>
+    // Keep legacy view scripts in sync with the server-validated cookie session.
+    // This value is only a UI marker; the actual JWT stays in an HttpOnly cookie.
+    try {
+        if (@(signedIn ? "true" : "false")) {
+            localStorage.setItem('token', 'SECURE_HTTPONLY_COOKIE');
+            localStorage.setItem('user', @Html.Raw(JsonSerializer.Serialize(browserUser)));
+        } else {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        }
+    } catch (_) {
+        // Storage can be unavailable; server authorization remains authoritative.
+    }
+</script>

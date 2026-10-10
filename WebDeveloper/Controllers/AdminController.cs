@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebDeveloper.Controllers
 {
+    [Authorize(Roles = "ADMIN")]
     public class AdminController : Controller
     {
         public IActionResult Dashboard()

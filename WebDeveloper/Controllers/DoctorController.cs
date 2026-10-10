@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace WebDeveloper.Controllers
 {
+    [Authorize(Roles = "DOCTOR")]
     public class DoctorController : Controller
     {
         public IActionResult Index()

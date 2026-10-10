@@ -74,13 +74,14 @@ namespace WebDeveloper.Services
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
 
-            if (user == null || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
+            if (user == null || user.IsActive != true || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
                 throw new InvalidOperationException("Refresh token không hợp lệ hoặc đã hết hạn.");
 
             var newAccessToken = _jwt.CreateToken(user);
             var newRefreshToken = _jwt.GenerateRefreshToken();
 
             user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
             await _db.SaveChangesAsync();
 
             string? verificationStatus = null;
@@ -146,16 +147,26 @@ namespace WebDeveloper.Services
             return "Vui lòng kiểm tra email để xác thực tài khoản!";
         }
 
-        public async Task SignOut(string token)
+        public async Task SignOut(string? token, string? refreshToken)
         {
-            var expiry = _jwt.GetExpiryDateFromToken(token);
-            var blacklist = new TokenBlacklist
+            if (!string.IsNullOrEmpty(token) && _jwt.GetUserIdFromToken(token) != null)
             {
-                Token = token,
-                ExpiryDate = expiry ?? DateTime.UtcNow.AddDays(1),
-                CreatedAt = DateTime.UtcNow
-            };
-            _db.TokenBlacklists.Add(blacklist);
+                _db.TokenBlacklists.Add(new TokenBlacklist
+                {
+                    Token = token,
+                    ExpiryDate = _jwt.GetExpiryDateFromToken(token) ?? DateTime.UtcNow.AddDays(1),
+                    CreatedAt = DateTime.UtcNow
+                });
+            }
+            if (!string.IsNullOrEmpty(refreshToken))
+            {
+                var user = await _db.Users.FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
+                if (user != null)
+                {
+                    user.RefreshToken = null;
+                    user.RefreshTokenExpiryTime = null;
+                }
+            }
             await _db.SaveChangesAsync();
         }
 
