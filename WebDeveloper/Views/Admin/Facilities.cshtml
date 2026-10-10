@@ -120,7 +120,7 @@
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
                     </svg>
                     <p id="imageText" style="margin: 0; font-size: 13px; color: #64748b;">Nhấn để chọn ảnh hoặc kéo thả vào đây</p>
-                    <input type="file" id="f_image" accept="image/*" onchange="handleImageChange(event)" />
+                    <input type="file" id="f_image" accept="image/jpeg,image/png" onchange="handleImageChange(event)" />
                 </div>
                 <div id="imagePreview" style="margin-top: 8px; display: none;">
                     <img id="imagePreviewImg" src="" style="width: 60px; height: 60px; border-radius: 8px; object-fit: cover; border: 1px solid #e2e8f0;" />
@@ -133,8 +133,8 @@
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 8px;">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
                     </svg>
-                    <p id="licenseText" style="margin: 0; font-size: 13px; color: #64748b;">Tải lên Giấy phép hoạt động (Ảnh/PDF)</p>
-                    <input type="file" id="f_license" accept="image/*,application/pdf" onchange="handleLicenseChange(event)" />
+                    <p id="licenseText" style="margin: 0; font-size: 13px; color: #64748b;">Tải lên Giấy phép hoạt động (JPG, PNG hoặc PDF; tối đa 5 MB)</p>
+                    <input type="file" id="f_license" accept="image/jpeg,image/png,application/pdf" onchange="handleLicenseChange(event)" />
                 </div>
                 <a id="licenseLink" href="#" target="_blank" style="font-size: 12px; color: #6366f1; margin-top: 8px; display: none; font-weight: 600;">Xem giấy phép hiện tại</a>
             </div>
@@ -153,6 +153,26 @@
         let editingFacility = null;
         let imageFile = null;
         let licenseFile = null;
+
+        function showFacilityError(message) {
+            Toastify({
+                text: message,
+                duration: 5000,
+                style: { background: '#ef4444', maxWidth: 'calc(100vw - 32px)', whiteSpace: 'normal', overflowWrap: 'anywhere' }
+            }).showToast();
+        }
+
+        function validateFacilityFile(file, types, label) {
+            if (file.size > 5 * 1024 * 1024) {
+                showFacilityError(`${label} không được vượt quá 5 MB.`);
+                return false;
+            }
+            if (!types.includes(file.type)) {
+                showFacilityError(`${label} không đúng định dạng. Chọn ${types.includes('application/pdf') ? 'JPG, PNG hoặc PDF' : 'JPG hoặc PNG'}.`);
+                return false;
+            }
+            return true;
+        }
 
         function fetchFacilities() {
             document.getElementById('loading').style.display = 'block';
@@ -253,7 +273,7 @@
                     document.getElementById('imagePreviewImg').src = fac.imageUrl;
                 } else document.getElementById('imagePreview').style.display = 'none';
 
-                document.getElementById('licenseText').innerHTML = fac.licenseUrl ? 'Đã có giấy phép (Nhấn để thay đổi)' : 'Tải lên Giấy phép hoạt động (Ảnh/PDF)';
+                document.getElementById('licenseText').textContent = fac.licenseUrl ? 'Đã có giấy phép (Nhấn để thay đổi)' : 'Tải lên Giấy phép hoạt động (JPG, PNG hoặc PDF; tối đa 5 MB)';
                 document.getElementById('licenseBox').style.borderColor = '#e2e8f0';
                 if (fac.licenseUrl) {
                     document.getElementById('licenseLink').href = fac.licenseUrl;
@@ -267,7 +287,7 @@
                 document.getElementById('f_id').value = '';
                 document.getElementById('imageText').innerHTML = 'Nhấn để chọn ảnh hoặc kéo thả vào đây';
                 document.getElementById('imagePreview').style.display = 'none';
-                document.getElementById('licenseText').innerHTML = 'Tải lên Giấy phép hoạt động (Ảnh/PDF)';
+                document.getElementById('licenseText').textContent = 'Tải lên Giấy phép hoạt động (JPG, PNG hoặc PDF; tối đa 5 MB)';
                 document.getElementById('licenseBox').style.borderColor = '#ef4444';
                 document.getElementById('licenseLink').style.display = 'none';
                 document.getElementById('submitBtn').innerText = 'Gia nhập mạng lưới';
@@ -281,8 +301,18 @@
         window.handleImageChange = function(e) {
             const file = e.target.files[0];
             if (file) {
+                if (!validateFacilityFile(file, ['image/jpeg', 'image/png'], 'Ảnh đại diện')) {
+                    e.target.value = '';
+                    imageFile = null;
+                    document.getElementById('imageText').textContent = editingFacility?.imageUrl
+                        ? 'Đã có ảnh đại diện (Nhấn để thay đổi)' : 'Nhấn để chọn ảnh hoặc kéo thả vào đây';
+                    document.getElementById('imagePreview').style.display = editingFacility?.imageUrl ? 'block' : 'none';
+                    if (editingFacility?.imageUrl)
+                        document.getElementById('imagePreviewImg').src = editingFacility.imageUrl;
+                    return;
+                }
                 imageFile = file;
-                document.getElementById('imageText').innerHTML = `<strong>${file.name}</strong>`;
+                document.getElementById('imageText').textContent = file.name;
                 document.getElementById('imagePreview').style.display = 'block';
                 document.getElementById('imagePreviewImg').src = URL.createObjectURL(file);
             }
@@ -291,8 +321,16 @@
         window.handleLicenseChange = function(e) {
             const file = e.target.files[0];
             if (file) {
+                if (!validateFacilityFile(file, ['image/jpeg', 'image/png', 'application/pdf'], 'Giấy phép hoạt động')) {
+                    e.target.value = '';
+                    licenseFile = null;
+                    document.getElementById('licenseText').textContent = editingFacility?.licenseUrl
+                        ? 'Đã có giấy phép (Nhấn để thay đổi)' : 'Tải lên Giấy phép hoạt động (JPG, PNG hoặc PDF; tối đa 5 MB)';
+                    document.getElementById('licenseBox').style.borderColor = editingFacility?.licenseUrl ? '#e2e8f0' : '#ef4444';
+                    return;
+                }
                 licenseFile = file;
-                document.getElementById('licenseText').innerHTML = `<strong>${file.name}</strong>`;
+                document.getElementById('licenseText').textContent = file.name;
                 document.getElementById('licenseBox').style.borderColor = '#e2e8f0';
             } else if (!editingFacility?.licenseUrl) {
                 document.getElementById('licenseBox').style.borderColor = '#ef4444';
@@ -331,7 +369,13 @@
                     Toastify({ text: "Thành công", style: {background: "#10b981"} }).showToast();
                     closeModal();
                     fetchFacilities();
-                } else Toastify({ text: await res.text() || "Lỗi lưu cơ sở", style: {background: "#ef4444"} }).showToast();
+                } else if (res.status === 413) {
+                    showFacilityError('Tổng dung lượng tệp vượt giới hạn máy chủ. Vui lòng chọn tệp nhỏ hơn.');
+                } else {
+                    const error = res.headers.get('content-type')?.includes('json')
+                        ? await res.json().catch(() => null) : null;
+                    showFacilityError(error?.detail || error?.message || error?.title || 'Không thể lưu cơ sở y tế. Vui lòng thử lại.');
+                }
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast())
             .finally(() => { btn.disabled = false; btn.innerText = editingFacility ? 'Lưu thay đổi' : 'Gia nhập mạng lưới'; });

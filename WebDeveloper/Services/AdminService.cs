@@ -231,7 +231,10 @@ namespace WebDeveloper.Services
             if (await _db.Facilities.AnyAsync(f => f.FacilityName!.ToLower() == req.FacilityName.ToLower()))
                 throw new InvalidOperationException("Cơ sở y tế đã tồn tại!");
 
-            _fileUpload.ValidateFile(req.LicenseFile, "Giấy phép hoạt động", "application/pdf");
+            if (req.LicenseFile == null || req.LicenseFile.Length == 0)
+                throw new InvalidOperationException("Vui lòng tải lên giấy phép hoạt động!");
+
+            _fileUpload.ValidateFile(req.LicenseFile, "Giấy phép hoạt động", "application/pdf", "image/jpeg", "image/png");
 
             var facility = new Facility
             {
@@ -277,7 +280,7 @@ namespace WebDeveloper.Services
             }
             if (req.LicenseFile != null)
             {
-                _fileUpload.ValidateFile(req.LicenseFile, "Giấy phép", "application/pdf");
+                _fileUpload.ValidateFile(req.LicenseFile, "Giấy phép", "application/pdf", "image/jpeg", "image/png");
                 f.LicenseUrl = await _fileUpload.UploadFileAsync(req.LicenseFile);
             }
 
