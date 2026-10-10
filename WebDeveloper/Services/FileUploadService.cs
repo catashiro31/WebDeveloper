@@ -62,6 +62,9 @@ namespace WebDeveloper.Services
         {
             if (file == null || file.Length == 0) return;
 
+            if (file.Length > 5 * 1024 * 1024)
+                throw new InvalidOperationException($"{fieldName} không được vượt quá 5 MB!");
+
             var contentType = file.ContentType;
             if (string.IsNullOrEmpty(contentType) || !supportedTypes.Contains(contentType))
             {
