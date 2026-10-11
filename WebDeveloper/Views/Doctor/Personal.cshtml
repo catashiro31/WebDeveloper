@@ -147,15 +147,24 @@
             .then(async res => {
                 if (res.ok) {
                     const updatedUser = await res.json();
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
-                    document.cookie = `user_info=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/;`;
+                    try { localStorage.setItem('user', JSON.stringify(updatedUser)); } catch (_) {}
+                    currentUser = updatedUser;
                     showMessage("Cập nhật thông tin thành công!", "success");
                     
                     // Update layout avatar and name
                     const layoutName = document.getElementById('doctorName');
                     if (layoutName) layoutName.innerText = 'BS. ' + updatedUser.fullName;
-                    const headerName = document.querySelector('header span');
-                    if (headerName && headerName.innerText.includes('BS.')) headerName.innerText = 'BS. ' + updatedUser.fullName;
+                    const headerName = document.getElementById('headerDoctorName');
+                    if (headerName) headerName.innerText = 'BS. ' + updatedUser.fullName;
+                    if (updatedUser.avatarUrl) {
+                        const sidebarAvatar = document.getElementById('doctorAvatar');
+                        sidebarAvatar.textContent = '';
+                        const img = document.createElement('img');
+                        img.src = updatedUser.avatarUrl;
+                        img.alt = '';
+                        img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+                        sidebarAvatar.appendChild(img);
+                    }
                 } else {
                     const msg = await readApiMessage(res);
                     showMessage(msg || "Đã xảy ra lỗi khi cập nhật", "error");

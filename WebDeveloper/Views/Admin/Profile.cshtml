@@ -146,13 +146,21 @@
             .then(async res => {
                 if (res.ok) {
                     const updatedUser = await res.json();
-                    localStorage.setItem('user', JSON.stringify(updatedUser));
-                    document.cookie = `user_info=${encodeURIComponent(JSON.stringify(updatedUser))}; path=/;`;
+                    try { localStorage.setItem('user', JSON.stringify(updatedUser)); } catch (_) {}
                     showMessage("Cập nhật thông tin thành công!", "success");
                     
-                    // Update layout avatar and name
-                    const layoutName = document.querySelector('header span');
-                    if (layoutName) layoutName.innerText = updatedUser.fullName;
+                    currentUser = updatedUser;
+                    if (updatedUser.avatarUrl) {
+                        for (const id of ['adminAvatar', 'adminSidebarAvatar']) {
+                            const container = document.getElementById(id);
+                            container.textContent = '';
+                            const img = document.createElement('img');
+                            img.src = updatedUser.avatarUrl;
+                            img.alt = '';
+                            img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+                            container.appendChild(img);
+                        }
+                    }
                 } else {
                     if (res.status === 413) {
                         showMessage('Yêu cầu tải ảnh vượt giới hạn máy chủ. Hãy chọn ảnh nhỏ hơn hoặc liên hệ quản trị viên.', 'error');
