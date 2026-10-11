@@ -309,6 +309,8 @@
         let debounceTimer;
         let allSpecialties = [];
         let allFacilities = [];
+        let specialtyLoadFailed = false;
+        let facilityLoadFailed = false;
         let isSpecExpanded = false;
         let isFacExpanded = false;
 
@@ -356,34 +358,37 @@
         }
 
         async function initData() {
-            try {
-                const [specsRes, facsRes] = await Promise.all([
-                    fetch('/api/v1/portal/specialties'),
-                    fetch('/api/v1/portal/facilities')
-                ]);
-                allSpecialties = await specsRes.json();
-                allFacilities = await facsRes.json();
+            elSpecList.textContent = 'Đang tải chuyên khoa...';
+            elFacList.textContent = 'Đang tải cơ sở y tế...';
+            const [specs, facilities] = await Promise.allSettled([
+                fetchApiList('/api/v1/portal/specialties'),
+                fetchApiList('/api/v1/portal/facilities')
+            ]);
+            specialtyLoadFailed = specs.status === 'rejected';
+            facilityLoadFailed = facilities.status === 'rejected';
+            allSpecialties = specialtyLoadFailed ? [] : specs.value;
+            allFacilities = facilityLoadFailed ? [] : facilities.value;
 
-                // Populate Provinces
-                const provinces = [...new Set(allFacilities.map(f => f.province).filter(Boolean))].sort();
-                provinces.forEach(p => {
-                    const opt = document.createElement('option');
-                    opt.value = p;
-                    opt.textContent = p;
-                    elProvince.appendChild(opt);
-                });
-                elProvince.value = state.province;
+            const provinces = [...new Set(allFacilities.map(f => f.province).filter(Boolean))].sort();
+            if (state.province && !provinces.includes(state.province)) provinces.push(state.province);
+            elProvince.replaceChildren(new Option('Tất cả tỉnh thành', ''));
+            provinces.forEach(province => elProvince.add(new Option(province, province)));
+            elProvince.value = state.province;
 
-                renderSpecialties();
-                renderFacilities();
-                fetchDoctors();
-            } catch(e) {
-                console.error(e);
-            }
+            renderSpecialties();
+            renderFacilities();
+            // A failed filter request must not prevent the doctor list loading.
+            await fetchDoctors();
         }
 
         function renderSpecialties() {
+            if (specialtyLoadFailed) {
+                elSpecList.innerHTML = '<p role="alert">Không thể tải chuyên khoa.</p><button type="button" class="spec-item" onclick="initData()">Tải lại chuyên khoa</button>';
+                elSpecToggle.style.display = 'none';
+                return;
+            }
             elSpecList.innerHTML = `<button class="spec-item ${!state.specId ? 'active' : ''}" onclick="setSpec(null)">Tất cả</button>`;
+            if (allSpecialties.length === 0) elSpecList.innerHTML += '<p style="font-size: 12px; color: #94a3b8; padding: 8px 12px;">Chưa có chuyên khoa đang hoạt động</p>';
             const toShow = isSpecExpanded ? allSpecialties : allSpecialties.slice(0, 6);
             
             toShow.forEach(s => {
@@ -404,6 +409,11 @@
         }
 
         function renderFacilities() {
+            if (facilityLoadFailed) {
+                elFacList.innerHTML = '<p role="alert">Không thể tải cơ sở y tế.</p><button type="button" class="spec-item" onclick="initData()">Tải lại cơ sở y tế</button>';
+                elFacToggle.style.display = 'none';
+                return;
+            }
             let filtered = allFacilities;
             if(state.province) filtered = filtered.filter(f => f.province === state.province);
             if(state.facSearch) filtered = filtered.filter(f => (f.name || f.facilityName).toLowerCase().includes(state.facSearch.toLowerCase()));
@@ -528,11 +538,12 @@
             if(state.maxPrice < 2000000) query += `&maxPrice=${state.maxPrice}`;
 
             try {
-                const res = await fetch(`/api/v1/portal/doctors${query}`);
+                const res = await fetch(`/api/v1/portal/doctors${query}`, { cache: 'no-store' });
+                if (!res.ok) throw new Error(await readApiMessage(res));
                 const data = await res.json();
-                
-                const docs = data.content || data || [];
-                state.totalPages = data.totalPages || 1;
+                if (!Array.isArray(data.content)) throw new Error('Danh sách bác sĩ không hợp lệ.');
+                const docs = data.content;
+                state.totalPages = data.totalPages || 0;
 
                 if (docs.length === 0) {
                     elGrid.innerHTML = `
@@ -600,7 +611,8 @@
                 }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch(e) {
-                console.error(e);
+                elGrid.innerHTML = '<div class="empty" role="alert"><h3>Không thể tải danh sách bác sĩ</h3><p>Vui lòng thử lại sau.</p><button type="button" class="book-btn" onclick="fetchDoctors()">Thử lại</button></div>';
+                elPagi.style.display = 'none';
             }
         }
 

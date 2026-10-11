@@ -20,6 +20,14 @@ function showApiToast(message, type = 'success') {
     setTimeout(() => notification.remove(), 5000);
 }
 
+async function fetchApiList(url) {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) throw new Error(await readApiMessage(response));
+    const data = await response.json();
+    if (!Array.isArray(data)) throw new Error('Máy chủ trả về danh sách không hợp lệ.');
+    return data;
+}
+
 // Read useful API errors without showing a JSON object or proxy HTML in the UI.
 async function readApiMessage(response, fallback = 'Yêu cầu không thành công. Vui lòng thử lại.') {
     if (response.status === 413) {

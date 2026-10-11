@@ -22,6 +22,11 @@
     <p style="color: #64748b;">Đang tải thông tin hồ sơ...</p>
 </div>
 
+<div id="profileLoadError" role="alert" style="display: none; padding: 24px; text-align: center;">
+    <p>Không thể tải hồ sơ bác sĩ. Vui lòng thử lại.</p>
+    <button type="button" onclick="init()" class="floating-input" style="width: auto; cursor: pointer;">Thử lại</button>
+</div>
+
 <!-- APPROVED VIEW -->
 <div id="approvedView" class="reveal" style="display: none; max-width: 900px; margin: 0 auto;">
     <div style="background: #fff; border-radius: 24px; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.04); border: 1px solid #f1f5f9; margin-bottom: 24px; display: flex; align-items: center; gap: 24px; position: relative; overflow: hidden; flex-wrap: wrap;">
@@ -133,6 +138,10 @@
 
             <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Cơ sở y tế *</label>
             <select id="f_facility" class="floating-input" required></select>
+            <div id="catalogLoadError" role="alert" style="display: none; margin-top: 12px; color: #b91c1c;">
+                <p id="catalogLoadMessage"></p>
+                <button type="button" onclick="loadOptions()" class="floating-input" style="width: auto; cursor: pointer;">Tải lại danh sách</button>
+            </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
                 <div>
@@ -158,6 +167,10 @@
 
         <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px;">Cơ sở y tế mới</label>
         <select id="t_facility" class="floating-input" style="margin-bottom: 20px;"></select>
+        <div id="transferCatalogError" role="alert" style="display: none; margin-bottom: 16px; color: #b91c1c;">
+            <p id="transferCatalogMessage"></p>
+            <button type="button" onclick="loadTransferFacilities(profileData)">Tải lại danh sách</button>
+        </div>
 
         <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px;">Lý do chuyển</label>
         <textarea id="t_reason" class="floating-input" style="min-height: 100px; margin-bottom: 24px;"></textarea>
@@ -177,8 +190,13 @@
         let facilitiesList = [];
 
         function init() {
+            document.getElementById('profileLoadError').style.display = 'none';
+            document.getElementById('initialLoading').style.display = 'flex';
             fetch('/api/v1/doctor/profile', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => {
+                if (!res.ok) throw new Error(await readApiMessage(res));
+                return res.json();
+            })
             .then(data => {
                 document.getElementById('initialLoading').style.display = 'none';
                 const status = data.verificationStatus || (user && user.verificationStatus ? user.verificationStatus : 'UNREGISTERED');
@@ -200,8 +218,7 @@
             })
             .catch(() => {
                 document.getElementById('initialLoading').style.display = 'none';
-                document.getElementById('formView').style.display = 'block';
-                loadOptions();
+                document.getElementById('profileLoadError').style.display = 'block';
             });
         }
 
@@ -234,26 +251,61 @@
                 transBtn.disabled = true;
             }
             
-            // load facilities for transfer
-            fetch('/api/v1/portal/facilities').then(res => res.json()).then(res => {
-                facilitiesList = res.content || res || [];
-                const select = document.getElementById('t_facility');
-                select.innerHTML = '<option value="">-- Chọn cơ sở --</option>' + 
-                    facilitiesList.filter(f => f.id != (data.facilityId || data.facility?.id)).map(f => `<option value="${f.id}">${f.name}</option>`).join('');
-            });
+            loadTransferFacilities(data);
         }
 
-        function loadOptions() {
-            fetch('/api/v1/portal/specialties').then(r => r.json()).then(res => {
-                const arr = res.content || res || [];
-                document.getElementById('f_specialty').innerHTML = '<option value="">-- Chọn chuyên khoa --</option>' + 
-                    arr.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        async function loadOptions() {
+            const selects = [document.getElementById('f_specialty'), document.getElementById('f_facility')];
+            const labels = ['chuyên khoa', 'cơ sở y tế'];
+            const previous = selects.map(select => select.value);
+            const submit = document.getElementById('submitFormBtn');
+            submit.disabled = true;
+            document.getElementById('catalogLoadError').style.display = 'none';
+            selects.forEach(select => {
+                select.disabled = true;
+                select.replaceChildren(new Option('Đang tải danh sách...', ''));
             });
-            fetch('/api/v1/portal/facilities').then(r => r.json()).then(res => {
-                const arr = res.content || res || [];
-                document.getElementById('f_facility').innerHTML = '<option value="">-- Chọn cơ sở --</option>' + 
-                    arr.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+            const results = await Promise.allSettled([
+                fetchApiList('/api/v1/portal/specialties'),
+                fetchApiList('/api/v1/portal/facilities')
+            ]);
+            const errors = [];
+            results.forEach((result, index) => {
+                const select = selects[index];
+                if (result.status === 'rejected') {
+                    select.replaceChildren(new Option(`Không thể tải ${labels[index]}`, ''));
+                    errors.push(`Không thể tải danh sách ${labels[index]}. Vui lòng thử lại.`);
+                    return;
+                }
+                const items = result.value;
+                select.replaceChildren(new Option(`-- Chọn ${labels[index]} --`, ''));
+                items.forEach(item => select.add(new Option(item.name, item.id)));
+                select.disabled = items.length === 0;
+                if (items.length === 0) errors.push(`Chưa có ${labels[index]} đang hoạt động. Vui lòng liên hệ quản trị viên.`);
+                if (items.some(item => String(item.id) === previous[index])) select.value = previous[index];
             });
+            submit.disabled = errors.length > 0;
+            document.getElementById('catalogLoadMessage').textContent = errors.join(' ');
+            document.getElementById('catalogLoadError').style.display = errors.length ? 'block' : 'none';
+        }
+
+        async function loadTransferFacilities(data) {
+            const select = document.getElementById('t_facility');
+            const submit = document.getElementById('submitTransferBtn');
+            select.disabled = submit.disabled = true;
+            document.getElementById('transferCatalogError').style.display = 'none';
+            select.replaceChildren(new Option('Đang tải danh sách...', ''));
+            try {
+                facilitiesList = await fetchApiList('/api/v1/portal/facilities');
+                const choices = facilitiesList.filter(f => f.id !== (data.facilityId || data.facility?.id));
+                select.replaceChildren(new Option('-- Chọn cơ sở --', ''));
+                choices.forEach(item => select.add(new Option(item.name, item.id)));
+                if (choices.length === 0) throw new Error('Chưa có cơ sở y tế khác để chuyển công tác.');
+                select.disabled = submit.disabled = false;
+            } catch (error) {
+                document.getElementById('transferCatalogMessage').textContent = error.message;
+                document.getElementById('transferCatalogError').style.display = 'block';
+            }
         }
 
         window.toggleEditMode = function(isEdit) {
@@ -286,14 +338,15 @@
             })
             .then(res => {
                 if (res.ok) {
-                    Toastify({ text: "Cập nhật thành công", style: {background: "#10b981"} }).showToast();
+                    showApiToast("Cập nhật thành công");
                     profileData.price = Number(price);
                     profileData.bio = bio;
                     document.getElementById('viewPrice').innerText = Number(price).toLocaleString('vi-VN');
                     document.getElementById('viewBio').innerText = bio;
                     toggleEditMode(false);
-                } else Toastify({ text: "Lỗi cập nhật", style: {background: "#ef4444"} }).showToast();
+                } else showApiToast("Lỗi cập nhật", 'error');
             })
+            .catch(() => showApiToast("Không thể cập nhật hồ sơ. Vui lòng thử lại.", 'error'))
             .finally(() => { btn.disabled = false; btn.innerText = "Lưu thay đổi"; });
         };
 
@@ -314,11 +367,11 @@
             if (certFile) formData.append('certificatePdf', certFile);
 
             if (idCardFile && (idCardFile.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png'].includes(idCardFile.type))) {
-                Toastify({ text: 'Ảnh CCCD phải là JPG/PNG và không quá 5 MB.', style: {background: '#ef4444'} }).showToast();
+                showApiToast('Ảnh CCCD phải là JPG/PNG và không quá 5 MB.', 'error');
                 return;
             }
             if (certFile && (certFile.size > 5 * 1024 * 1024 || certFile.type !== 'application/pdf')) {
-                Toastify({ text: 'Chứng chỉ phải là PDF và không quá 5 MB.', style: {background: '#ef4444'} }).showToast();
+                showApiToast('Chứng chỉ phải là PDF và không quá 5 MB.', 'error');
                 return;
             }
 
@@ -332,22 +385,29 @@
             })
             .then(async res => {
                 if (res.ok) {
-                    if (user) { user.verificationStatus = 'PENDING'; localStorage.setItem('user', JSON.stringify(user)); }
+                    if (user) {
+                        user.verificationStatus = 'PENDING';
+                        try { localStorage.setItem('user', JSON.stringify(user)); } catch (_) {}
+                    }
                     document.getElementById('formView').style.display = 'none';
                     document.getElementById('successView').style.display = 'block';
-                } else Toastify({ text: await readApiMessage(res, 'Không thể gửi hồ sơ bác sĩ.'), style: {background: '#ef4444'} }).showToast();
+                } else showApiToast(await readApiMessage(res, 'Không thể gửi hồ sơ bác sĩ.'), 'error');
             })
+            .catch(() => showApiToast('Không thể gửi hồ sơ bác sĩ. Vui lòng thử lại.', 'error'))
             .finally(() => { btn.disabled = false; btn.innerText = "Gửi hồ sơ xét duyệt"; });
         };
 
-        window.openTransferModal = () => document.getElementById('transferModal').classList.add('active');
+        window.openTransferModal = () => {
+            document.getElementById('transferModal').classList.add('active');
+            loadTransferFacilities(profileData);
+        };
         window.closeTransferModal = () => document.getElementById('transferModal').classList.remove('active');
 
         window.submitTransfer = function() {
             const fac = document.getElementById('t_facility').value;
             const reason = document.getElementById('t_reason').value;
             if (!fac || !reason) {
-                Toastify({ text: "Vui lòng nhập đủ thông tin", style: {background: "#f59e0b"} }).showToast();
+                showApiToast("Vui lòng nhập đủ thông tin", 'warning');
                 return;
             }
             
@@ -361,11 +421,12 @@
             })
             .then(res => {
                 if (res.ok) {
-                    Toastify({ text: "Đã gửi yêu cầu", style: {background: "#10b981"} }).showToast();
+                    showApiToast("Đã gửi yêu cầu");
                     closeTransferModal();
                     setTimeout(() => location.reload(), 1500);
-                } else Toastify({ text: "Lỗi gửi yêu cầu", style: {background: "#ef4444"} }).showToast();
+                } else showApiToast("Lỗi gửi yêu cầu", 'error');
             })
+            .catch(() => showApiToast('Không thể gửi yêu cầu chuyển công tác. Vui lòng thử lại.', 'error'))
             .finally(() => { btn.disabled = false; btn.innerText = "Gửi yêu cầu"; });
         };
 

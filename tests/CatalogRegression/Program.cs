@@ -5,8 +5,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
 using WebDeveloper.Data;
 using WebDeveloper.Models.DTOs.Admin;
+using WebDeveloper.Models.DTOs.Doctor;
 using WebDeveloper.Models.DTOs.Portal;
 using WebDeveloper.Models.DTOs.Upload;
+using WebDeveloper.Models.Entities;
+using WebDeveloper.Models.Enums;
 using WebDeveloper.Services;
 using WebDeveloper.Services.Interfaces;
 
@@ -93,6 +96,55 @@ try
     Check((await Facilities()).Single(f => f.Id == facilityId).Verified, "Verified facility state stale.");
     Console.WriteLine("PASS: facility verification state updates immediately.");
 
+    // Registration must persist the selected catalog IDs. Pending profiles are
+    // intentionally private; approval makes the same record publicly visible.
+    using var imageStream = new MemoryStream(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 });
+    var image = new FormFile(imageStream, 0, imageStream.Length, "IdCardImage", "id.png")
+    {
+        Headers = new HeaderDictionary(), ContentType = "image/png"
+    };
+    await using (var db = new ApplicationDbContext(options))
+    {
+        var doctorUser = new User
+        {
+            Email = unique + "@example.test", FullName = unique,
+            Role = RoleStatus.DOCTOR, IsActive = true, CreatedAt = DateTime.UtcNow
+        };
+        db.Users.Add(doctorUser);
+        await db.SaveChangesAsync();
+        await new DoctorService(db, upload).RegisterDoctor(doctorUser, new DoctorProfileRequest
+        {
+            SpecialtyId = specialtyId.Value, FacilityId = facilityId.Value,
+            Bio = "Regression profile", Degree = "Bác sĩ", ExperienceYears = 3,
+            Price = 200000, IdCardImage = image, CertificatePdf = license
+        });
+    }
+    await using (var db = new ApplicationDbContext(options))
+    {
+        var doctorUser = await db.Users.SingleAsync(u => u.Email == unique + "@example.test");
+        var profile = await new DoctorService(db, upload).GetProfile(doctorUser);
+        Check(profile.SpecialtyId == specialtyId && profile.FacilityId == facilityId,
+            "Doctor registration did not persist the selected catalog IDs.");
+        Check(profile.SpecialtyName == unique + "-updated" && profile.FacilityName == unique + "-updated",
+            "Doctor profile did not resolve catalog names from the database.");
+        var publicService = new PublicService(db, cache);
+        var pending = await publicService.GetDoctors(unique, null, null, null, null, null, null, 0, 10);
+        Check(pending.TotalElements == 0, "Pending doctor incorrectly listed publicly.");
+        await db.DoctorDetails.Where(d => d.UserId == doctorUser.UserId)
+            .ExecuteUpdateAsync(s => s.SetProperty(d => d.VerificationStatus, VerificationStatus.APPROVED));
+    }
+    await using (var db = new ApplicationDbContext(options))
+    {
+        var approved = await new PublicService(db, cache)
+            .GetDoctors(unique, specialtyId, facilityId, null, null, null, null, 0, 10);
+        Check(approved.TotalElements == 1, "Approved doctor missing with matching catalog filters.");
+        var card = approved.Content.Single();
+        Check(card.SpecialtyName == unique + "-updated" && card.FacilityName == unique + "-updated",
+            "Public doctor card is missing its specialty/facility name.");
+        await db.Users.Where(u => u.Email == unique + "@example.test").ExecuteDeleteAsync();
+    }
+    Console.WriteLine("PASS: doctor registration stores catalog IDs/names; pending stays private and approved appears with correct filters/names.");
+
     await Write(admin => admin.DeleteSpecialty(specialtyId.Value));
     await Write(admin => admin.DeleteFacility(facilityId.Value));
     Check(!(await Specialties()).Any(s => s.Id == specialtyId), "Deleted specialty still appears.");
@@ -102,6 +154,7 @@ try
 finally
 {
     await using var db = new ApplicationDbContext(options);
+    await db.Users.Where(u => u.Email == unique + "@example.test").ExecuteDeleteAsync();
     // Restrict cleanup to this run's two unique names, including renamed rows.
     await db.Specialties.Where(s => s.SpecialtyName == unique || s.SpecialtyName == unique + "-updated").ExecuteDeleteAsync();
     await db.Facilities.Where(f => f.FacilityName == unique || f.FacilityName == unique + "-updated").ExecuteDeleteAsync();

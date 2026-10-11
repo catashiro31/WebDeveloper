@@ -5,6 +5,8 @@ namespace WebDeveloper.Models.DTOs.Portal
         public int DoctorId { get; set; }
         public string? DoctorName { get; set; }
         public string? SpecialtyName { get; set; }
+        public string? FacilityName { get; set; }
+        public string? Province { get; set; }
         public string? DoctorEmail { get; set; }
         public string? DoctorPhone { get; set; }
         public string? AvatarUrl { get; set; }

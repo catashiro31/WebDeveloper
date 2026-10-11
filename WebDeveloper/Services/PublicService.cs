@@ -111,6 +111,8 @@ namespace WebDeveloper.Services
                 DoctorId = d.DoctorId,
                 DoctorName = d.User.FullName,
                 SpecialtyName = d.Specialty?.SpecialtyName,
+                FacilityName = d.Facility?.FacilityName,
+                Province = d.Facility?.Province,
                 DoctorEmail = d.User.Email,
                 DoctorPhone = d.User.PhoneNumber,
                 AvatarUrl = d.User.AvatarUrl,

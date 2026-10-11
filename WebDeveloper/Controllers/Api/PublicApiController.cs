@@ -18,6 +18,7 @@ namespace WebDeveloper.Controllers.Api
         public async Task<IActionResult> GetStats() => Ok(await _publicService.GetPortalStats());
 
         [HttpGet("doctors")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> GetDoctors(
             [FromQuery] string? keyword,
             [FromQuery] int? specId,
