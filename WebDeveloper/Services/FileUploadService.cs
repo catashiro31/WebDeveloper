@@ -60,7 +60,10 @@ namespace WebDeveloper.Services
 
         public void ValidateFile(IFormFile? file, string fieldName, params string[] supportedTypes)
         {
-            if (file == null || file.Length == 0) return;
+            if (file == null) return;
+
+            if (file.Length == 0)
+                throw new InvalidOperationException($"{fieldName} không được để trống!");
 
             if (file.Length > 5 * 1024 * 1024)
                 throw new InvalidOperationException($"{fieldName} không được vượt quá 5 MB!");

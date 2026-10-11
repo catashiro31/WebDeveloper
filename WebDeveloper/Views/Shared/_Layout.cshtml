@@ -18,6 +18,7 @@
     
     <!-- Toastify for Notifications (Replacing React-Toastify) -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <style type="text/tailwindcss">
@@ -142,6 +143,7 @@
         }
     </script>
 
+    <script src="/js/api-messages.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

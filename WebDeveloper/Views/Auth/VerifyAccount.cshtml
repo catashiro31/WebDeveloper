@@ -116,10 +116,10 @@
                 })
                 .then(async res => {
                     if (res.ok) {
-                        const txt = await res.text();
+                        const txt = await readApiMessage(res, "Chúc mừng! Tài khoản của bạn đã được xác minh thành công.");
                         setStatus('success', txt || "Chúc mừng! Tài khoản của bạn đã được xác minh thành công. Hãy bắt đầu trải nghiệm dịch vụ của DocBooking ngay.");
                     } else {
-                        const txt = await res.text();
+                        const txt = await readApiMessage(res, "Mã xác thực không hợp lệ hoặc liên kết đã hết hiệu lực sử dụng.");
                         setStatus('error', txt || "Mã xác thực không hợp lệ hoặc liên kết đã hết hiệu lực sử dụng.");
                     }
                 })

@@ -87,7 +87,7 @@
                     Toastify({ text: "Đã hủy lịch hẹn thành công", style: { background: "#10b981" } }).showToast();
                     fetchAppointments();
                 } else {
-                    const msg = await res.text();
+                    const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Không thể hủy lịch hẹn", style: { background: "#ef4444" } }).showToast();
                     btn.innerHTML = originalText;
                     btn.disabled = false;

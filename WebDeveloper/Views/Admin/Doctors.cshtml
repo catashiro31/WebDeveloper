@@ -310,7 +310,7 @@
                 if (res.ok) {
                     Toastify({ text: "Phê duyệt thành công", style: {background: "#10b981"} }).showToast();
                     fetchData();
-                } else Toastify({ text: await res.text() || "Lỗi phê duyệt", style: {background: "#ef4444"} }).showToast();
+                } else Toastify({ text: await readApiMessage(res) || "Lỗi phê duyệt", style: {background: "#ef4444"} }).showToast();
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
         };
@@ -339,7 +339,7 @@
                     Toastify({ text: "Đã từ chối", style: {background: "#10b981"} }).showToast();
                     closeRejectModal();
                     fetchData();
-                } else Toastify({ text: await res.text() || "Lỗi từ chối", style: {background: "#ef4444"} }).showToast();
+                } else Toastify({ text: await readApiMessage(res) || "Lỗi từ chối", style: {background: "#ef4444"} }).showToast();
             })
             .finally(() => { btn.disabled = false; btn.innerText = 'Gửi từ chối'; });
         };

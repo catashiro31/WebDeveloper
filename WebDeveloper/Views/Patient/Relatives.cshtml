@@ -260,7 +260,7 @@
                     closeModal();
                     fetchRelatives();
                 } else {
-                    const msg = await res.text();
+                    const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Không thể lưu thông tin", style: { background: "#ef4444" } }).showToast();
                 }
             })
@@ -284,7 +284,7 @@
                     Toastify({ text: "Đã xóa hồ sơ", style: { background: "#10b981" } }).showToast();
                     fetchRelatives();
                 } else {
-                    const msg = await res.text();
+                    const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Không thể xóa hồ sơ", style: { background: "#ef4444" } }).showToast();
                 }
             })

@@ -11,7 +11,7 @@ Trên VPS, tìm file cấu hình Nginx đang phục vụ `163.61.182.126` (thư�
 khối `server { ... }` phục vụ website**:
 
 ```nginx
-client_max_body_size 12m;
+client_max_body_size 20m;
 ```
 
 Kiểm tra và nạp lại Nginx:
@@ -27,7 +27,8 @@ Nginx, nếu có, cũng cần lớn hơn 5 MB.
 
 Mã ứng dụng mới từ nhánh `master` từ chối ảnh đại diện vượt 5 MB hoặc không phải
 JPG/PNG ngay trên trang và kiểm tra lại tại backend. Giấy phép cơ sở y tế hỗ trợ
-JPG/PNG/PDF, tối đa 5 MB. Khi proxy trả 413, trang hiển thị thông báo ngắn thay vì
+JPG/PNG/PDF, tối đa 5 MB. Hồ sơ bác sĩ cũng có thể gửi nhiều tệp cùng lúc; mức 20 MB
+đủ cho ba tệp tối đa 5 MB và phần dữ liệu biểu mẫu. Khi proxy trả 413, trang hiển thị thông báo ngắn thay vì
 in nguyên HTML lỗi. Sau khi lấy mã mới, build lại dịch vụ ứng dụng. Cần cả thay đổi
 Nginx lẫn triển khai ứng dụng để hai tệp hợp lệ tải lên được.
 

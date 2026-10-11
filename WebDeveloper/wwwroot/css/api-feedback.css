@@ -1,0 +1,6 @@
+.toastify {
+    box-sizing: border-box;
+    max-width: min(380px, calc(100vw - 32px));
+    white-space: normal;
+    overflow-wrap: anywhere;
+}

@@ -202,7 +202,7 @@
                     fetchSchedules();
                     Toastify({ text: "Tạo lịch thành công", style: { background: "#10b981" } }).showToast();
                 } else {
-                    const msg = await res.text();
+                    const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Không thể tạo lịch làm việc", style: { background: "#ef4444" } }).showToast();
                 }
             })
@@ -220,7 +220,7 @@
             })
             .then(async res => {
                 if (res.ok) fetchSchedules();
-                else Toastify({ text: await res.text() || "Không thể xóa lịch (có thể đã có người đặt)", style: { background: "#ef4444" } }).showToast();
+                else Toastify({ text: await readApiMessage(res) || "Không thể xóa lịch (có thể đã có người đặt)", style: { background: "#ef4444" } }).showToast();
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast());
         };

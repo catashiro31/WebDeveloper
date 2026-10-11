@@ -15,6 +15,7 @@
     <!-- Toastify -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
 
     <style>
         body { margin: 0; padding: 0; font-family: 'Inter', sans-serif; background: #fafbfe; }
@@ -238,6 +239,7 @@
         </div>
     </div>
 
+    <script src="/js/api-messages.js" asp-append-version="true"></script>
     <script>
         let currentRole = 'PATIENT';
 
@@ -280,7 +282,9 @@
                     body: JSON.stringify({ email, password, fullName, phoneNumber, role: currentRole })
                 });
 
-                let msg = await response.text();
+                const msg = await readApiMessage(response, response.ok
+                    ? "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản."
+                    : "Đã xảy ra lỗi hệ thống.");
 
                 if (response.ok) {
                     Toastify({
@@ -293,14 +297,8 @@
                         window.location.href = '/Auth/Login';
                     }, 2000);
                 } else {
-                    let parsedMsg = msg;
-                    try { parsedMsg = JSON.parse(msg); } catch(e){}
-                    let errorText = "Đã xảy ra lỗi hệ thống.";
-                    if (parsedMsg && parsedMsg.message) errorText = parsedMsg.message;
-                    else if (typeof parsedMsg === 'string') errorText = parsedMsg;
-
                     Toastify({
-                        text: errorText,
+                        text: msg,
                         style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
                     }).showToast();
                     btn.disabled = false;

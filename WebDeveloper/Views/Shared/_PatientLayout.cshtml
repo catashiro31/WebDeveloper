@@ -15,6 +15,8 @@
     <script src="https://unpkg.com/@@tailwindcss/browser@4"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/role-layout.css" asp-append-version="true" />
     <style>
         body { font-family: 'Inter', sans-serif; background: #f8fafc; margin: 0; }
         .glass { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
@@ -42,7 +44,7 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="glass" style="position: sticky; top: 0; z-index: 100; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
+    <header class="glass role-header" style="position: sticky; top: 0; z-index: 100; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
         <div style="display: flex; align-items: center; gap: 20px;">
             <a href="/" style="text-decoration: none;">
                 <h1 style="margin: 0; font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #6366f1, #8b5cf6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -0.03em;">
@@ -64,7 +66,7 @@
         </div>
     </header>
 
-    <div style="display: flex; max-width: 1440px; margin: 0 auto; padding: 32px 40px; gap: 32px;">
+    <div class="role-shell" style="display: flex; max-width: 1440px; margin: 0 auto; padding: 32px 40px; gap: 32px;">
         <!-- Sidebar -->
         <aside class="reveal" style="width: 280px; flex-shrink: 0;">
             <div class="premium-card" style="padding: 24px; position: sticky; top: 100px;">
@@ -111,7 +113,7 @@
 
         <!-- Main Content -->
         <main class="reveal-delayed" style="flex: 1;">
-            <div class="premium-card" style="padding: 32px; min-height: 600px;">
+            <div class="premium-card role-content-card" style="padding: 32px; min-height: 600px;">
                 @RenderBody()
             </div>
         </main>
@@ -128,6 +130,7 @@
             });
         }
     </script>
+    <script src="/js/api-messages.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
 </body>
 </html>

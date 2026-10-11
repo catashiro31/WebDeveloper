@@ -286,7 +286,7 @@
                     closeReview();
                     fetchHistory();
                 } else {
-                    const msg = await res.text();
+                    const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Không thể gửi đánh giá", style: { background: "#ef4444" } }).showToast();
                 }
             })

@@ -187,7 +187,7 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
                     closeModal();
                     fetchData();
                 } else {
-                    Toastify({ text: await res.text() || "Lỗi xử lý", style: {background: "#ef4444"} }).showToast();
+                    Toastify({ text: await readApiMessage(res) || "Lỗi xử lý", style: {background: "#ef4444"} }).showToast();
                 }
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast())

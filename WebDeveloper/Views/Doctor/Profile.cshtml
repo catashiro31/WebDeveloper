@@ -136,11 +136,11 @@
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
                 <div>
-                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Ảnh CCCD *</label>
-                    <input type="file" id="f_idCard" class="floating-input" accept="image/*" required style="padding: 10px;" />
+                    <label id="idCardLabel" style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Ảnh CCCD *</label>
+                    <input type="file" id="f_idCard" class="floating-input" accept="image/jpeg,image/png" required style="padding: 10px;" />
                 </div>
                 <div>
-                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Chứng chỉ hành nghề *</label>
+                    <label id="certificateLabel" style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Chứng chỉ hành nghề *</label>
                     <input type="file" id="f_certificate" class="floating-input" accept="application/pdf" required style="padding: 10px;" />
                 </div>
             </div>
@@ -189,6 +189,11 @@
                 } else if (status === 'PENDING') {
                     document.getElementById('successView').style.display = 'block';
                 } else {
+                    const mustUploadDocuments = status === 'UNREGISTERED';
+                    document.getElementById('f_idCard').required = mustUploadDocuments;
+                    document.getElementById('f_certificate').required = mustUploadDocuments;
+                    document.getElementById('idCardLabel').innerText = mustUploadDocuments ? 'Ảnh CCCD *' : 'Ảnh CCCD (nếu cần thay đổi)';
+                    document.getElementById('certificateLabel').innerText = mustUploadDocuments ? 'Chứng chỉ hành nghề *' : 'Chứng chỉ hành nghề (nếu cần thay đổi)';
                     document.getElementById('formView').style.display = 'block';
                     loadOptions();
                 }
@@ -308,6 +313,15 @@
             const certFile = document.getElementById('f_certificate').files[0];
             if (certFile) formData.append('certificatePdf', certFile);
 
+            if (idCardFile && (idCardFile.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png'].includes(idCardFile.type))) {
+                Toastify({ text: 'Ảnh CCCD phải là JPG/PNG và không quá 5 MB.', style: {background: '#ef4444'} }).showToast();
+                return;
+            }
+            if (certFile && (certFile.size > 5 * 1024 * 1024 || certFile.type !== 'application/pdf')) {
+                Toastify({ text: 'Chứng chỉ phải là PDF và không quá 5 MB.', style: {background: '#ef4444'} }).showToast();
+                return;
+            }
+
             const btn = document.getElementById('submitFormBtn');
             btn.disabled = true; btn.innerText = "Đang gửi...";
 
@@ -316,12 +330,12 @@
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
             })
-            .then(res => {
+            .then(async res => {
                 if (res.ok) {
                     if (user) { user.verificationStatus = 'PENDING'; localStorage.setItem('user', JSON.stringify(user)); }
                     document.getElementById('formView').style.display = 'none';
                     document.getElementById('successView').style.display = 'block';
-                } else Toastify({ text: "Lỗi gửi hồ sơ", style: {background: "#ef4444"} }).showToast();
+                } else Toastify({ text: await readApiMessage(res, 'Không thể gửi hồ sơ bác sĩ.'), style: {background: '#ef4444'} }).showToast();
             })
             .finally(() => { btn.disabled = false; btn.innerText = "Gửi hồ sơ xét duyệt"; });
         };

@@ -95,7 +95,7 @@
                     // update badge in layout
                     if (typeof fetchOverdueCount === 'function') fetchOverdueCount();
                 }
-                else Toastify({ text: await res.text() || "Không thể cập nhật trạng thái", style: { background: "#ef4444" } }).showToast();
+                else Toastify({ text: await readApiMessage(res) || "Không thể cập nhật trạng thái", style: { background: "#ef4444" } }).showToast();
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast());
         };

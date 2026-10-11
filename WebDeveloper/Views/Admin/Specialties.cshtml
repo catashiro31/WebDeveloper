@@ -191,7 +191,7 @@
                     closeModal();
                     loadSpecialties();
                 } else {
-                    const text = await res.text();
+                    const text = await readApiMessage(res);
                     Toastify({ text: "Lỗi: " + text, style: { background: "#ef4444" } }).showToast();
                 }
             } catch(e) { console.error(e); }
@@ -208,7 +208,7 @@
                     Toastify({ text: "Đã xóa", style: { background: "#10b981" } }).showToast();
                     loadSpecialties();
                 } else {
-                    const text = await res.text();
+                    const text = await readApiMessage(res);
                     Toastify({ text: "Không thể xóa: " + text, style: { background: "#ef4444" } }).showToast();
                 }
             } catch(e) { console.error(e); }

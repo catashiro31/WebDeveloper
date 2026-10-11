@@ -187,7 +187,7 @@
                     closeBlockModal();
                     fetchUsers();
                 } else {
-                    Toastify({ text: await res.text() || "Không thể khóa tài khoản", style: {background: "#ef4444"} }).showToast();
+                    Toastify({ text: await readApiMessage(res) || "Không thể khóa tài khoản", style: {background: "#ef4444"} }).showToast();
                 }
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast())
@@ -205,7 +205,7 @@
                     Toastify({ text: "Đã mở khóa tài khoản", style: {background: "#10b981"} }).showToast();
                     fetchUsers();
                 } else {
-                    Toastify({ text: await res.text() || "Không thể mở khóa", style: {background: "#ef4444"} }).showToast();
+                    Toastify({ text: await readApiMessage(res) || "Không thể mở khóa", style: {background: "#ef4444"} }).showToast();
                 }
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());

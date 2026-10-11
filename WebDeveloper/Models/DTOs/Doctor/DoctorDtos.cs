@@ -18,10 +18,8 @@ namespace WebDeveloper.Models.DTOs.Doctor
         [Range(0, double.MaxValue, ErrorMessage = "Giá khám không được là số âm")]
         public double Price { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng tải lên ảnh CCCD")]
         public IFormFile? IdCardImage { get; set; }
 
-        [Required(ErrorMessage = "Vui lòng đính kèm file chứng chỉ")]
         public IFormFile? CertificatePdf { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn chuyên khoa")]

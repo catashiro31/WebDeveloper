@@ -93,6 +93,10 @@ namespace WebDeveloper.Services
 
             if (existingDoctor == null)
             {
+                if (req.IdCardImage == null || req.IdCardImage.Length == 0)
+                    throw new InvalidOperationException("Vui lòng tải lên ảnh CCCD!");
+                if (req.CertificatePdf == null || req.CertificatePdf.Length == 0)
+                    throw new InvalidOperationException("Vui lòng đính kèm chứng chỉ hành nghề!");
                 _fileUpload.ValidateFile(req.IdCardImage, "Ảnh CCCD", "image/jpeg", "image/png");
                 _fileUpload.ValidateFile(req.CertificatePdf, "Chứng chỉ", "application/pdf");
             }

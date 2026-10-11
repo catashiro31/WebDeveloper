@@ -70,7 +70,7 @@
             <div>
                 <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: #64748b;">Tệp đính kèm (Ảnh/PDF đơn thuốc)</label>
                 <div style="position: relative; overflow: hidden;">
-                    <input type="file" id="prescriptionFile" accept="image/*,.pdf" onchange="handleFileChange(event)" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px dashed #cbd5e1; background: #f8fafc; font-size: 13px; cursor: pointer; box-sizing: border-box;" />
+                    <input type="file" id="prescriptionFile" accept="image/jpeg,image/png,application/pdf" onchange="handleFileChange(event)" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px dashed #cbd5e1; background: #f8fafc; font-size: 13px; cursor: pointer; box-sizing: border-box;" />
                     <p id="fileStatus" style="margin: 8px 0 0; font-size: 12px; font-weight: 600; display: none;"></p>
                     <div id="existingFileLink" style="margin: 8px 0 0; display: none; align-items: center; gap: 8px;">
                         <p style="margin: 0; font-size: 12px; color: #3b82f6; font-weight: 600;">✓ Đã có file kết quả cũ</p>
@@ -231,7 +231,7 @@
             })
             .then(async res => {
                 if (res.ok) fetchAppointments();
-                else Toastify({ text: await res.text() || "Lỗi", style: { background: "#ef4444" } }).showToast();
+                else Toastify({ text: await readApiMessage(res) || "Lỗi", style: { background: "#ef4444" } }).showToast();
             })
             .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast());
         };
@@ -270,6 +270,13 @@
             const f = e.target.files[0];
             const p = document.getElementById('fileStatus');
             if (f) {
+                if (f.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png', 'application/pdf'].includes(f.type)) {
+                    e.target.value = '';
+                    currentFile = null;
+                    p.style.display = 'none';
+                    Toastify({ text: 'Đơn thuốc phải là JPG, PNG hoặc PDF và không quá 5 MB.', style: { background: '#ef4444' } }).showToast();
+                    return;
+                }
                 currentFile = f;
                 p.innerText = `✓ Đã chọn file mới: ${f.name}`;
                 p.style.display = 'block';
@@ -316,7 +323,7 @@
                     fetchAppointments();
                     Toastify({ text: "Lưu kết quả thành công", style: { background: "#10b981" } }).showToast();
                 } else {
-                    const msg = await res.text();
+                    const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Không thể lưu kết quả", style: { background: "#ef4444" } }).showToast();
                 }
             })

@@ -723,7 +723,7 @@
                     Toastify({ text: "Đặt lịch thành công! Đang chuyển hướng...", style: { background: "#10b981" } }).showToast();
                     setTimeout(() => window.location.href = '/Patient', 1500);
                 } else {
-                    const msg = await res.text();
+                    const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Đặt lịch thất bại", style: { background: "#ef4444" } }).showToast();
                     bookBtn.disabled = false;
                     bookBtn.innerText = 'Xác nhận đặt lịch';
