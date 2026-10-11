@@ -44,12 +44,12 @@ namespace WebDeveloper.Services
 
         public async Task<List<FacilityResponse>> GetAllFacilities()
         {
-            return await _cache.GetOrCreateAsync("ALL_FACILITIES", async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12); // Cache for 12 hours
-                
-                var items = await _db.Facilities.Where(f => f.IsActive).ToListAsync();
-                return items.Select(f => new FacilityResponse
+            // These lists also back admin screens. Read current records so a
+            // successful create/update/delete is visible on the next request.
+            return await _db.Facilities.AsNoTracking()
+                .Where(f => f.IsActive)
+                .OrderBy(f => f.FacilityId)
+                .Select(f => new FacilityResponse
                 {
                     Id = f.FacilityId,
                     Name = f.FacilityName,
@@ -60,24 +60,20 @@ namespace WebDeveloper.Services
                     MapUrl = f.MapUrl,
                     Province = f.Province,
                     Verified = f.IsVerified
-                }).ToList();
-            });
+                }).ToListAsync();
         }
 
         public async Task<List<SpecialtyResponse>> GetAllSpecialties()
         {
-            return await _cache.GetOrCreateAsync("ALL_SPECIALTIES", async entry =>
-            {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(12); // Cache for 12 hours
-                
-                var items = await _db.Specialties.Where(s => s.IsActive == true).ToListAsync();
-                return items.Select(s => new SpecialtyResponse
+            return await _db.Specialties.AsNoTracking()
+                .Where(s => s.IsActive == true)
+                .OrderBy(s => s.SpecialtyId)
+                .Select(s => new SpecialtyResponse
                 {
                     Id = s.SpecialtyId,
                     Name = s.SpecialtyName,
                     Description = s.Description
-                }).ToList();
-            });
+                }).ToListAsync();
         }
 
         public async Task<PagedResult<DoctorCardResponse>> GetDoctors(string? keyword, int? specId, int? facilityId, string? province, double? minPrice, double? maxPrice, string? sortBy, int page, int size)

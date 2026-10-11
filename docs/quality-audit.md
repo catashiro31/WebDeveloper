@@ -13,6 +13,8 @@ trực tiếp các luồng chính bằng tài khoản thử trong môi trường
 | Điện thoại | Thanh bên rộng 280 px đẩy nội dung chính ra khỏi màn hình | Ba layout role đưa nội dung chính lên trước và xếp thanh bên bên dưới ở màn hình hẹp; modal cơ sở y tế không tràn ngang. |
 | Tải nhiều tệp | Giới hạn proxy 12 MB có thể chặn request ba tệp, mỗi tệp 5 MB | Hướng dẫn đặt `client_max_body_size 20m` trên VPS. |
 | Đổi tên hồ sơ | Form lấy tên mới từ DB nhưng thanh bên/header đọc claim cũ trong access token; JavaScript cập nhật nhầm phần tử header | API phát lại cookie access với tên/ảnh mới; trang cập nhật đúng tên ngay và giữ đúng sau reload. |
+| Danh sách chuyên khoa/cơ sở | Database đã lưu nhưng API danh sách trả bộ đệm cũ trong 12 giờ; thư viện thông báo không tải được cũng có thể ngăn bước làm mới giao diện | Hai danh sách đọc trực tiếp bằng truy vấn chỉ lấy các cột DTO, không tracking; API và fetch dùng no-store. Thông báo có phương án hiển thị nội bộ khi CDN lỗi. |
+| Lỗi tải danh sách | Cơ sở y tế có thể báo mạng lưới trống khi API trả lỗi hoặc phản hồi sai định dạng | Kiểm tra HTTP và mảng dữ liệu, hiển thị trạng thái lỗi cùng nút thử lại cho cả hai trang. |
 
 ## Kiểm tra
 
@@ -28,6 +30,14 @@ trực tiếp các luồng chính bằng tài khoản thử trong môi trường
   kiểm thử đã được xóa.
 - Sửa tên hồ sơ ở ba role: access cookie được phát lại với tên mới; header/thanh
   bên cập nhật ngay và tiếp tục đúng sau reload. Ba tài khoản thử đã được xóa.
+- Test hồi quy `tests/CatalogRegression`: trước khi sửa, cả hai bản ghi vừa tạo
+  không xuất hiện sau lần đọc danh sách đầu tiên; sau khi sửa, thêm/sửa/xóa và
+  xác minh cơ sở đều cập nhật ngay. File upload được thay bằng dịch vụ test,
+  không gửi lên Cloudinary. Các bản ghi thử được dọn trong `finally`.
+- Chromium: thêm/sửa/xóa chuyên khoa qua giao diện; cơ sở đã thêm sau lần đọc
+  đầu xuất hiện ngay, sửa/xác minh/xóa qua giao diện và reload đều đúng. API 503
+  hiển thị lỗi thay vì dữ liệu trống, nút thử lại hoạt động. CDN thông báo không
+  tải được trong môi trường test, giao diện vẫn lưu và làm mới danh sách đúng.
 
 Kiểm tra cục bộ không thay thế việc thử upload thật trên VPS: cấu hình Nginx nằm
 ngoài repository, và việc lưu tệp còn phụ thuộc dịch vụ Cloudinary của môi trường

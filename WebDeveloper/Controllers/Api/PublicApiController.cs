@@ -42,9 +42,11 @@ namespace WebDeveloper.Controllers.Api
         public async Task<IActionResult> GetAvailableSlots(int id, [FromQuery] DateOnly date) => Ok(await _publicService.GetAvailableSlots(id, date));
 
         [HttpGet("facilities")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> GetAllFacilities() => Ok(await _publicService.GetAllFacilities());
 
         [HttpGet("specialties")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
         public async Task<IActionResult> GetAllSpecialties() => Ok(await _publicService.GetAllSpecialties());
     }
 }

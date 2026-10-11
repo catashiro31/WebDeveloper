@@ -64,6 +64,10 @@
         <p style="color: #64748b; margin-top: 8px;">Nhấn nút "Thêm cơ sở" để mở rộng mạng lưới liên kết y tế</p>
     </div>
 
+    <div id="loadError" role="alert" style="display: none; text-align: center; padding: 40px; background: white; border-radius: 24px;">
+        <p style="color: #ef4444;">Không thể tải danh sách cơ sở y tế. Vui lòng thử lại.</p>
+        <button type="button" class="btn-card-action" onclick="fetchFacilities()">Thử lại</button>
+    </div>
     <div id="facilitiesContainer" class="facility-grid" style="display: none;"></div>
 </div>
 
@@ -155,11 +159,7 @@
         let licenseFile = null;
 
         function showFacilityError(message) {
-            Toastify({
-                text: message,
-                duration: 5000,
-                style: { background: '#ef4444', maxWidth: 'calc(100vw - 32px)', whiteSpace: 'normal', overflowWrap: 'anywhere' }
-            }).showToast();
+            showApiToast(message, 'error');
         }
 
         function validateFacilityFile(file, types, label) {
@@ -177,13 +177,19 @@
         function fetchFacilities() {
             document.getElementById('loading').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
+            document.getElementById('loadError').style.display = 'none';
             document.getElementById('facilitiesContainer').style.display = 'none';
 
-            fetch('/api/v1/portal/facilities', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            fetch('/api/v1/portal/facilities', { cache: 'no-store' })
+            .then(async res => {
+                if (!res.ok) throw new Error(await readApiMessage(res));
+                const data = await res.json();
+                if (!Array.isArray(data)) throw new Error('Danh sách cơ sở y tế không hợp lệ.');
+                return data;
+            })
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
-                facilitiesList = Array.isArray(data) ? data : [];
+                facilitiesList = data;
                 
                 if (facilitiesList.length === 0) {
                     document.getElementById('emptyState').style.display = 'block';
@@ -248,7 +254,10 @@
                 document.getElementById('facilitiesContainer').innerHTML = html;
                 document.getElementById('facilitiesContainer').style.display = 'grid';
             })
-            .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
+            .catch(() => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('loadError').style.display = 'block';
+            });
         }
 
         window.openModal = function(fac = null) {
@@ -340,7 +349,7 @@
         window.submitForm = function(e) {
             e.preventDefault();
             if (!editingFacility && !licenseFile) {
-                Toastify({ text: "Vui lòng tải lên Giấy phép hoạt động!", style: {background: "#f59e0b"} }).showToast();
+                showApiToast("Vui lòng tải lên Giấy phép hoạt động!", 'warning');
                 return;
             }
 
@@ -366,7 +375,7 @@
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: "Thành công", style: {background: "#10b981"} }).showToast();
+                    showApiToast("Thành công");
                     closeModal();
                     fetchFacilities();
                 } else if (res.status === 413) {
@@ -377,7 +386,7 @@
                     showFacilityError(error?.detail || error?.message || error?.title || 'Không thể lưu cơ sở y tế. Vui lòng thử lại.');
                 }
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast())
+            .catch(() => showFacilityError("Lỗi mạng. Vui lòng thử lại."))
             .finally(() => { btn.disabled = false; btn.innerText = editingFacility ? 'Lưu thay đổi' : 'Gia nhập mạng lưới'; });
         };
 
@@ -389,11 +398,11 @@
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: "Đã xóa", style: {background: "#10b981"} }).showToast();
+                    showApiToast("Đã xóa");
                     fetchFacilities();
-                } else Toastify({ text: await readApiMessage(res) || "Lỗi xóa cơ sở", style: {background: "#ef4444"} }).showToast();
+                } else showFacilityError(await readApiMessage(res) || "Lỗi xóa cơ sở");
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
+            .catch(() => showFacilityError("Lỗi mạng. Vui lòng thử lại."));
         };
 
         window.verifyFacility = function(id) {
@@ -403,11 +412,11 @@
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: "Đã xác minh", style: {background: "#10b981"} }).showToast();
+                    showApiToast("Đã xác minh");
                     fetchFacilities();
-                } else Toastify({ text: await readApiMessage(res) || "Lỗi xác minh", style: {background: "#ef4444"} }).showToast();
+                } else showFacilityError(await readApiMessage(res) || "Lỗi xác minh");
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
+            .catch(() => showFacilityError("Lỗi mạng. Vui lòng thử lại."));
         };
 
         fetchFacilities();

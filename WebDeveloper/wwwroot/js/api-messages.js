@@ -1,3 +1,25 @@
+// Notifications must not prevent a successful save from refreshing the UI when
+// an external notification script is unavailable.
+function showApiToast(message, type = 'success') {
+    const background = type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#10b981';
+    if (typeof Toastify === 'function') {
+        try {
+            Toastify({ text: message, duration: 5000, style: { background } }).showToast();
+            return;
+        } catch (_) {}
+    }
+
+    document.getElementById('apiToast')?.remove();
+    const notification = document.createElement('div');
+    notification.id = 'apiToast';
+    notification.className = 'api-toast';
+    notification.setAttribute('role', type === 'error' ? 'alert' : 'status');
+    notification.style.backgroundColor = background;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    setTimeout(() => notification.remove(), 5000);
+}
+
 // Read useful API errors without showing a JSON object or proxy HTML in the UI.
 async function readApiMessage(response, fallback = 'Yêu cầu không thành công. Vui lòng thử lại.') {
     if (response.status === 413) {

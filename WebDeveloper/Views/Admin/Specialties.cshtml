@@ -111,8 +111,11 @@
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
             
             try {
-                const res = await fetch('/api/v1/portal/specialties');
-                specialties = await res.json();
+                const res = await fetch('/api/v1/portal/specialties', { cache: 'no-store' });
+                if (!res.ok) throw new Error(await readApiMessage(res));
+                const data = await res.json();
+                if (!Array.isArray(data)) throw new Error('Danh sách chuyên khoa không hợp lệ.');
+                specialties = data;
 
                 if (specialties.length === 0) {
                     tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #64748b;">Chưa có dữ liệu</td></tr>`;
@@ -137,7 +140,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: red;">Lỗi tải dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #ef4444;">Không thể tải danh sách chuyên khoa. <button type="button" class="btn-action" onclick="loadSpecialties()">Thử lại</button></td></tr>';
             }
         }
 
@@ -169,7 +172,7 @@
             };
 
             if(!payload.specialtyName) {
-                Toastify({ text: "Vui lòng nhập tên chuyên khoa", style: { background: "#ef4444" } }).showToast();
+                showApiToast("Vui lòng nhập tên chuyên khoa", 'error');
                 return;
             }
 
@@ -187,14 +190,14 @@
                 });
 
                 if (res.ok) {
-                    Toastify({ text: "Lưu thành công", style: { background: "#10b981" } }).showToast();
+                    showApiToast("Lưu thành công");
                     closeModal();
                     loadSpecialties();
                 } else {
                     const text = await readApiMessage(res);
-                    Toastify({ text: "Lỗi: " + text, style: { background: "#ef4444" } }).showToast();
+                    showApiToast("Lỗi: " + text, 'error');
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { showApiToast("Không thể lưu chuyên khoa. Vui lòng thử lại.", 'error'); }
         }
 
         window.deleteSpecialty = async (id) => {
@@ -205,13 +208,13 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
-                    Toastify({ text: "Đã xóa", style: { background: "#10b981" } }).showToast();
+                    showApiToast("Đã xóa");
                     loadSpecialties();
                 } else {
                     const text = await readApiMessage(res);
-                    Toastify({ text: "Không thể xóa: " + text, style: { background: "#ef4444" } }).showToast();
+                    showApiToast("Không thể xóa: " + text, 'error');
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) { showApiToast("Không thể xóa chuyên khoa. Vui lòng thử lại.", 'error'); }
         };
 
         loadSpecialties();
