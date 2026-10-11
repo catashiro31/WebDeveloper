@@ -158,15 +158,18 @@ namespace WebDeveloper.Services
 
         public async Task SignOut(string? token, string? refreshToken)
         {
-            if (!string.IsNullOrEmpty(token) && _jwt.GetUserIdFromToken(token) != null &&
-                !await _db.TokenBlacklists.AnyAsync(t => t.Token == token))
+            if (!string.IsNullOrEmpty(token) && _jwt.GetUserIdFromToken(token) != null)
             {
-                _db.TokenBlacklists.Add(new TokenBlacklist
+                var tokenKey = TokenBlacklistKey.FromToken(token);
+                if (!await _db.TokenBlacklists.AnyAsync(t => t.Token == tokenKey || t.Token == token))
                 {
-                    Token = token,
-                    ExpiryDate = _jwt.GetExpiryDateFromToken(token) ?? DateTime.UtcNow.AddDays(1),
-                    CreatedAt = DateTime.UtcNow
-                });
+                    _db.TokenBlacklists.Add(new TokenBlacklist
+                    {
+                        Token = tokenKey,
+                        ExpiryDate = _jwt.GetExpiryDateFromToken(token) ?? DateTime.UtcNow.AddDays(1),
+                        CreatedAt = DateTime.UtcNow
+                    });
+                }
             }
             if (!string.IsNullOrEmpty(refreshToken))
             {

@@ -49,7 +49,9 @@ namespace WebDeveloper.Security
                 if (!string.IsNullOrEmpty(token))
                 {
                     // Kiểm tra token blacklist
-                    var isBlacklisted = await db.TokenBlacklists.AnyAsync(t => t.Token == token);
+                    var tokenKey = TokenBlacklistKey.FromToken(token);
+                    // Keep recognizing tokens revoked before hashed keys were introduced.
+                    var isBlacklisted = await db.TokenBlacklists.AnyAsync(t => t.Token == tokenKey || t.Token == token);
                     if (isBlacklisted)
                     {
                         context.Response.StatusCode = 401;
