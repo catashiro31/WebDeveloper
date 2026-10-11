@@ -382,11 +382,4 @@
     }
   });
 
-  function logoutApp() {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      fetch('/api/v1/auth/signout', { method: 'POST' }).finally(() => {
-          window.location.href = '/Auth/Login';
-      });
-  }
 </script>

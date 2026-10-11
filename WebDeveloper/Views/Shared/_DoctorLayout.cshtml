@@ -110,15 +110,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     @await Html.PartialAsync("_AuthState")
+    <script src="/js/auth-logout.js" asp-append-version="true"></script>
     <script>
-        function logout() {
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-            fetch('/api/v1/auth/signout', { method: 'POST' }).finally(() => {
-                window.location.href = '/Auth/Login';
-            });
-        }
-
         const token = localStorage.getItem('token');
         const userStr = localStorage.getItem('user');
         
