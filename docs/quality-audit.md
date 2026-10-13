@@ -61,3 +61,11 @@ Kiểm tra cục bộ không thay thế việc thử upload thật trên VPS: c�
 ngoài repository, và việc lưu tệp còn phụ thuộc dịch vụ Cloudinary của môi trường
 triển khai. Sau khi triển khai mã, thử lại một ảnh hợp lệ và một tệp vượt 5 MB cho
 từng biểu mẫu tải tệp.
+
+### Khóa và mở khóa người dùng (2026-10-13)
+
+- Nguyên nhân: trang Admin/Users gửi PUT nhưng hai endpoint block/unblock chỉ nhận PATCH, nên yêu cầu không chạy vào service.
+- Đổi cả hai thao tác sang PATCH với cookie cùng nguồn; dùng showApiToast có fallback khi CDN Toastify lỗi. Chặn gửi trùng trong lúc xử lý, giữ lý do khi API thất bại, thêm tải lại danh sách khi lỗi.
+- API danh sách trả thêm ReasonBanned để hiển thị lý do sau khi khóa. Tên người dùng được truyền qua data attribute đã escape, tránh lỗi JavaScript với tên chứa dấu nháy.
+- Kiểm thử Chromium + PostgreSQL local với người dùng thử nghiệm PATIENT và DOCTOR: khóa/mở khóa qua nút giao diện trả 200; trạng thái database đúng; tải lại vẫn giữ trạng thái; tài khoản bị khóa không đăng nhập được, mở khóa đăng nhập lại được. Kiểm thử thêm lý do rỗng, tên O'Brien, CDN Toastify bị chặn và API trả 503 vẫn hiện lỗi, giữ lý do để thử lại. Không phát sinh pageerror.
+- dotnet build --no-restore thành công (6 cảnh báo đã có). Chưa triển khai hoặc xác nhận trên VPS; email SMTP thực tế không nằm trong kiểm thử local.

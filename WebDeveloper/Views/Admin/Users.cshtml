@@ -31,6 +31,8 @@
         <div class="skeleton" style="height: 400px; border-radius: 24px;"></div>
     </div>
 
+    <div id="listError" hidden role="alert">Không thể tải danh sách người dùng. <button onclick="fetchUsers()">Thử lại</button></div>
+
     <div id="tableContainer" style="display: none;">
         <table class="premium-table">
             <thead>
@@ -69,6 +71,14 @@
         let currentPage = 0;
         let totalPages = 0;
         let selectedUserId = null;
+        let blockPending = false;
+        const pendingUnblocks = new Set();
+
+        function escapeHtml(value) {
+            const span = document.createElement('span');
+            span.textContent = value;
+            return span.innerHTML.replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+        }
 
         function getRoleBadge(role) {
             const styles = {
@@ -87,13 +97,17 @@
         }
 
         function fetchUsers() {
+            document.getElementById('listError').hidden = true;
             document.getElementById('loading').style.display = 'block';
             document.getElementById('tableContainer').style.display = 'none';
 
             fetch(`/api/v1/admin/users?page=${currentPage}&size=10`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+                credentials: 'same-origin', cache: 'no-store'
             })
-            .then(res => res.json())
+            .then(async res => {
+                if (!res.ok) throw new Error(await readApiMessage(res));
+                return res.json();
+            })
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
                 const users = data.content || [];
@@ -109,14 +123,14 @@
                     } else {
                         statusHtml = `<div>
                             <span style="color: #ef4444; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span> Bị khóa</span>
-                            ${u.reasonBanned ? `<div style="font-size: 11px; color: #94a3b8; margin-top: 2px; max-width: 150px;">${u.reasonBanned}</div>` : ''}
+                            ${u.reasonBanned ? `<div style="font-size: 11px; color: #94a3b8; margin-top: 2px; max-width: 150px;">${escapeHtml(u.reasonBanned)}</div>` : ''}
                         </div>`;
                     }
 
                     let actionHtml = '';
                     if (u.role !== 'ROLE_ADMIN' && u.role !== 'ADMIN') {
                         if (u.isActive) {
-                            actionHtml = `<button onclick="openBlockModal(${u.userId}, '${u.fullName || ''}')" style="background: #fee2e2; color: #ef4444; border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">Khóa</button>`;
+                            actionHtml = `<button data-name="${escapeHtml(u.fullName || '')}" onclick="openBlockModal(${u.userId}, this.dataset.name)" style="background: #fee2e2; color: #ef4444; border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">Khóa</button>`;
                         } else {
                             actionHtml = `<button onclick="unblockUser(${u.userId})" style="background: #dcfce7; color: #16a34a; border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">Mở khóa</button>`;
                         }
@@ -127,8 +141,8 @@
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div class="user-avatar">${avatar}</div>
                                 <div>
-                                    <div style="font-weight: 800; color: #1e293b; font-size: 15px;">${u.fullName || ''}</div>
-                                    <div style="color: #94a3b8; font-size: 12px;">${u.email || ''}</div>
+                                    <div style="font-weight: 800; color: #1e293b; font-size: 15px;">${escapeHtml(u.fullName || '')}</div>
+                                    <div style="color: #94a3b8; font-size: 12px;">${escapeHtml(u.email || '')}</div>
                                 </div>
                             </div>
                         </td>
@@ -152,7 +166,11 @@
                 document.getElementById('btnNext').style.color = currentPage >= totalPages - 1 ? '#cbd5e1' : '#6366f1';
                 document.getElementById('btnNext').disabled = currentPage >= totalPages - 1;
             })
-            .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('listError').hidden = false;
+                showApiToast(error.message || 'Lỗi tải dữ liệu', 'error');
+            });
         }
 
         window.openBlockModal = function(id, name) {
@@ -163,52 +181,58 @@
         };
 
         window.closeBlockModal = function() {
+            if (blockPending) return;
             document.getElementById('blockModal').classList.remove('active');
             selectedUserId = null;
         };
 
         window.submitBlock = function() {
+            if (blockPending || selectedUserId === null) return;
             const reason = document.getElementById('blockReason').value.trim();
             if (!reason) {
-                Toastify({ text: "Vui lòng nhập lý do khóa", style: {background: "#f59e0b"} }).showToast();
+                showApiToast("Vui lòng nhập lý do khóa", "warning");
                 return;
             }
 
             const btn = document.getElementById('btnSubmitBlock');
+            blockPending = true;
             btn.disabled = true; btn.innerText = 'Đang xử lý...';
 
             fetch(`/api/v1/admin/users/${selectedUserId}/block?reason=${encodeURIComponent(reason)}`, {
-                method: 'PUT',
-                headers: { 'Authorization': `Bearer ${token}` }
+                method: 'PATCH',
+                credentials: 'same-origin'
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: "Đã khóa tài khoản", style: {background: "#10b981"} }).showToast();
+                    showApiToast("Đã khóa tài khoản", "success");
+                    blockPending = false;
                     closeBlockModal();
                     fetchUsers();
                 } else {
-                    Toastify({ text: await readApiMessage(res) || "Không thể khóa tài khoản", style: {background: "#ef4444"} }).showToast();
+                    showApiToast(await readApiMessage(res) || "Không thể khóa tài khoản", "error");
                 }
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast())
-            .finally(() => { btn.disabled = false; btn.innerText = 'Gửi lệnh khóa'; });
+            .catch(() => showApiToast("Lỗi mạng", "error"))
+            .finally(() => { blockPending = false; btn.disabled = false; btn.innerText = 'Gửi lệnh khóa'; });
         };
 
         window.unblockUser = function(id) {
-            if (!confirm("Mở khóa tài khoản này?")) return;
+            if (pendingUnblocks.has(id) || !confirm("Mở khóa tài khoản này?")) return;
+            pendingUnblocks.add(id);
             fetch(`/api/v1/admin/users/${id}/unblock`, {
-                method: 'PUT',
-                headers: { 'Authorization': `Bearer ${token}` }
+                method: 'PATCH',
+                credentials: 'same-origin'
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: "Đã mở khóa tài khoản", style: {background: "#10b981"} }).showToast();
+                    showApiToast("Đã mở khóa tài khoản", "success");
                     fetchUsers();
                 } else {
-                    Toastify({ text: await readApiMessage(res) || "Không thể mở khóa", style: {background: "#ef4444"} }).showToast();
+                    showApiToast(await readApiMessage(res) || "Không thể mở khóa", "error");
                 }
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
+            .catch(() => showApiToast("Lỗi mạng", "error"))
+            .finally(() => pendingUnblocks.delete(id));
         };
 
         fetchUsers();

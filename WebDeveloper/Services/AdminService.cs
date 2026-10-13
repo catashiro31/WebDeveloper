@@ -326,6 +326,7 @@ namespace WebDeveloper.Services
                 u.FullName,
                 u.Role,
                 u.IsActive,
+                u.ReasonBanned,
                 u.CreatedAt
             }).Cast<object>().ToListAsync();
 
