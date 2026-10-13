@@ -18,6 +18,8 @@ trực tiếp các luồng chính bằng tài khoản thử trong môi trường
 | Danh mục ở hồ sơ bác sĩ/bộ lọc bệnh nhân | Cùng API bị bộ đệm cũ; giao diện thiếu kiểm tra HTTP và không có cách thử lại. Một danh mục lỗi có thể ngăn trang tải cả danh sách bác sĩ | Dùng hàm tải mảng dữ liệu có kiểm tra phản hồi và no-store. Hai danh mục tải độc lập; hiển thị lỗi/empty đúng và có nút thử lại. Form chỉ cho gửi khi đủ danh mục. |
 | Thẻ bác sĩ công khai | Database có cơ sở và tỉnh nhưng DTO danh sách bác sĩ không trả hai trường này | Trả `facilityName` và `province` cùng chuyên khoa để thẻ hiển thị đúng. |
 | Lỗi tải hồ sơ bác sĩ | API lỗi bị hiểu thành bác sĩ chưa nộp hồ sơ và mở form đăng ký | Hiển thị lỗi hồ sơ có nút thử lại; danh sách chuyển công tác cũng kiểm tra lỗi và làm mới khi mở. |
+| Trạng thái bác sĩ ở admin | API danh sách đã duyệt và chờ duyệt thiếu `verificationStatus`, khiến nhãn hiện `undefined` và nút duyệt không xuất hiện | Trả trạng thái cùng avatar; giao diện đọc cả email dạng phẳng và có nhãn dự phòng khi thiếu trạng thái. |
+| Đặt lịch ngay | Nút trên trang chủ sau đăng nhập trỏ `/User/Profile`, không có MVC route tương ứng | Đổi sang `/Portal/Doctors` để chọn bác sĩ đặt lịch. |
 
 ## Kiểm tra
 
@@ -49,6 +51,11 @@ trực tiếp các luồng chính bằng tài khoản thử trong môi trường
   vẫn dùng được. Lỗi bộ lọc không chặn danh sách bác sĩ. API danh sách bác sĩ
   lỗi hiện trạng thái lỗi thay vì kết quả rỗng. Lỗi API hồ sơ không mở form mới.
   Danh sách cơ sở chuyển công tác cập nhật và không chứa cơ sở hiện tại.
+- PostgreSQL và Chromium: danh sách admin trả/hiện PENDING và APPROVED đúng;
+  nút duyệt hiện cho hồ sơ chờ duyệt, email hiện đúng, trạng thái đã duyệt giữ
+  đúng sau reload. Test hồi quy kiểm tra trường trạng thái ở cả hai API.
+- Chromium với tài khoản bệnh nhân: từ trang chủ bấm "Đặt lịch ngay" mở
+  `/Portal/Doctors` thành công. Khách chưa đăng nhập vẫn có link đăng ký.
 
 Kiểm tra cục bộ không thay thế việc thử upload thật trên VPS: cấu hình Nginx nằm
 ngoài repository, và việc lưu tệp còn phụ thuộc dịch vụ Cloudinary của môi trường

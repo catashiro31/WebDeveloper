@@ -145,7 +145,7 @@
                 'PENDING': { label: 'Chờ duyệt', color: '#f59e0b', bg: '#fffbeb' },
                 'REJECTED': { label: 'Từ chối', color: '#ef4444', bg: '#fef2f2' }
             };
-            return styles[status] || { label: status, color: '#64748b', bg: '#f8fafc' };
+            return styles[status] || { label: 'Chưa rõ trạng thái', color: '#64748b', bg: '#f8fafc' };
         }
 
         function fetchData() {
@@ -180,7 +180,7 @@
                     const avatar = doc.user?.avatarUrl || doc.avatarUrl;
                     const name = doc.user?.fullName || doc.fullName || '';
                     const avatarHtml = avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.parentElement.innerText='${name.charAt(0)}'"/>` : name.charAt(0);
-                    const email = doc.user?.email || '';
+                    const email = doc.user?.email || doc.email || '';
                     const spec = doc.specialty?.specialtyName || doc.specialtyName || '';
                     const badge = getStatusBadge(doc.verificationStatus);
 

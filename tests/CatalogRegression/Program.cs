@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging.Abstractions;
+using System.Text.Json;
 using WebDeveloper.Data;
 using WebDeveloper.Models.DTOs.Admin;
 using WebDeveloper.Models.DTOs.Doctor;
@@ -130,6 +131,9 @@ try
         var publicService = new PublicService(db, cache);
         var pending = await publicService.GetDoctors(unique, null, null, null, null, null, null, 0, 10);
         Check(pending.TotalElements == 0, "Pending doctor incorrectly listed publicly.");
+        var adminPending = JsonSerializer.SerializeToElement(await new AdminService(db, upload, email).GetPendingDoctors());
+        var pendingRow = adminPending.EnumerateArray().Single(row => row.GetProperty("FullName").GetString() == unique);
+        Check(pendingRow.GetProperty("VerificationStatus").GetString() == "PENDING", "Admin pending list omitted verification status.");
         await db.DoctorDetails.Where(d => d.UserId == doctorUser.UserId)
             .ExecuteUpdateAsync(s => s.SetProperty(d => d.VerificationStatus, VerificationStatus.APPROVED));
     }
@@ -141,6 +145,10 @@ try
         var card = approved.Content.Single();
         Check(card.SpecialtyName == unique + "-updated" && card.FacilityName == unique + "-updated",
             "Public doctor card is missing its specialty/facility name.");
+        var adminApproved = await new AdminService(db, upload, email).GetAllDoctors(0, 100);
+        var approvedRows = JsonSerializer.SerializeToElement(adminApproved.Content);
+        var approvedRow = approvedRows.EnumerateArray().Single(row => row.GetProperty("FullName").GetString() == unique);
+        Check(approvedRow.GetProperty("VerificationStatus").GetString() == "APPROVED", "Admin approved list omitted verification status.");
         await db.Users.Where(u => u.Email == unique + "@example.test").ExecuteDeleteAsync();
     }
     Console.WriteLine("PASS: doctor registration stores catalog IDs/names; pending stays private and approved appears with correct filters/names.");

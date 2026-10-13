@@ -22,3 +22,5 @@ It also registers a doctor with the selected specialty and facility, verifies
 that both IDs and names can be read back, checks that pending profiles remain
 private, and checks that an approved profile appears with matching filters and
 the correct specialty/facility names in its public card.
+The admin pending and approved lists must also include their verification status
+so the UI can render the correct badge and pending approval actions.
