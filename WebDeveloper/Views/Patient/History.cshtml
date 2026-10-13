@@ -191,11 +191,14 @@
                             <p style="margin: 0; font-size: 15px; color: #475569; font-style: italic; line-height: 1.6;">"${detail.doctorNotes || ''}"</p>
                         </div>
                 `;
+                if (detail.followUpDate) {
+                    html += `<p><strong>Hẹn ngày tái khám:</strong> ${new Date(detail.followUpDate + 'T00:00:00').toLocaleDateString('vi-VN')} (vui lòng đặt lịch riêng)</p>`;
+                }
                 if (detail.prescriptionUrl) {
                     html += `
                         <div style="margin-top: 8px;">
-                            <a href="${detail.prescriptionUrl}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 18px; border-radius: 20px; text-decoration: none; font-weight: 800; font-size: 15px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); transition: all 0.3s;" onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 20px 25px -5px rgba(16, 185, 129, 0.4)'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(16, 185, 129, 0.3)'">
-                                📄 Xem đơn thuốc (PDF Online)
+                            <a href="${encodeURI(detail.prescriptionUrl).replaceAll('"', '%22').replaceAll("'", '%27')}" target="_blank" rel="noopener noreferrer" style="display: flex; align-items: center; justify-content: center; gap: 12px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; padding: 18px; border-radius: 20px; text-decoration: none; font-weight: 800; font-size: 15px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.3); transition: all 0.3s;" onmouseenter="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 20px 25px -5px rgba(16, 185, 129, 0.4)'" onmouseleave="this.style.transform='translateY(0)'; this.style.boxShadow='0 10px 15px -3px rgba(16, 185, 129, 0.3)'">
+                                📄 Xem tệp / link kết quả
                             </a>
                         </div>
                     `;

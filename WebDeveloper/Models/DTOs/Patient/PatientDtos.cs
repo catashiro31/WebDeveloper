@@ -65,6 +65,7 @@ namespace WebDeveloper.Models.DTOs.Patient
 
     public class AppointmentDetailResponse : AppointmentResponse
     {
+        public DateOnly? FollowUpDate { get; set; }
         public string? Diagnosis { get; set; }
         public string? PrescriptionUrl { get; set; }
         public string? DoctorNotes { get; set; }

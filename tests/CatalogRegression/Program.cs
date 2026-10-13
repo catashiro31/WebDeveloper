@@ -149,6 +149,43 @@ try
         var approvedRows = JsonSerializer.SerializeToElement(adminApproved.Content);
         var approvedRow = approvedRows.EnumerateArray().Single(row => row.GetProperty("FullName").GetString() == unique);
         Check(approvedRow.GetProperty("VerificationStatus").GetString() == "APPROVED", "Admin approved list omitted verification status.");
+        var doctor = await db.DoctorDetails.Include(d => d.User).SingleAsync(d => d.User.Email == unique + "@example.test");
+        var patient = new PatientProfile { User = doctor.User, FullName = "Người thân kiểm thử" };
+        var schedule = new DoctorSchedule { Doctor = doctor, DateWorking = DateOnly.FromDateTime(DateTime.UtcNow), TimeSlot = TimeSlot.SLOT_09_00, SlotStatus = SlotStatus.BOOKED };
+        var appointment = new Appointment { Patient = patient, Schedule = schedule, BookingStatus = BookingStatus.CONFIRMED };
+        db.Appointments.Add(appointment);
+        await db.SaveChangesAsync();
+        var service = new DoctorService(db, upload);
+        foreach (var invalid in new[] {
+            new MedicalResultRequest { Diagnosis = "" },
+            new MedicalResultRequest { Diagnosis = "Test", PrescriptionLink = "javascript:alert(1)" },
+            new MedicalResultRequest { Diagnosis = "Test", FollowUpDate = schedule.DateWorking.AddDays(-1) }
+        })
+        {
+            bool rejected = false;
+            try { await service.SaveMedicalResult(doctor.User, appointment.Id, invalid); }
+            catch (InvalidOperationException) { rejected = true; }
+            Check(rejected && appointment.BookingStatus == BookingStatus.CONFIRMED, "Invalid result changed appointment state.");
+        }
+        var nextVisit = schedule.DateWorking.AddDays(7);
+        await service.SaveMedicalResult(doctor.User, appointment.Id, new MedicalResultRequest {
+            Diagnosis = "Chẩn đoán", DoctorNotes = "Dặn dò", PrescriptionLink = "https://example.test/result.docx", FollowUpDate = nextVisit
+        });
+        db.ChangeTracker.Clear();
+        var saved = await db.MedicalResults.SingleAsync(r => r.AppointmentId == appointment.Id);
+        Check(saved.FollowUpDate == nextVisit && saved.PrescriptionUrl == "https://example.test/result.docx", "Result fields not persisted.");
+        Check(await db.Appointments.Where(a => a.Id == appointment.Id).Select(a => a.BookingStatus).SingleAsync() == BookingStatus.COMPLETED, "Result did not complete appointment.");
+        foreach (var mime in new[] { "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document" })
+        {
+            using var stream = new MemoryStream(new byte[] { 1, 2, 3 });
+            var document = new FormFile(stream, 0, stream.Length, "PrescriptionFile", "result.docx") { Headers = new HeaderDictionary(), ContentType = mime };
+            await service.SaveMedicalResult(doctor.User, appointment.Id, new MedicalResultRequest { Diagnosis = "Cập nhật", PrescriptionFile = document });
+        }
+        db.ChangeTracker.Clear();
+        saved = await db.MedicalResults.SingleAsync(r => r.AppointmentId == appointment.Id);
+        Check(saved.FollowUpDate == null && saved.DoctorNotes == null && saved.PrescriptionUrl == "/test-assets/license.pdf", "Editing result did not clear optional fields or replace attachment.");
+        Console.WriteLine("PASS: result validation, atomic completion, link/follow-up persistence, DOC/DOCX uploads through fake storage, optional field clearing.");
+        await db.Appointments.Where(a => a.Patient.User.Email == unique + "@example.test").ExecuteDeleteAsync();
         await db.Users.Where(u => u.Email == unique + "@example.test").ExecuteDeleteAsync();
     }
     Console.WriteLine("PASS: doctor registration stores catalog IDs/names; pending stays private and approved appears with correct filters/names.");
@@ -162,6 +199,7 @@ try
 finally
 {
     await using var db = new ApplicationDbContext(options);
+    await db.Appointments.Where(a => a.Patient.User.Email == unique + "@example.test").ExecuteDeleteAsync();
     await db.Users.Where(u => u.Email == unique + "@example.test").ExecuteDeleteAsync();
     // Restrict cleanup to this run's two unique names, including renamed rows.
     await db.Specialties.Where(s => s.SpecialtyName == unique || s.SpecialtyName == unique + "-updated").ExecuteDeleteAsync();

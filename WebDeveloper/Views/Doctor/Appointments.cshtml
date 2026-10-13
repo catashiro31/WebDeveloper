@@ -22,7 +22,7 @@
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
 .modal-content {
     background: white; border-radius: 32px; width: 100%; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
-    max-height: 90vh; overflow-y: auto; transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-sizing: border-box; max-height: 90dvh; overflow-y: auto; transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
 </style>
@@ -53,6 +53,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
             <div>
                 <h3 id="modalTitle" style="margin: 0; font-size: 22px; font-weight: 800; color: #0f172a;">Trả kết quả khám</h3>
+                <p id="modalVisitInfo" style="color: #64748b; font-size: 14px;"></p>
                 <p style="margin: 4px 0 0; color: #64748b; font-size: 14px;">Bệnh nhân: <span id="modalPatientName" style="color: #0f172a; font-weight: 700;"></span></p>
             </div>
             <button onclick="closeResultModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 20px; display: flex; align-items: center; justify-content: center;">×</button>
@@ -68,22 +69,32 @@
             </div>
 
             <div>
-                <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: #64748b;">Tệp đính kèm (Ảnh/PDF đơn thuốc)</label>
+                <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: #64748b;">Tệp kết quả (JPG, PNG, PDF, DOC, DOCX — tối đa 5 MB)</label>
                 <div style="position: relative; overflow: hidden;">
-                    <input type="file" id="prescriptionFile" accept="image/jpeg,image/png,application/pdf" onchange="handleFileChange(event)" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px dashed #cbd5e1; background: #f8fafc; font-size: 13px; cursor: pointer; box-sizing: border-box;" />
+                    <input type="file" id="prescriptionFile" accept="image/jpeg,image/png,application/pdf,.doc,.docx" onchange="handleFileChange(event)" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px dashed #cbd5e1; background: #f8fafc; font-size: 13px; cursor: pointer; box-sizing: border-box;" />
                     <p id="fileStatus" style="margin: 8px 0 0; font-size: 12px; font-weight: 600; display: none;"></p>
                     <div id="existingFileLink" style="margin: 8px 0 0; display: none; align-items: center; gap: 8px;">
                         <p style="margin: 0; font-size: 12px; color: #3b82f6; font-weight: 600;">✓ Đã có file kết quả cũ</p>
-                        <a id="fileUrlAnchor" href="#" target="_blank" style="font-size: 12px; color: #5f6dfc; text-decoration: underline; font-weight: 600;">Xem file</a>
+                        <a id="fileUrlAnchor" href="#" target="_blank" rel="noopener noreferrer" style="font-size: 12px; color: #5f6dfc; text-decoration: underline; font-weight: 600;">Xem file</a>
                     </div>
                 </div>
             </div>
 
             <div>
+                <label for="prescriptionLink">Hoặc link kết quả (http/https)</label>
+                <input id="prescriptionLink" type="url" placeholder="https://..." style="width:100%; padding:12px; box-sizing:border-box; border:1px solid #cbd5e1; border-radius:12px; margin-top:8px;" />
+                <small>Chọn tệp hoặc nhập link mới. Để trống cả hai để giữ tệp/link đã lưu.</small>
+            </div>
+            <div>
                 <label style="display: block; margin-bottom: 8px; font-weight: 700; font-size: 13px; color: #64748b;">Lời nhắn / Dặn dò bệnh nhân</label>
                 <textarea id="doctorNotes" placeholder="Dặn dò uống thuốc, ngày tái khám..." style="width: 100%; padding: 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; min-height: 80px; resize: vertical; box-sizing: border-box; font-size: 14px; color: #475569; outline: none; transition: border-color 0.2s; font-family: inherit;" onfocus="this.style.borderColor='#5f6dfc'" onblur="this.style.borderColor='#e2e8f0'"></textarea>
             </div>
 
+            <div>
+                <label for="followUpDate">Hẹn ngày tái khám (không bắt buộc)</label>
+                <input id="followUpDate" type="date" style="display:block; padding:12px; margin-top:8px; border:1px solid #cbd5e1; border-radius:12px;" />
+                <small>Ngày bác sĩ đề nghị tái khám; bệnh nhân cần đặt lịch riêng.</small>
+            </div>
             <div style="display: flex; gap: 12px; margin-top: 32px; border-top: 1px solid #f1f5f9; padding-top: 24px;">
                 <button type="button" onclick="closeResultModal()" style="flex: 1; padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; cursor: pointer; font-weight: 700; font-size: 15px; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Đóng</button>
                 <button type="submit" id="submitResultBtn" style="flex: 2; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, #5f6dfc, #3b82f6); color: white; cursor: pointer; font-weight: 700; font-size: 15px; box-shadow: 0 8px 20px rgba(95,109,252,0.3); transition: all 0.2s;">Lưu kết quả & Hoàn tất</button>
@@ -97,6 +108,8 @@
         
         
 
+        // Keep the fixed dialog outside the animated layout's transformed main element.
+        document.body.appendChild(document.getElementById('resultModal'));
         const container = document.getElementById('appointmentsContainer');
         let allAppointments = [];
         let currentFilter = 'ALL';
@@ -231,9 +244,9 @@
             })
             .then(async res => {
                 if (res.ok) fetchAppointments();
-                else Toastify({ text: await readApiMessage(res) || "Lỗi", style: { background: "#ef4444" } }).showToast();
+                else showApiToast(await readApiMessage(res) || "Lỗi", "error");
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast());
+            .catch(() => showApiToast("Lỗi mạng", "error"));
         };
 
         window.openResultModal = function(id, mode) {
@@ -245,6 +258,10 @@
             document.getElementById('modalTitle').innerText = mode === 'edit' ? 'Cập nhật kết quả' : 'Trả kết quả khám';
             document.getElementById('submitResultBtn').innerText = mode === 'edit' ? 'Cập nhật kết quả' : 'Lưu kết quả & Hoàn tất';
             document.getElementById('modalPatientName').innerText = apt.patientName;
+            document.getElementById('modalVisitInfo').textContent = `Mã ca khám: #${id} | Ngày khám: ${apt.dateWorking} ${apt.timeSlot || ''} | Khoa: ${apt.specialtyName || 'Chưa cập nhật'}`;
+            document.getElementById('followUpDate').value = apt.followUpDate || '';
+            document.getElementById('followUpDate').min = apt.dateWorking;
+            document.getElementById('prescriptionLink').value = '';
             
             document.getElementById('diagnosis').value = mode === 'edit' || apt.diagnosis ? (apt.diagnosis || '') : '';
             document.getElementById('doctorNotes').value = mode === 'edit' || apt.doctorNotes ? (apt.doctorNotes || '') : '';
@@ -270,11 +287,11 @@
             const f = e.target.files[0];
             const p = document.getElementById('fileStatus');
             if (f) {
-                if (f.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png', 'application/pdf'].includes(f.type)) {
+                if (f.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png', 'application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'].includes(f.type)) {
                     e.target.value = '';
                     currentFile = null;
                     p.style.display = 'none';
-                    Toastify({ text: 'Đơn thuốc phải là JPG, PNG hoặc PDF và không quá 5 MB.', style: { background: '#ef4444' } }).showToast();
+                    showApiToast('Đơn thuốc phải là JPG, PNG, PDF, DOC hoặc DOCX và không quá 5 MB.', "error");
                     return;
                 }
                 currentFile = f;
@@ -295,11 +312,17 @@
             const notes = document.getElementById('doctorNotes').value.trim();
 
             if (!diagnosis) {
-                Toastify({ text: "Vui lòng nhập chẩn đoán", style: { background: "#f59e0b" } }).showToast();
+                showApiToast("Vui lòng nhập chẩn đoán", "warning");
                 return;
             }
 
+            const link = document.getElementById('prescriptionLink').value.trim();
+            if (link && (currentFile || !/^https?:\/\//i.test(link))) {
+                showApiToast('Chọn tệp hoặc nhập một link http/https hợp lệ.', 'error');
+                return;
+            }
             const btn = document.getElementById('submitResultBtn');
+            if (btn.disabled) return;
             btn.disabled = true;
             btn.innerText = 'Đang lưu...';
             btn.style.background = '#cbd5e1';
@@ -307,6 +330,8 @@
             const formData = new FormData();
             formData.append('diagnosis', diagnosis);
             formData.append('doctorNotes', notes);
+            formData.append('prescriptionLink', link);
+            formData.append('followUpDate', document.getElementById('followUpDate').value);
             if (currentFile) formData.append('prescriptionFile', currentFile);
 
             const url = mode === 'edit' ? `/api/v1/doctor/appointment/${id}/result` : `/api/v1/doctor/appointment/${id}/result`;
@@ -321,13 +346,13 @@
                 if (res.ok) {
                     closeResultModal();
                     fetchAppointments();
-                    Toastify({ text: "Lưu kết quả thành công", style: { background: "#10b981" } }).showToast();
+                    showApiToast("Lưu kết quả thành công", "success");
                 } else {
                     const msg = await readApiMessage(res);
-                    Toastify({ text: msg || "Không thể lưu kết quả", style: { background: "#ef4444" } }).showToast();
+                    showApiToast(msg || "Không thể lưu kết quả", "error");
                 }
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast())
+            .catch(() => showApiToast("Lỗi mạng", "error"))
             .finally(() => {
                 btn.disabled = false;
                 btn.innerText = mode === 'edit' ? 'Cập nhật kết quả' : 'Lưu kết quả & Hoàn tất';

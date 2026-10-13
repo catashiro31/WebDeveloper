@@ -24,3 +24,8 @@ private, and checks that an approved profile appears with matching filters and
 the correct specialty/facility names in its public card.
 The admin pending and approved lists must also include their verification status
 so the UI can render the correct badge and pending approval actions.
+
+Medical-result coverage also checks validation before completing a confirmed visit,
+persisted links and follow-up dates, DOC/DOCX MIME acceptance through fake storage,
+and clearing optional notes/follow-up dates while editing. Apply the latest migrations
+before running. The suite never uploads medical documents to external storage.

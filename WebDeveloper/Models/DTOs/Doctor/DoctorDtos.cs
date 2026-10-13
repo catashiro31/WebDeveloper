@@ -58,8 +58,10 @@ namespace WebDeveloper.Models.DTOs.Doctor
 
     public class MedicalResultRequest
     {
+        public DateOnly? FollowUpDate { get; set; }
         public string? Diagnosis { get; set; }
         public string? DoctorNotes { get; set; }
+        public string? PrescriptionLink { get; set; }
         public IFormFile? PrescriptionFile { get; set; }
     }
 
@@ -97,6 +99,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
 
     public class DoctorAppointmentResponse
     {
+        public string? SpecialtyName { get; set; }
         public int AppointmentId { get; set; }
         public string? PatientName { get; set; }
         public string? PatientPhoneNumber { get; set; }
@@ -106,6 +109,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public string? Reason { get; set; }
         public string? BookingStatus { get; set; }
         public DateTime? CreatedAt { get; set; }
+        public DateOnly? FollowUpDate { get; set; }
         public string? Diagnosis { get; set; }
         public string? DoctorNotes { get; set; }
         public string? PrescriptionUrl { get; set; }

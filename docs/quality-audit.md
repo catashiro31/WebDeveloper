@@ -69,3 +69,11 @@ từng biểu mẫu tải tệp.
 - API danh sách trả thêm ReasonBanned để hiển thị lý do sau khi khóa. Tên người dùng được truyền qua data attribute đã escape, tránh lỗi JavaScript với tên chứa dấu nháy.
 - Kiểm thử Chromium + PostgreSQL local với người dùng thử nghiệm PATIENT và DOCTOR: khóa/mở khóa qua nút giao diện trả 200; trạng thái database đúng; tải lại vẫn giữ trạng thái; tài khoản bị khóa không đăng nhập được, mở khóa đăng nhập lại được. Kiểm thử thêm lý do rỗng, tên O'Brien, CDN Toastify bị chặn và API trả 503 vẫn hiện lỗi, giữ lý do để thử lại. Không phát sinh pageerror.
 - dotnet build --no-restore thành công (6 cảnh báo đã có). Chưa triển khai hoặc xác nhận trên VPS; email SMTP thực tế không nằm trong kiểm thử local.
+
+### Phiếu trả kết quả khám (2026-10-14)
+
+- Phiếu hiển thị mã ca khám, bệnh nhân thực tế trong hồ sơ đặt lịch, ngày/giờ và chuyên khoa. Đưa modal ra ngoài vùng layout có transform để tiêu đề/nút đóng không bị che; nội dung dài cuộn trong màn hình.
+- Hỗ trợ JPG/PNG/PDF/DOC/DOCX tối đa 5 MB hoặc một link HTTP/HTTPS. Giữ tệp/link cũ khi sửa mà không chọn thay thế; từ chối link sai giao thức hoặc đồng thời gửi tệp và link. Dùng thông báo có fallback khi Toastify không tải được.
+- Thêm FollowUpDate nullable, migration AddMedicalResultFollowUpDate. API bác sĩ và bệnh nhân trả ngày tái khám; lịch sử bệnh nhân hiển thị ngày đề nghị và nhắc đặt lịch riêng (không tự đặt lịch).
+- Sửa bất nhất: trước đây nút trả kết quả xuất hiện ở CONFIRMED nhưng service chỉ nhận COMPLETED. Nay lưu kết quả và chuyển CONFIRMED sang COMPLETED trong cùng SaveChanges; kiểm tra chẩn đoán, ngày tái khám, quyền bác sĩ và tệp/link trước khi đổi trạng thái.
+- Kiểm thử PostgreSQL: migration áp dụng được; kiểm tra dữ liệu không hợp lệ không đổi trạng thái, lưu link/ngày tái khám, cập nhật DOC/DOCX qua fake storage, xóa trường tùy chọn khi sửa. Chromium kiểm tra form thực, lưu và mở lại kết quả, API lịch sử bệnh nhân; không có pageerror. Cloudinary thực tế và VPS chưa được kiểm thử/triển khai.

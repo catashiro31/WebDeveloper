@@ -81,6 +81,8 @@ namespace WebDeveloper.Services
             "image/jpeg" => "JPG",
             "image/png" => "PNG",
             "application/pdf" => "PDF",
+            "application/msword" => "DOC",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document" => "DOCX",
             _ => type
         };
     }

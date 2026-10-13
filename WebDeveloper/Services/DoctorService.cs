@@ -302,7 +302,7 @@ namespace WebDeveloper.Services
         public async Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, int page, int size)
         {
             var appointmentsQuery = _db.Appointments
-                .Include(a => a.Schedule)
+                .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.Specialty)
                 .Include(a => a.Patient).ThenInclude(p => p.User)
                 .AsSplitQuery()
                 .Where(a => a.Schedule.Doctor.UserId == user.UserId)
@@ -327,7 +327,7 @@ namespace WebDeveloper.Services
                 return new DoctorAppointmentResponse
                 {
                     AppointmentId = a.Id,
-                    PatientName = a.Patient.User?.FullName ?? a.Patient.FullName,
+                    PatientName = a.Patient.FullName ?? a.Patient.User?.FullName,
                     PatientPhoneNumber = a.Patient.PhoneNumber,
                     PatientGender = a.Patient.Gender?.ToString(),
                     DateWorking = a.Schedule.DateWorking,
@@ -335,6 +335,8 @@ namespace WebDeveloper.Services
                     Reason = a.Reason,
                     BookingStatus = a.BookingStatus.ToString(),
                     CreatedAt = a.CreatedAt,
+                    SpecialtyName = a.Schedule.Doctor.Specialty.SpecialtyName,
+                    FollowUpDate = result?.FollowUpDate,
                     Diagnosis = result?.Diagnosis,
                     DoctorNotes = result?.DoctorNotes,
                     PrescriptionUrl = result?.PrescriptionUrl
@@ -393,36 +395,41 @@ namespace WebDeveloper.Services
             if (app.Schedule.Doctor.UserId != user.UserId)
                 throw new InvalidOperationException("Bạn không có quyền");
 
-            if (app.BookingStatus != BookingStatus.COMPLETED)
-                throw new InvalidOperationException("Chỉ có thể lưu kết quả khi lịch khám đã hoàn thành");
+            if (app.BookingStatus != BookingStatus.CONFIRMED && app.BookingStatus != BookingStatus.COMPLETED)
+                throw new InvalidOperationException("Chỉ có thể lưu kết quả cho lịch khám đã xác nhận hoặc hoàn thành");
+            if (string.IsNullOrWhiteSpace(req.Diagnosis))
+                throw new InvalidOperationException("Vui lòng nhập chẩn đoán");
+            if (req.FollowUpDate.HasValue && req.FollowUpDate.Value < app.Schedule.DateWorking)
+                throw new InvalidOperationException("Ngày tái khám không được trước ngày khám");
+            var link = req.PrescriptionLink?.Trim();
+            if (!string.IsNullOrEmpty(link) && (!Uri.TryCreate(link, UriKind.Absolute, out var uri)
+                || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp)))
+                throw new InvalidOperationException("Link kết quả phải là địa chỉ http:// hoặc https:// hợp lệ");
+            if (req.PrescriptionFile != null && !string.IsNullOrEmpty(link))
+                throw new InvalidOperationException("Chỉ chọn tệp hoặc link kết quả");
 
+            string? uploadedUrl = null;
+            if (req.PrescriptionFile != null)
+            {
+                _fileUpload.ValidateFile(req.PrescriptionFile, "Kết quả khám", "application/pdf", "image/jpeg", "image/png",
+                    "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                uploadedUrl = await _fileUpload.UploadFileAsync(req.PrescriptionFile);
+                if (string.IsNullOrWhiteSpace(uploadedUrl))
+                    throw new InvalidOperationException("Không thể tải tệp kết quả. Vui lòng thử lại");
+            }
             var result = await _db.MedicalResults.FirstOrDefaultAsync(m => m.AppointmentId == appointmentId);
             if (result == null)
             {
-                result = new MedicalResult
-                {
-                    AppointmentId = appointmentId,
-                    Diagnosis = req.Diagnosis,
-                    DoctorNotes = req.DoctorNotes,
-                    CreatedAt = DateTime.UtcNow
-                };
-                if (req.PrescriptionFile != null)
-                {
-                    _fileUpload.ValidateFile(req.PrescriptionFile, "Đơn thuốc", "application/pdf", "image/jpeg", "image/png");
-                    result.PrescriptionUrl = await _fileUpload.UploadFileAsync(req.PrescriptionFile);
-                }
+                result = new MedicalResult { AppointmentId = appointmentId, CreatedAt = DateTime.UtcNow };
                 _db.MedicalResults.Add(result);
             }
-            else
-            {
-                if (!string.IsNullOrWhiteSpace(req.Diagnosis)) result.Diagnosis = req.Diagnosis;
-                if (!string.IsNullOrWhiteSpace(req.DoctorNotes)) result.DoctorNotes = req.DoctorNotes;
-                if (req.PrescriptionFile != null)
-                {
-                    _fileUpload.ValidateFile(req.PrescriptionFile, "Đơn thuốc", "application/pdf", "image/jpeg", "image/png");
-                    result.PrescriptionUrl = await _fileUpload.UploadFileAsync(req.PrescriptionFile);
-                }
-            }
+            result.Diagnosis = req.Diagnosis.Trim();
+            result.DoctorNotes = req.DoctorNotes?.Trim();
+            result.FollowUpDate = req.FollowUpDate;
+            // An omitted attachment preserves the existing file/link when editing.
+            if (uploadedUrl != null) result.PrescriptionUrl = uploadedUrl;
+            else if (!string.IsNullOrEmpty(link)) result.PrescriptionUrl = link;
+            app.BookingStatus = BookingStatus.COMPLETED;
 
             await _db.SaveChangesAsync();
             return "Lưu kết quả khám thành công";
@@ -471,7 +478,7 @@ namespace WebDeveloper.Services
             return items.Select(a => new DoctorAppointmentResponse
             {
                 AppointmentId = a.Id,
-                PatientName = a.Patient.User?.FullName ?? a.Patient.FullName,
+                PatientName = a.Patient.FullName ?? a.Patient.User?.FullName,
                 PatientPhoneNumber = a.Patient.PhoneNumber,
                 PatientGender = a.Patient.Gender?.ToString(),
                 DateWorking = a.Schedule.DateWorking,

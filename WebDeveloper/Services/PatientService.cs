@@ -319,6 +319,7 @@ namespace WebDeveloper.Services
                 BookingStatus = a.BookingStatus.ToString(),
                 CreatedAt = a.CreatedAt,
                 HasResult = result != null,
+                FollowUpDate = result?.FollowUpDate,
                 Diagnosis = result?.Diagnosis,
                 PrescriptionUrl = result?.PrescriptionUrl,
                 DoctorNotes = result?.DoctorNotes,

@@ -312,6 +312,10 @@ namespace WebDeveloper.Migrations
                         .HasColumnType("text")
                         .HasColumnName("doctor_notes");
 
+                    b.Property<DateOnly?>("FollowUpDate")
+                        .HasColumnType("date")
+                        .HasColumnName("follow_up_date");
+
                     b.Property<string>("PrescriptionUrl")
                         .HasColumnType("text")
                         .HasColumnName("prescription_url");

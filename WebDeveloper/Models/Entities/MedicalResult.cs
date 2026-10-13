@@ -28,6 +28,9 @@ namespace WebDeveloper.Models.Entities
         [Column("doctor_notes")]
         public string? DoctorNotes { get; set; }
 
+        [Column("follow_up_date")]
+        public DateOnly? FollowUpDate { get; set; }
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
     }
