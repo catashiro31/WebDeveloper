@@ -89,7 +89,7 @@
                 <div>
                     <div id="modalCertWrap" style="margin-bottom: 20px; display: none;">
                         <b>Chứng chỉ hành nghề:</b>
-                        <a id="modalCertLink" href="#" target="_blank"><img id="modalCertImg" src="" style="width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid #f1f5f9;" /></a>
+                        <a id="modalCertLink" href="#" target="_blank" rel="noopener noreferrer" style="display:block; padding:16px; color:#4f46e5;">📄 Mở tệp chứng chỉ hành nghề</a>
                     </div>
                     <div id="modalIdWrap" style="display: none;">
                         <b>CCCD/Hộ chiếu:</b>
@@ -272,7 +272,6 @@
                 document.getElementById('modalBio').innerText = data.bio || '';
 
                 if (data.certificateUrl) {
-                    document.getElementById('modalCertImg').src = data.certificateUrl;
                     document.getElementById('modalCertLink').href = data.certificateUrl;
                     document.getElementById('modalCertWrap').style.display = 'block';
                 } else document.getElementById('modalCertWrap').style.display = 'none';

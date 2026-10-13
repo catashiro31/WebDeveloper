@@ -97,6 +97,8 @@ namespace WebDeveloper.Controllers.Api
             else if (status == BookingStatus.COMPLETED)
                 return Ok(await _doctorService.CompleteAppointment(user, id));
             
+            if (status == BookingStatus.CANCELLED || status == BookingStatus.NO_SHOW)
+                return Ok(await _doctorService.DeclineAppointment(user, id, status));
             return BadRequest("Lỗi cập nhật trạng thái");
         }
 

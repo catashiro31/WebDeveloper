@@ -246,6 +246,7 @@
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                     Chuyên khoa
                 </h3>
+                <input id="specSearchInput" class="fac-search-input" placeholder="Tìm chuyên khoa..." aria-label="Tìm chuyên khoa" />
                 <div id="specList" class="spec-list"></div>
                 <button id="specToggleBtn" class="spec-item" style="color: #6366f1; text-align: center; font-size: 12px; margin-top: 4px; display: none;"></button>
             </div>
@@ -268,12 +269,12 @@
                 <div class="price-slider-wrap">
                     <div class="slider-labels">
                         <span id="minPriceLbl" class="slider-label">0k</span>
-                        <span id="maxPriceLbl" class="slider-label">2tr</span>
+                        <span id="maxPriceLbl" class="slider-label">Đang tải</span>
                     </div>
                     <div class="range-container">
                         <div id="rangeTrack" class="range-track" style="--min: 0%; --max: 0%;"></div>
-                        <input type="range" id="minPrice" min="0" max="2000000" step="50000" value="0" class="range-input" />
-                        <input type="range" id="maxPrice" min="0" max="2000000" step="50000" value="2000000" class="range-input" />
+                        <input type="range" id="minPrice" min="0" max="0" step="1" value="0" class="range-input" />
+                        <input type="range" id="maxPrice" min="0" max="0" step="1" value="0" class="range-input" />
                     </div>
                     <p style="font-size: 11px; color: #94a3b8; margin-top: 12px; text-align: center; font-weight: 500;">Khoảng giá tối ưu cho bạn</p>
                 </div>
@@ -293,13 +294,14 @@
 @section Scripts {
     <script>
         // State variables
+        let priceLimit = 0;
         let state = {
             search: '',
             specId: null,
             facilityId: null,
             province: '',
             minPrice: 0,
-            maxPrice: 2000000,
+            maxPrice: priceLimit,
             page: 0,
             size: 12,
             totalPages: 0,
@@ -351,13 +353,26 @@
             if(state.facilityId) params.set('facilityId', state.facilityId);
             if(state.province) params.set('province', state.province);
             if(state.minPrice > 0) params.set('minPrice', state.minPrice);
-            if(state.maxPrice < 2000000) params.set('maxPrice', state.maxPrice);
+            if(state.maxPrice < priceLimit) params.set('maxPrice', state.maxPrice);
             
             const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
             window.history.replaceState({}, '', newUrl);
         }
 
         async function initData() {
+            try {
+                const response = await fetch('/api/v1/portal/doctors/price-range', { cache: 'no-store' });
+                if (!response.ok) throw new Error('Không thể tải khoảng giá');
+                const range = await response.json();
+                priceLimit = Math.max(0, Number(range.max) || 0);
+                elMinPrice.max = elMaxPrice.max = priceLimit;
+                state.maxPrice = urlParams.has('maxPrice') ? Math.min(Number(urlParams.get('maxPrice')), priceLimit) : priceLimit;
+                state.minPrice = Math.min(state.minPrice, state.maxPrice);
+                elMinPrice.value = state.minPrice; elMaxPrice.value = state.maxPrice;
+                elMinPrice.disabled = elMaxPrice.disabled = priceLimit === 0;
+                updateSliderUI();
+            } catch (_) { elMinPrice.disabled = elMaxPrice.disabled = true; }
+
             elSpecList.textContent = 'Đang tải chuyên khoa...';
             elFacList.textContent = 'Đang tải cơ sở y tế...';
             const [specs, facilities] = await Promise.allSettled([
@@ -381,6 +396,8 @@
             await fetchDoctors();
         }
 
+        function normalizeFilter(text) { return (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase(); }
+        document.getElementById('specSearchInput').oninput = () => { isSpecExpanded = false; renderSpecialties(); };
         function renderSpecialties() {
             if (specialtyLoadFailed) {
                 elSpecList.innerHTML = '<p role="alert">Không thể tải chuyên khoa.</p><button type="button" class="spec-item" onclick="initData()">Tải lại chuyên khoa</button>';
@@ -389,7 +406,9 @@
             }
             elSpecList.innerHTML = `<button class="spec-item ${!state.specId ? 'active' : ''}" onclick="setSpec(null)">Tất cả</button>`;
             if (allSpecialties.length === 0) elSpecList.innerHTML += '<p style="font-size: 12px; color: #94a3b8; padding: 8px 12px;">Chưa có chuyên khoa đang hoạt động</p>';
-            const toShow = isSpecExpanded ? allSpecialties : allSpecialties.slice(0, 6);
+            const term = document.getElementById('specSearchInput').value;
+            const filtered = allSpecialties.filter(s => normalizeFilter(s.name || s.specialtyName).includes(normalizeFilter(term)));
+            const toShow = isSpecExpanded ? filtered : filtered.slice(0, 4);
             
             toShow.forEach(s => {
                 const id = s.id || s.specialtyId;
@@ -400,9 +419,9 @@
             if(isSpecExpanded) elSpecList.classList.add('expanded');
             else elSpecList.classList.remove('expanded');
 
-            if (allSpecialties.length > 6) {
+            if (filtered.length > 4) {
                 elSpecToggle.style.display = 'block';
-                elSpecToggle.innerText = isSpecExpanded ? 'Thu gọn ↑' : `Xem thêm ${allSpecialties.length - 6} chuyên khoa ↓`;
+                elSpecToggle.innerText = isSpecExpanded ? 'Thu gọn ↑' : `Xem thêm ${filtered.length - 4} chuyên khoa ↓`;
             } else {
                 elSpecToggle.style.display = 'none';
             }
@@ -416,14 +435,14 @@
             }
             let filtered = allFacilities;
             if(state.province) filtered = filtered.filter(f => f.province === state.province);
-            if(state.facSearch) filtered = filtered.filter(f => (f.name || f.facilityName).toLowerCase().includes(state.facSearch.toLowerCase()));
+            if(state.facSearch) filtered = filtered.filter(f => normalizeFilter(f.name || f.facilityName).includes(normalizeFilter(state.facSearch)));
 
             elFacList.innerHTML = `<button class="spec-item ${!state.facilityId ? 'active' : ''}" onclick="setFac(null)">Tất cả</button>`;
             
             if(filtered.length === 0) {
                 elFacList.innerHTML += `<p style="font-size: 12px; color: #94a3b8; padding: 8px 12px;">Không có cơ sở nào</p>`;
             } else {
-                const toShow = isFacExpanded ? filtered : filtered.slice(0, 6);
+                const toShow = isFacExpanded ? filtered : filtered.slice(0, 4);
                 toShow.forEach(f => {
                     const id = f.id || f.facilityId;
                     const name = f.name || f.facilityName;
@@ -434,9 +453,9 @@
             if(isFacExpanded) elFacList.classList.add('expanded');
             else elFacList.classList.remove('expanded');
 
-            if (filtered.length > 6) {
+            if (filtered.length > 4) {
                 elFacToggle.style.display = 'block';
-                elFacToggle.innerText = isFacExpanded ? 'Thu gọn ↑' : `Xem thêm ${filtered.length - 6} cơ sở ↓`;
+                elFacToggle.innerText = isFacExpanded ? 'Thu gọn ↑' : `Xem thêm ${filtered.length - 4} cơ sở ↓`;
             } else {
                 elFacToggle.style.display = 'none';
             }
@@ -486,17 +505,17 @@
         function updateSliderUI() {
             elMinLbl.innerText = formatPrice(state.minPrice);
             elMaxLbl.innerText = formatPrice(state.maxPrice);
-            elTrack.style.setProperty('--min', `${(state.minPrice / 2000000) * 100}%`);
-            elTrack.style.setProperty('--max', `${100 - (state.maxPrice / 2000000) * 100}%`);
+            elTrack.style.setProperty('--min', `${(state.minPrice / (priceLimit || 1)) * 100}%`);
+            elTrack.style.setProperty('--max', `${100 - (state.maxPrice / (priceLimit || 1)) * 100}%`);
         }
 
         const handlePriceChange = (e) => {
             let val = parseInt(e.target.value);
             if (e.target.id === 'minPrice') {
-                state.minPrice = Math.min(val, state.maxPrice - 50000);
+                state.minPrice = Math.min(val, state.maxPrice);
                 elMinPrice.value = state.minPrice;
             } else {
-                state.maxPrice = Math.max(val, state.minPrice + 50000);
+                state.maxPrice = Math.max(val, state.minPrice);
                 elMaxPrice.value = state.maxPrice;
             }
             state.page = 0;
@@ -537,7 +556,7 @@
             if(state.facilityId) query += `&facilityId=${state.facilityId}`;
             if(state.province) query += `&province=${encodeURIComponent(state.province)}`;
             if(state.minPrice > 0) query += `&minPrice=${state.minPrice}`;
-            if(state.maxPrice < 2000000) query += `&maxPrice=${state.maxPrice}`;
+            if(state.maxPrice < priceLimit) query += `&maxPrice=${state.maxPrice}`;
 
             try {
                 const res = await fetch(`/api/v1/portal/doctors${query}`, { cache: 'no-store' });
@@ -621,17 +640,19 @@
         }
 
         window.clearFilters = () => {
+            document.getElementById('specSearchInput').value = '';
+            isSpecExpanded = isFacExpanded = false;
             state.specId = null;
             state.facilityId = null;
             state.search = '';
             state.province = '';
             state.minPrice = 0;
-            state.maxPrice = 2000000;
+            state.maxPrice = priceLimit;
             
             elSearch.value = '';
             elProvince.value = '';
             elMinPrice.value = 0;
-            elMaxPrice.value = 2000000;
+            elMaxPrice.value = priceLimit;
             
             updateSliderUI();
             renderSpecialties();

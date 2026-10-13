@@ -14,6 +14,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> RegisterDoctor(User user, DoctorProfileRequest request);
         Task<DoctorProfileResponse> ChangeProfile(User user, ChangeProfileRequest request);
         Task<List<DoctorScheduleResponse>> GetSchedules(User user);
+        Task<string> DeclineAppointment(User user, int id, BookingStatus status);
         Task<string> CreateSchedule(User user, ScheduleRequest request);
         Task<string> DeleteSchedule(User user, int scheduleId);
         Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, int page, int size);
@@ -70,6 +71,7 @@ namespace WebDeveloper.Services.Interfaces
 
     public interface IPublicService
     {
+        Task<double> GetMaxDoctorPrice();
         Task<PortalStatsResponse> GetPortalStats();
         Task<PagedResult<DoctorCardResponse>> GetDoctors(string? keyword, int? specId, int? facilityId, string? province, double? minPrice, double? maxPrice, string? sortBy, int page, int size);
         Task<DoctorDetailPublicResponse> GetDoctorById(int doctorId);

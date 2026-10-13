@@ -15,7 +15,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public int ExperienceYears { get; set; }
 
         [Required(ErrorMessage = "Vui lòng nhập giá khám")]
-        [Range(0, double.MaxValue, ErrorMessage = "Giá khám không được là số âm")]
+        [Range(1, double.MaxValue, ErrorMessage = "Giá khám phải lớn hơn 0 đồng")]
         public double Price { get; set; }
 
         public IFormFile? IdCardImage { get; set; }
@@ -40,7 +40,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
     {
         public string? Bio { get; set; }
 
-        [Range(0, double.MaxValue, ErrorMessage = "Giá khám không được là số âm")]
+        [Range(1, double.MaxValue, ErrorMessage = "Giá khám phải lớn hơn 0 đồng")]
         public double? Price { get; set; }
 
         public string? FacilityName { get; set; }
@@ -94,6 +94,8 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public int? ReviewCount { get; set; }
         public string? VerificationStatus { get; set; }
         public bool? HasPendingTransfer { get; set; }
+        public string? LastTransferStatus { get; set; }
+        public string? LastTransferNote { get; set; }
         public string? LastTransferRejectionNote { get; set; }
     }
 

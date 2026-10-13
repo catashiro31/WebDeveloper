@@ -14,6 +14,10 @@ namespace WebDeveloper.Controllers.Api
             _publicService = publicService;
         }
 
+        [HttpGet("doctors/price-range")]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> GetPriceRange() => Ok(new { min = 0, max = await _publicService.GetMaxDoctorPrice() });
+
         [HttpGet("stats")]
         public async Task<IActionResult> GetStats() => Ok(await _publicService.GetPortalStats());
 

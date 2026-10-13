@@ -377,13 +377,7 @@ namespace WebDeveloper.Services
 
         public async Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size)
         {
-            var query = _db.Appointments
-                .Include(a => a.Patient).ThenInclude(p => p.User)
-                .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.User)
-                .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.Specialty)
-                .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.Facility)
-                .AsSplitQuery()
-                .AsQueryable();
+            var query = _db.Appointments.AsNoTracking().AsQueryable();
 
             if (dateFrom.HasValue) query = query.Where(a => a.CreatedAt >= dateFrom.Value.ToDateTime(TimeOnly.MinValue));
             if (dateTo.HasValue) query = query.Where(a => a.CreatedAt < dateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue));
@@ -391,15 +385,13 @@ namespace WebDeveloper.Services
 
             query = query.OrderByDescending(a => a.CreatedAt);
             var total = await query.CountAsync();
-            var items = await query.Skip(page * size).Take(size).ToListAsync();
-
-            var dtos = items.Select(a => new AppointmentAdminResponse
+            var dtos = await query.Skip(page * size).Take(size).Select(a => new AppointmentAdminResponse
             {
                 AppointmentId = a.Id,
                 PatientId = a.PatientId,
-                PatientName = a.Patient.User?.FullName ?? a.Patient.FullName,
-                PatientPhone = a.Patient.User?.PhoneNumber ?? a.Patient.PhoneNumber,
-                PatientEmail = a.Patient.User?.Email,
+                PatientName = a.Patient.FullName,
+                PatientPhone = a.Patient.PhoneNumber,
+                PatientEmail = a.Patient.User.Email,
                 DoctorId = a.Schedule.DoctorId,
                 DoctorName = a.Schedule.Doctor.User.FullName,
                 SpecialtyName = a.Schedule.Doctor.Specialty.SpecialtyName,
@@ -409,7 +401,7 @@ namespace WebDeveloper.Services
                 Reason = a.Reason,
                 BookingStatus = a.BookingStatus,
                 CreatedAt = a.CreatedAt
-            }).ToList();
+            }).ToListAsync();
 
             return PagedResult<AppointmentAdminResponse>.Create(dtos, page, size, total);
         }

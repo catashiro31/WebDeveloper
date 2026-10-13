@@ -76,6 +76,10 @@ namespace WebDeveloper.Services
                 }).ToListAsync();
         }
 
+        public async Task<double> GetMaxDoctorPrice() => await _db.DoctorDetails
+            .Where(d => d.VerificationStatus == VerificationStatus.APPROVED)
+            .MaxAsync(d => (double?)d.Price) ?? 0;
+
         public async Task<PagedResult<DoctorCardResponse>> GetDoctors(string? keyword, int? specId, int? facilityId, string? province, double? minPrice, double? maxPrice, string? sortBy, int page, int size)
         {
             var query = _db.DoctorDetails

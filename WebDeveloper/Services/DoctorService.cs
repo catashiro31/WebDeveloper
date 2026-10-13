@@ -46,7 +46,7 @@ namespace WebDeveloper.Services
                 .FirstOrDefaultAsync();
 
             var lastRejectedTransfer = await _db.DoctorTransferRequests
-                .Where(t => t.DoctorId == doctor.DoctorId && t.Status == TransferStatus.REJECTED)
+                .Where(t => t.DoctorId == doctor.DoctorId && t.Status != TransferStatus.PENDING)
                 .OrderByDescending(t => t.CreatedAt)
                 .FirstOrDefaultAsync();
 
@@ -73,12 +73,15 @@ namespace WebDeveloper.Services
                 ReviewCount = doctor.ReviewCount,
                 VerificationStatus = doctor.VerificationStatus.ToString(),
                 HasPendingTransfer = pendingTransfer != null,
-                LastTransferRejectionNote = lastRejectedTransfer?.AdminNote
+                LastTransferRejectionNote = lastRejectedTransfer?.Status == TransferStatus.REJECTED ? lastRejectedTransfer.AdminNote : null,
+                LastTransferStatus = lastRejectedTransfer?.Status.ToString(),
+                LastTransferNote = lastRejectedTransfer?.AdminNote
             };
         }
 
         public async Task<string> RegisterDoctor(User user, DoctorProfileRequest req)
         {
+            if (!double.IsFinite(req.Price) || req.Price <= 0) throw new InvalidOperationException("Giá khám phải lớn hơn 0 đồng");
             var existingDoctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId);
 
             if (existingDoctor != null)
@@ -200,7 +203,10 @@ namespace WebDeveloper.Services
             if (!string.IsNullOrWhiteSpace(req.Bio))
                 doctor.Bio = req.Bio;
             if (req.Price != null)
+            {
+                if (!double.IsFinite(req.Price.Value) || req.Price <= 0) throw new InvalidOperationException("Giá khám phải lớn hơn 0 đồng");
                 doctor.Price = req.Price;
+            }
 
             var facility = doctor.Facility;
             if (facility != null)
@@ -251,12 +257,21 @@ namespace WebDeveloper.Services
             if (req.Date < DateOnly.FromDateTime(DateTime.UtcNow)) // Vietnam time roughly
                 throw new InvalidOperationException("Không thể đăng ký lịch cho ngày trong quá khứ hoặc hôm nay!");
 
+            var slots = req.SlotIds.Distinct().Select(value =>
+                Enum.TryParse<TimeSlot>(value, out var parsed) && Enum.IsDefined(parsed)
+                    ? parsed : throw new InvalidOperationException("Ca làm việc không hợp lệ")).ToList();
+            if (slots.Count == 0) throw new InvalidOperationException("Vui lòng chọn ca làm việc");
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            // Serialize schedule creation per doctor, including concurrent submissions.
+            await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({doctor.DoctorId})");
             var existingSchedules = await _db.DoctorSchedules
                 .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking == req.Date)
                 .ToListAsync();
 
+            if (existingSchedules.Any(s => slots.Contains(s.TimeSlot)))
+                throw new InvalidOperationException("Ngày và giờ này đã có lịch làm việc. Vui lòng chọn ca khác.");
             int addedCount = 0;
-            foreach (var slotStr in req.SlotIds)
+            foreach (var slotStr in req.SlotIds.Distinct())
             {
                 if (!Enum.TryParse<TimeSlot>(slotStr, out var slot))
                     continue;
@@ -277,6 +292,7 @@ namespace WebDeveloper.Services
             }
 
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
             return $"Đã thêm thành công {addedCount} ca làm việc.";
         }
 
@@ -363,6 +379,27 @@ namespace WebDeveloper.Services
             app.BookingStatus = BookingStatus.CONFIRMED;
             await _db.SaveChangesAsync();
             return "Xác nhận lịch hẹn thành công";
+        }
+
+        public async Task<string> DeclineAppointment(User user, int id, BookingStatus status)
+        {
+            var app = await _db.Appointments.Include(a => a.Schedule).ThenInclude(s => s.Doctor)
+                .FirstOrDefaultAsync(a => a.Id == id) ?? throw new InvalidOperationException("Không tìm thấy lịch hẹn");
+            if (app.Schedule.Doctor.UserId != user.UserId) throw new InvalidOperationException("Bạn không có quyền");
+            if (status == BookingStatus.CANCELLED && app.BookingStatus == BookingStatus.PENDING)
+            {
+                app.BookingStatus = status;
+                app.Schedule.SlotStatus = SlotStatus.AVAILABLE;
+            }
+            else if (status == BookingStatus.NO_SHOW && app.BookingStatus == BookingStatus.CONFIRMED)
+            {
+                if (app.Schedule.DateWorking.ToDateTime(TimeOnly.Parse(app.Schedule.TimeSlot.GetDisplayValue())) > DateTime.UtcNow.AddHours(7))
+                    throw new InvalidOperationException("Chưa đến giờ khám, không thể đánh dấu vắng mặt");
+                app.BookingStatus = status;
+            }
+            else throw new InvalidOperationException("Trạng thái lịch hẹn không cho phép thao tác này");
+            await _db.SaveChangesAsync();
+            return "Đã cập nhật lịch hẹn";
         }
 
         public async Task<string> CompleteAppointment(User user, int appointmentId)

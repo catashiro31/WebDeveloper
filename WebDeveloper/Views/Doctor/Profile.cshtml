@@ -84,7 +84,7 @@
                     <span style="font-size: 14px; font-weight: 700; color: #334155;">Giá khám tư vấn (VNĐ)</span>
                 </label>
                 <div id="viewPrice" style="background: #f0fdf4; padding: 16px 20px; border-radius: 16px; border: 1px solid #dcfce7; font-size: 24px; font-weight: 800; color: #0ea47a;"></div>
-                <input type="number" id="editPrice" class="floating-input" style="display: none; font-size: 16px; font-weight: 700; color: #0ea47a; border-color: #0ea47a;" />
+                <input type="number" id="editPrice" min="1" class="floating-input" style="display: none; font-size: 16px; font-weight: 700; color: #0ea47a; border-color: #0ea47a;" />
             </div>
             <div>
                 <label style="display: flex; justify-content: space-between; margin-bottom: 10px;">
@@ -129,7 +129,7 @@
                 </div>
                 <div>
                     <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Giá khám (VNĐ) *</label>
-                    <input type="number" id="f_price" class="floating-input" required min="0" />
+                    <input type="number" id="f_price" class="floating-input" required min="1" />
                 </div>
             </div>
 
@@ -326,6 +326,7 @@
 
         window.saveEdit = function() {
             const price = document.getElementById('editPrice').value;
+            if (!Number.isFinite(Number(price)) || Number(price) <= 0) { showApiToast('Giá khám phải lớn hơn 0 đồng', 'error'); return; }
             const bio = document.getElementById('editBio').value;
             
             const btn = document.getElementById('saveEditBtn');

@@ -85,3 +85,15 @@ từng biểu mẫu tải tệp.
 - Thống nhất Arial, Helvetica, sans-serif cho các trang và form controls; bỏ các font Google/Playfair/Nunito trộn lẫn.
 - Thiết kế lại ResetPassword bằng CSS riêng vì trước đây dùng class Bootstrap không có stylesheet tương ứng: thẻ form, nhãn rõ ràng, kích thước mobile, trạng thái đang xử lý/thành công/lỗi, liên kết yêu cầu email mới. Đọc thông báo API qua readApiMessage.
 - Build đạt; regression thực trên PostgreSQL đạt cho tên có/không dấu, hoa/thường, nhiều từ, bio/chuyên khoa/cơ sở và ký tự wildcard. Chromium đạt trên desktop/mobile, mật khẩu không khớp, đổi mật khẩu thật với tài khoản thử nghiệm, đăng nhập bằng mật khẩu mới, link đã dùng báo lỗi, tìm kiếm gửi đúng keyword, không có pageerror. Không kiểm thử gửi email thật hay triển khai VPS.
+
+### Bộ lọc, giấy tờ, lịch và chuyển công tác (2026-10-14)
+
+- Chuyên khoa có ô tìm không dấu. Chuyên khoa/cơ sở mặc định hiện 4 mục với Xem thêm/Thu gọn; xóa bộ lọc đưa về trạng thái thu gọn.
+- Thêm API doctors/price-range lấy giá lớn nhất của bác sĩ đã duyệt, không giới hạn cứng 2 triệu; bộ lọc tối thiểu 0, không giới hạn trên khi chọn toàn khoảng. Giá đăng ký/cập nhật bác sĩ phải lớn hơn 0; form cũng kiểm tra giá.
+- Chứng chỉ hành nghề trong modal admin dùng liên kết tệp thay vì nhúng PDF vào img gây ảnh vỡ.
+- Lịch hẹn admin dùng projection trực tiếp thay cho tải toàn bộ entity graph. Frontend kiểm tra HTTP, bỏ phản hồi cũ, timeout 15 giây và có thử lại; chưa đo độ trễ dữ liệu thật trên VPS.
+- Giấy phép cơ sở đã hỗ trợ JPG/PNG/PDF tối đa 5 MB trong API và frontend. Kiểm thử lại cả ba loại trong trình duyệt; không mở cho mọi loại tệp. Cloudinary thực tế chưa được kiểm thử ở môi trường local.
+- Tạo lịch trùng báo lỗi thay vì thành công 0 ca; kiểm tra tất cả ca trước khi thêm, dùng PostgreSQL advisory transaction lock theo bác sĩ để tránh hai yêu cầu tạo trùng đồng thời. Thêm chú thích đỏ/đã đặt và xanh/còn trống.
+- API xử lý CANCELLED cho lịch PENDING, giải phóng slot; NO_SHOW chỉ cho CONFIRMED đã tới giờ khám. Giữ kiểm tra quyền sở hữu lịch.
+- Layout bác sĩ hiển thị thông báo kết quả chuyển công tác gần nhất (duyệt/từ chối) cùng ghi chú khi mở/tải lại trang; không gửi email hoặc thông báo đẩy.
+- Build/regression PostgreSQL đạt: ca đã đặt/còn trống không tạo trùng, từ chối giải phóng slot, giá trên 2 triệu vào khoảng giá. Chromium đạt: tìm/thu gọn/mở rộng danh mục, giá tối đa động, thông báo cả duyệt/từ chối, chú thích lịch, bảng lịch admin và phục hồi khi API 503, chọn giấy phép PNG/JPG/PDF; không có pageerror. Chưa triển khai VPS.

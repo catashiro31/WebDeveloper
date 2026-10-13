@@ -33,3 +33,7 @@ before running. The suite never uploads medical documents to external storage.
 Doctor search regression covers Vietnamese accents/case, multiple words, specialty,
 facility and bio keywords, and literal LIKE wildcard characters. The test database
 must have the EnableUnaccentSearch migration applied.
+
+Scheduling checks reject duplicate available/booked slots, verify declining a pending
+appointment releases its slot, and ensure the public price ceiling includes approved
+doctors charging more than two million VND.

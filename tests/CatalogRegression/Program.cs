@@ -167,6 +167,28 @@ try
         db.Appointments.Add(appointment);
         await db.SaveChangesAsync();
         var service = new DoctorService(db, upload);
+        foreach (var status in new[] { SlotStatus.BOOKED, SlotStatus.AVAILABLE })
+        {
+            schedule.SlotStatus = status;
+            await db.SaveChangesAsync();
+            bool duplicateRejected = false;
+            try { await service.CreateSchedule(doctor.User, new ScheduleRequest { Date = schedule.DateWorking, SlotIds = new List<string> { schedule.TimeSlot.ToString() } }); }
+            catch (InvalidOperationException) { duplicateRejected = true; }
+            Check(duplicateRejected, "Duplicate schedule reported success.");
+        }
+        appointment.BookingStatus = BookingStatus.PENDING;
+        schedule.SlotStatus = SlotStatus.BOOKED;
+        await db.SaveChangesAsync();
+        await service.DeclineAppointment(doctor.User, appointment.Id, BookingStatus.CANCELLED);
+        Check(appointment.BookingStatus == BookingStatus.CANCELLED && schedule.SlotStatus == SlotStatus.AVAILABLE, "Decline did not release slot.");
+        appointment.BookingStatus = BookingStatus.CONFIRMED;
+        schedule.SlotStatus = SlotStatus.BOOKED;
+        await db.SaveChangesAsync();
+        doctor.Price = 3500000;
+        await db.SaveChangesAsync();
+        Check(await new PublicService(db, cache).GetMaxDoctorPrice() >= 3500000, "Price limit excludes expensive doctors.");
+        Console.WriteLine("PASS: duplicate available/booked slots rejected, declined appointment frees slot, price maximum includes prices above 2 million.");
+
         foreach (var invalid in new[] {
             new MedicalResultRequest { Diagnosis = "" },
             new MedicalResultRequest { Diagnosis = "Test", PrescriptionLink = "javascript:alert(1)" },
