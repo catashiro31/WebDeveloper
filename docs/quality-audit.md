@@ -77,3 +77,11 @@ từng biểu mẫu tải tệp.
 - Thêm FollowUpDate nullable, migration AddMedicalResultFollowUpDate. API bác sĩ và bệnh nhân trả ngày tái khám; lịch sử bệnh nhân hiển thị ngày đề nghị và nhắc đặt lịch riêng (không tự đặt lịch).
 - Sửa bất nhất: trước đây nút trả kết quả xuất hiện ở CONFIRMED nhưng service chỉ nhận COMPLETED. Nay lưu kết quả và chuyển CONFIRMED sang COMPLETED trong cùng SaveChanges; kiểm tra chẩn đoán, ngày tái khám, quyền bác sĩ và tệp/link trước khi đổi trạng thái.
 - Kiểm thử PostgreSQL: migration áp dụng được; kiểm tra dữ liệu không hợp lệ không đổi trạng thái, lưu link/ngày tái khám, cập nhật DOC/DOCX qua fake storage, xóa trường tùy chọn khi sửa. Chromium kiểm tra form thực, lưu và mở lại kết quả, API lịch sử bệnh nhân; không có pageerror. Cloudinary thực tế và VPS chưa được kiểm thử/triển khai.
+
+### Tìm kiếm bác sĩ, phông chữ và đặt lại mật khẩu (2026-10-14)
+
+- Tìm kiếm cũ dùng Contains phân biệt hoa/thường và chỉ đọc họ tên. Nay PostgreSQL unaccent + ILIKE tìm từng từ không phân biệt hoa/thường/dấu trong tên, chuyên khoa, cơ sở và bio. Escape %, _ và dấu gạch chéo ngược để tìm đúng ký tự nhập. Giữ các bộ lọc/phân trang; bỏ qua phản hồi tìm kiếm cũ tới muộn. Placeholder mô tả đúng các trường hỗ trợ.
+- Migration EnableUnaccentSearch cài extension unaccent (PostgreSQL cần hỗ trợ extension và tài khoản chạy migration có quyền tạo). Đã áp dụng trên PostgreSQL local.
+- Thống nhất Arial, Helvetica, sans-serif cho các trang và form controls; bỏ các font Google/Playfair/Nunito trộn lẫn.
+- Thiết kế lại ResetPassword bằng CSS riêng vì trước đây dùng class Bootstrap không có stylesheet tương ứng: thẻ form, nhãn rõ ràng, kích thước mobile, trạng thái đang xử lý/thành công/lỗi, liên kết yêu cầu email mới. Đọc thông báo API qua readApiMessage.
+- Build đạt; regression thực trên PostgreSQL đạt cho tên có/không dấu, hoa/thường, nhiều từ, bio/chuyên khoa/cơ sở và ký tự wildcard. Chromium đạt trên desktop/mobile, mật khẩu không khớp, đổi mật khẩu thật với tài khoản thử nghiệm, đăng nhập bằng mật khẩu mới, link đã dùng báo lỗi, tìm kiếm gửi đúng keyword, không có pageerror. Không kiểm thử gửi email thật hay triển khai VPS.

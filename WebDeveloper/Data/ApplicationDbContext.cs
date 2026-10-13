@@ -23,6 +23,7 @@ namespace WebDeveloper.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+            modelBuilder.HasPostgresExtension("unaccent");
 
             // Store enums as strings (matching Java @Enumerated(EnumType.STRING))
             modelBuilder.Entity<User>()

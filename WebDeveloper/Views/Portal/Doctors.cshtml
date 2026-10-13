@@ -3,7 +3,7 @@
 }
 
 <style>
-.page { min-height: 100vh; background: #f8fafc; font-family: 'Inter', -apple-system, sans-serif; padding-top: 96px; }
+.page { min-height: 100vh; background: #f8fafc; font-family: Arial, Helvetica, sans-serif; padding-top: 96px; }
 
 /* ===== HERO ===== */
 .hero-wrapper { max-width: 1280px; margin: 0 auto; padding: 24px 40px; }
@@ -29,7 +29,7 @@
   padding: 16px 24px 16px 56px; font-size: 16px; outline: none; 
   color: #0f172a; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-family: inherit; box-sizing: border-box;
+  font-family: Arial, Helvetica, sans-serif; box-sizing: border-box;
 }
 .search-input:focus { box-shadow: 0 15px 40px rgba(0,0,0,0.15); transform: translateY(-3px); }
 .search-icon { 
@@ -76,7 +76,7 @@
 .spec-item { 
   padding: 10px 14px; border-radius: 12px; border: none; background: transparent; 
   cursor: pointer; font-size: 13.5px; transition: all 0.2s; text-align: left; 
-  color: #475569; font-weight: 600; font-family: inherit; width: 100%; box-sizing: border-box;
+  color: #475569; font-weight: 600; font-family: Arial, Helvetica, sans-serif; width: 100%; box-sizing: border-box;
 }
 .spec-item:hover { background: #f8fafc; color: #6366f1; }
 .spec-item.active { background: #eef2ff; color: #6366f1; }
@@ -91,7 +91,7 @@
 .pagination button { 
   display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 18px; 
   border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-weight: 700; font-size: 14px;
-  cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: inherit;
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: Arial, Helvetica, sans-serif;
 }
 .pagination button:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(99,102,241,0.15); }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -207,7 +207,7 @@
   font-size: 14px; font-weight: 800; 
   cursor: pointer; width: 100%; 
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
-  font-family: inherit;
+  font-family: Arial, Helvetica, sans-serif;
 }
 .doc-card:hover .book-btn { background: #6366f1; color: #fff; box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
 </style>
@@ -223,7 +223,7 @@
                 <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
-                <input type="text" id="searchInput" class="search-input" placeholder="Tên bác sĩ, triệu chứng..." />
+                <input type="text" id="searchInput" class="search-input" placeholder="Tên bác sĩ, chuyên khoa, cơ sở..." />
             </div>
         </div>
     </div>
@@ -524,7 +524,9 @@
             fetchDoctors();
         }
 
+        let searchRequestId = 0;
         async function fetchDoctors() {
+            const requestId = ++searchRequestId;
             // Loading state
             elGrid.innerHTML = Array(6).fill(`<div style="background: #eee; border-radius: 24px; height: 300px; animation: pulse 1.5s infinite;"></div>`).join('');
             elPagi.style.display = 'none';
@@ -542,6 +544,7 @@
                 if (!res.ok) throw new Error(await readApiMessage(res));
                 const data = await res.json();
                 if (!Array.isArray(data.content)) throw new Error('Danh sách bác sĩ không hợp lệ.');
+                if (requestId !== searchRequestId) return;
                 const docs = data.content;
                 state.totalPages = data.totalPages || 0;
 
@@ -611,6 +614,7 @@
                 }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch(e) {
+                if (requestId !== searchRequestId) return;
                 elGrid.innerHTML = '<div class="empty" role="alert"><h3>Không thể tải danh sách bác sĩ</h3><p>Vui lòng thử lại sau.</p><button type="button" class="book-btn" onclick="fetchDoctors()">Thử lại</button></div>';
                 elPagi.style.display = 'none';
             }

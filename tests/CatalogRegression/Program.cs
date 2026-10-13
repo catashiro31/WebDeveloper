@@ -150,6 +150,17 @@ try
         var approvedRow = approvedRows.EnumerateArray().Single(row => row.GetProperty("FullName").GetString() == unique);
         Check(approvedRow.GetProperty("VerificationStatus").GetString() == "APPROVED", "Admin approved list omitted verification status.");
         var doctor = await db.DoctorDetails.Include(d => d.User).SingleAsync(d => d.User.Email == unique + "@example.test");
+        doctor.User.FullName = "Đặng Lê Văn";
+        doctor.Bio = "Tư vấn đau đầu";
+        await db.SaveChangesAsync();
+        foreach (var keyword in new[] { "  dang   VAN  ", "ĐẶNG", "dau dau", unique + "-updated" })
+        {
+            var found = await new PublicService(db, cache).GetDoctors(keyword, specialtyId, facilityId, null, null, null, null, 0, 10);
+            Check(found.Content.Count() == 1, "Search missed keyword: " + keyword);
+        }
+        foreach (var keyword in new[] { "%", "_", "unmatched-keyword" })
+            Check((await new PublicService(db, cache).GetDoctors(keyword, specialtyId, facilityId, null, null, null, null, 0, 10)).TotalElements == 0, "Search treated literal keyword as wildcard.");
+        Console.WriteLine("PASS: case/accent insensitive multiword doctor search, specialty/facility/bio keywords, literal wildcard escaping.");
         var patient = new PatientProfile { User = doctor.User, FullName = "Người thân kiểm thử" };
         var schedule = new DoctorSchedule { Doctor = doctor, DateWorking = DateOnly.FromDateTime(DateTime.UtcNow), TimeSlot = TimeSlot.SLOT_09_00, SlotStatus = SlotStatus.BOOKED };
         var appointment = new Appointment { Patient = patient, Schedule = schedule, BookingStatus = BookingStatus.CONFIRMED };

@@ -29,3 +29,7 @@ Medical-result coverage also checks validation before completing a confirmed vis
 persisted links and follow-up dates, DOC/DOCX MIME acceptance through fake storage,
 and clearing optional notes/follow-up dates while editing. Apply the latest migrations
 before running. The suite never uploads medical documents to external storage.
+
+Doctor search regression covers Vietnamese accents/case, multiple words, specialty,
+facility and bio keywords, and literal LIKE wildcard characters. The test database
+must have the EnableUnaccentSearch migration applied.

@@ -84,8 +84,15 @@ namespace WebDeveloper.Services
                 .Include(d => d.Facility)
                 .Where(d => d.VerificationStatus == VerificationStatus.APPROVED);
 
-            if (!string.IsNullOrWhiteSpace(keyword))
-                query = query.Where(d => d.User.FullName!.Contains(keyword));
+            // Match each word across names, specialties, facilities and profile descriptions.
+            // Escape LIKE metacharacters so user input remains a literal keyword.
+            foreach (var word in (keyword ?? "").Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pattern = "%" + word.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+                query = query.Where(d => EF.Functions.ILike(
+                    EF.Functions.Unaccent((d.User.FullName ?? "") + " " + d.Specialty.SpecialtyName + " " + d.Facility.FacilityName + " " + (d.Bio ?? "")),
+                    EF.Functions.Unaccent(pattern), "\\"));
+            }
             if (specId.HasValue)
                 query = query.Where(d => d.SpecialtyId == specId.Value);
             if (facilityId.HasValue)
