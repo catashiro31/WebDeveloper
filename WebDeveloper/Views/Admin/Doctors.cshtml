@@ -81,6 +81,7 @@
                         </a>
                     </div>
                     <p style="margin: 8px 0; font-size: 15px;"><b style="display:inline-block; width: 110px;">Giá khám:</b> <span id="modalPrice"></span> VNĐ</p>
+                    <p style="margin: 8px 0; font-size: 15px;"><b style="display:inline-block; width: 110px;">Đánh giá:</b> <span id="modalRating" style="color: #f59e0b; font-weight: 700;"></span></p>
                     <div style="margin-top: 20px; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid #f1f5f9;">
                         <b style="display: block; margin-bottom: 8px;">Giới thiệu chuyên môn:</b>
                         <p id="modalBio" style="margin: 0; font-size: 14px; line-height: 1.6; color: #475569; white-space: pre-wrap;"></p>
@@ -194,6 +195,7 @@
                                         <div style="margin-top: 4px;">
                                             <span class="chip">📧 ${email}</span>
                                             <span class="chip">🏥 ${spec}</span>
+                                            <span class="chip" style="color: #f59e0b; font-weight: 700;">⭐ ${(doc.ratingAverage != null ? Number(doc.ratingAverage).toFixed(1) : '5.0')} (${doc.reviewCount || 0} đánh giá)</span>
                                             <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: ${badge.bg}; color: ${badge.color}; display: inline-block; margin-top: 4px;">${badge.label}</span>
                                         </div>
                                     </div>
@@ -269,6 +271,7 @@
                 }
 
                 document.getElementById('modalPrice').innerText = (data.price || 0).toLocaleString();
+                document.getElementById('modalRating').innerText = `⭐ ${(data.ratingAverage != null ? Number(data.ratingAverage).toFixed(1) : '5.0')} / 5.0 (${data.reviewCount || 0} đánh giá)`;
                 document.getElementById('modalBio').innerText = data.bio || '';
 
                 if (data.certificateUrl) {

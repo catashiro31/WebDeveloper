@@ -88,13 +88,13 @@ namespace WebDeveloper.Services
                 .Include(d => d.Facility)
                 .Where(d => d.VerificationStatus == VerificationStatus.APPROVED);
 
-            // Match each word across names, specialties, facilities and profile descriptions.
-            // Escape LIKE metacharacters so user input remains a literal keyword.
+            // Tìm kiếm CHÍNH XÁC hơn: chỉ tìm theo tên bác sĩ và tên chuyên khoa
+            // Không tìm trong Bio hay FacilityName để tránh kết quả sai
             foreach (var word in (keyword ?? "").Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
             {
                 var pattern = "%" + word.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
                 query = query.Where(d => EF.Functions.ILike(
-                    EF.Functions.Unaccent((d.User.FullName ?? "") + " " + d.Specialty.SpecialtyName + " " + d.Facility.FacilityName + " " + (d.Bio ?? "")),
+                    EF.Functions.Unaccent((d.User.FullName ?? "") + " " + d.Specialty.SpecialtyName),
                     EF.Functions.Unaccent(pattern), "\\"));
             }
             if (specId.HasValue)
@@ -175,7 +175,7 @@ namespace WebDeveloper.Services
         {
             var reviews = await _db.Reviews
                 .Include(r => r.Appointment).ThenInclude(a => a.Patient).ThenInclude(p => p.User)
-                .Where(r => r.Appointment.Schedule.DoctorId == doctorId && r.IsVisible == true)
+                .Where(r => r.Appointment.Schedule.DoctorId == doctorId && r.IsVisible != false)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
@@ -198,12 +198,14 @@ namespace WebDeveloper.Services
                 .Where(s => s.DoctorId == doctorId && s.DateWorking == date && s.SlotStatus == SlotStatus.AVAILABLE)
                 .ToListAsync();
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            var minTime = TimeOnly.FromDateTime(DateTime.UtcNow.AddHours(8)); // 1 hour buffer
+            var vnNow = DateTime.UtcNow.AddHours(7); // Giờ Việt Nam (UTC+7)
+            var today = DateOnly.FromDateTime(vnNow);
+            var vnTime = TimeOnly.FromDateTime(vnNow);
 
-            return schedules.Where(s => 
+            return schedules.Where(s =>
             {
-                if (date == today) return TimeSlotHelper.ParseTimeSlot(s.TimeSlot) > minTime;
+                // Nếu là ngày hôm nay, chỉ hiện slot chưa qua giờ hiện tại
+                if (date == today) return TimeSlotHelper.ParseTimeSlot(s.TimeSlot) > vnTime;
                 return true;
             }).Select(s => new DoctorSlotResponse
             {

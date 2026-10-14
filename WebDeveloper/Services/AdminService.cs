@@ -141,7 +141,9 @@ namespace WebDeveloper.Services
                 d.Bio,
                 d.IdCardUrl,
                 d.CertificateUrl,
-                VerificationStatus = d.VerificationStatus.ToString()
+                VerificationStatus = d.VerificationStatus.ToString(),
+                d.RatingAverage,
+                d.ReviewCount
             };
         }
 
@@ -436,29 +438,93 @@ namespace WebDeveloper.Services
             var review = await _db.Reviews.Include(r => r.Appointment).ThenInclude(a => a.Schedule).FirstOrDefaultAsync(r => r.ReviewId == id)
                 ?? throw new InvalidOperationException("Không tìm thấy");
             
-            review.IsVisible = false;
-            
-            // Tối ưu hóa: Thay vì tính toán Rating Real-Time gây quá tải,
-            // ta áp dụng Batch Processing. Điểm đánh giá trung bình và số lượng review
-            // sẽ được BackgroundService (AppointmentCleanupService) tính toán lại định kỳ.
-
-
+            // Chuyển đổi trạng thái ẩn/hiện
+            bool willBeVisible = (review.IsVisible == false);
+            review.IsVisible = willBeVisible;
             await _db.SaveChangesAsync();
-            return "Đã ẩn bài đánh giá";
+
+            // Cập nhật lại RatingAverage và ReviewCount cho bác sĩ ngay lập tức
+            if (review.Appointment?.Schedule != null)
+            {
+                var docId = review.Appointment.Schedule.DoctorId;
+                var stats = await _db.Reviews
+                    .Where(r => r.Appointment.Schedule.DoctorId == docId && r.IsVisible != false)
+                    .GroupBy(r => r.Appointment.Schedule.DoctorId)
+                    .Select(g => new { Count = g.Count(), Avg = g.Average(x => (double?)(x.Rating ?? 0)) })
+                    .FirstOrDefaultAsync();
+
+                var doctor = await _db.DoctorDetails.FindAsync(docId);
+                if (doctor != null)
+                {
+                    doctor.ReviewCount = stats?.Count ?? 0;
+                    doctor.RatingAverage = stats != null && stats.Count > 0 ? Math.Round((stats.Avg ?? 0) * 10) / 10.0 : 0;
+                    await _db.SaveChangesAsync();
+                }
+            }
+
+            return willBeVisible ? "Đã hiển thị lại bài đánh giá" : "Đã ẩn bài đánh giá";
         }
 
-        // Mock AI (C# version of Naive Bayes, simple dictionary return for now)
-        // You could fully port the Java AI logic here later.
+        // Tự động phân tích và thanh lọc bình luận tiếng Việt (phát hiện từ ngữ thô tục / phản cảm)
         public Dictionary<string, double> AnalyzeComment(string text)
         {
             var results = new Dictionary<string, double>();
             if (string.IsNullOrWhiteSpace(text)) return results;
+
+            var lower = text.ToLowerInvariant();
             
-            results.Add("Tích cực", 25.0);
-            results.Add("Tiêu cực", 25.0);
-            results.Add("Quảng cáo", 25.0);
-            results.Add("Thô tục", 25.0);
-            return results; // Mock implementation to fulfill interface
+            // Danh sách các từ khóa thô tục, phản cảm thường gặp trong tiếng Việt
+            var vulgarKeywords = new[]
+            {
+                "đm", "dm", "đcm", "dcm", "vcl", "vcll", "vl", "cl", "đụ", "cặc", "lồn",
+                "địt", "ngu", "chó", "khốn nạn", "mẹ kiếp", "lừa đảo", "súc vật", "con đĩ",
+                "đĩ", "mất dạy", "bố láo", "khốn khiếp", "đếch", "mẹ mày", "con mẹ",
+                "thằng điên", "con điên", "đồ chó", "đéo", "đeo", "dmm", "đmm"
+            };
+
+            bool isVulgar = false;
+            // Tách từ để kiểm tra chính xác hoặc kiểm tra từ ghép
+            var words = lower.Split(new[] { ' ', ',', '.', '!', '?', ';', ':', '-', '_', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var kw in vulgarKeywords)
+            {
+                if (kw.Contains(' '))
+                {
+                    if (lower.Contains(kw)) { isVulgar = true; break; }
+                }
+                else
+                {
+                    if (words.Contains(kw)) { isVulgar = true; break; }
+                }
+            }
+
+            if (isVulgar)
+            {
+                results["Thô tục"] = 95.0;
+                results["Cần xem xét"] = 100.0;
+                results["Tiêu cực"] = 80.0;
+                results["Tích cực"] = 5.0;
+            }
+            else
+            {
+                // Kiểm tra tiêu cực thông thường
+                var negativeKeywords = new[] { "tệ", "kém", "chán", "dở", "thất vọng", "bực", "chờ lâu", "chậm", "khó chịu" };
+                bool isNegative = negativeKeywords.Any(n => lower.Contains(n));
+
+                if (isNegative)
+                {
+                    results["Tiêu cực"] = 75.0;
+                    results["Tích cực"] = 20.0;
+                    results["Thô tục"] = 0.0;
+                }
+                else
+                {
+                    results["Tích cực"] = 85.0;
+                    results["Tiêu cực"] = 10.0;
+                    results["Thô tục"] = 0.0;
+                }
+            }
+
+            return results;
         }
     }
 }

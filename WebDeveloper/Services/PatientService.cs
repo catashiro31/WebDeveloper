@@ -162,9 +162,24 @@ namespace WebDeveloper.Services
                 if (schedule.SlotStatus != SlotStatus.AVAILABLE)
                     throw new InvalidOperationException("Ca khám đã có người đặt hoặc đã đóng");
 
-                var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                // Dùng giờ Việt Nam (UTC+7) để kiểm tra
+                var vnNow = DateTime.UtcNow.AddHours(7);
+                var today = DateOnly.FromDateTime(vnNow);
                 if (schedule.DateWorking < today)
                     throw new InvalidOperationException("Không thể đặt lịch cho ngày đã qua!");
+
+                // Nếu đặt lịch ngày hôm nay, kiểm tra giờ chưa qua
+                if (schedule.DateWorking == today)
+                {
+                    var timeStr2 = schedule.TimeSlot.GetDisplayValue();
+                    var timeParts2 = timeStr2.Split(':');
+                    int slotHour = int.Parse(timeParts2[0]);
+                    int slotMin = int.Parse(timeParts2[1]);
+                    var slotTime = new TimeOnly(slotHour, slotMin);
+                    var vnTime = TimeOnly.FromDateTime(vnNow);
+                    if (slotTime <= vnTime)
+                        throw new InvalidOperationException("Không thể đặt lịch cho khung giờ đã qua!");
+                }
 
                 // Overlap check
                 var overlapStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
@@ -356,7 +371,31 @@ namespace WebDeveloper.Services
             _db.Reviews.Add(review);
             await _db.SaveChangesAsync();
 
+            // Cập nhật RatingAverage và ReviewCount ngay lập tức
+            await UpdateDoctorRating(app.Schedule.DoctorId);
+
             return "Gửi đánh giá thành công!";
+        }
+
+        private async Task UpdateDoctorRating(int doctorId)
+        {
+            var stats = await _db.Reviews
+                .Where(r => r.Appointment.Schedule.DoctorId == doctorId && r.IsVisible == true)
+                .GroupBy(r => r.Appointment.Schedule.DoctorId)
+                .Select(g => new
+                {
+                    Count = g.Count(),
+                    Avg = g.Average(x => (double?)(x.Rating ?? 0))
+                })
+                .FirstOrDefaultAsync();
+
+            var doctor = await _db.DoctorDetails.FindAsync(doctorId);
+            if (doctor != null)
+            {
+                doctor.ReviewCount = stats?.Count ?? 0;
+                doctor.RatingAverage = stats != null ? Math.Round((stats.Avg ?? 0) * 10) / 10.0 : 0;
+                await _db.SaveChangesAsync();
+            }
         }
 
         public async Task<string> UpdateReview(User user, int appointmentId, ReviewRequest req)
@@ -379,6 +418,9 @@ namespace WebDeveloper.Services
             review.Rating = req.Rating;
             review.Comment = req.Comment;
             await _db.SaveChangesAsync();
+
+            // Cập nhật RatingAverage và ReviewCount ngay lập tức
+            await UpdateDoctorRating(app.Schedule.DoctorId);
 
             return "Cập nhật đánh giá thành công!";
         }

@@ -436,8 +436,9 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Chỉ có thể lưu kết quả cho lịch khám đã xác nhận hoặc hoàn thành");
             if (string.IsNullOrWhiteSpace(req.Diagnosis))
                 throw new InvalidOperationException("Vui lòng nhập chẩn đoán");
-            if (req.FollowUpDate.HasValue && req.FollowUpDate.Value < app.Schedule.DateWorking)
-                throw new InvalidOperationException("Ngày tái khám không được trước ngày khám");
+            var vnToday = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            if (req.FollowUpDate.HasValue && (req.FollowUpDate.Value <= app.Schedule.DateWorking || req.FollowUpDate.Value <= vnToday))
+                throw new InvalidOperationException("Ngày tái khám phải sau ngày khám và ít nhất là từ ngày mai");
             var link = req.PrescriptionLink?.Trim();
             if (!string.IsNullOrEmpty(link) && (!Uri.TryCreate(link, UriKind.Absolute, out var uri)
                 || (uri.Scheme != Uri.UriSchemeHttps && uri.Scheme != Uri.UriSchemeHttp)))
@@ -477,7 +478,7 @@ namespace WebDeveloper.Services
             var query = _db.Reviews
                 .Include(r => r.Appointment).ThenInclude(a => a.Patient).ThenInclude(p => p.User)
                 .Include(r => r.Appointment).ThenInclude(a => a.Schedule).ThenInclude(s => s.Doctor)
-                .Where(r => r.Appointment.Schedule.Doctor.UserId == user.UserId && r.IsVisible == true)
+                .Where(r => r.Appointment.Schedule.Doctor.UserId == user.UserId && r.IsVisible != false)
                 .OrderByDescending(r => r.CreatedAt);
 
             var total = await query.CountAsync();

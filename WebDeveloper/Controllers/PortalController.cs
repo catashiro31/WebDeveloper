@@ -25,7 +25,7 @@ namespace WebDeveloper.Controllers
                 var reviews = await _publicService.GetReviewsByDoctorId(id);
                 var topRated = await _publicService.GetDoctors(null, null, null, null, null, null, "rating", 0, 10);
                 
-                ViewBag.Reviews = reviews.Take(2).ToList();
+                ViewBag.Reviews = reviews.ToList();
                 ViewBag.TopRated = topRated.Content.ToList();
                 
                 return View(doctor);

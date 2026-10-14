@@ -5,25 +5,70 @@
 
 <style>
 .admin-card {
-    background: #fff; border-radius: 24px; padding: 24px;
+    background: #fff; border-radius: 24px; padding: 28px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #e2e8f0;
 }
-.page-header { margin-bottom: 32px; }
+.page-header { margin-bottom: 28px; }
 .page-title { margin: 0; font-size: 28px; font-weight: 800; color: #1e293b; }
 .page-desc { margin: 8px 0 0; font-size: 15px; color: #64748b; }
+
+.filter-bar {
+    display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center;
+    gap: 16px; margin-bottom: 24px;
+}
+.tab-group {
+    display: flex; gap: 8px; background: #f1f5f9; padding: 4px; border-radius: 14px;
+}
+.tab-btn {
+    padding: 8px 16px; border: none; background: transparent; border-radius: 10px;
+    font-size: 13px; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s;
+}
+.tab-btn.active {
+    background: #fff; color: #6366f1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+.tab-btn.warning-tab.active {
+    background: #fff; color: #dc2626; box-shadow: 0 2px 6px rgba(220,38,38,0.15);
+}
+
+.search-box {
+    display: flex; align-items: center; background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 14px; padding: 8px 14px; width: 320px; max-width: 100%; transition: border-color 0.2s;
+}
+.search-box:focus-within {
+    border-color: #6366f1; background: #fff; box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+}
+.search-box input {
+    border: none; background: transparent; outline: none; width: 100%; font-size: 14px; color: #1e293b;
+}
+
 .premium-table { width: 100%; border-collapse: collapse; text-align: left; }
 .premium-table th {
-    padding: 16px 24px; background: #f8fafc; font-size: 11px; font-weight: 700;
+    padding: 16px 20px; background: #f8fafc; font-size: 11px; font-weight: 700;
     color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid #f1f5f9;
 }
-.premium-table td { padding: 20px 24px; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+.premium-table td { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; font-size: 14px; vertical-align: top; }
 .premium-table tr:hover { background: #fafbfc; }
+
+.badge-status {
+    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
+    border-radius: 8px; font-size: 12px; font-weight: 700;
+}
+.badge-visible { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
+.badge-hidden { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+.badge-toxic {
+    background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
+    font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
+}
+
 .btn-action {
-    padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 13px;
-    cursor: pointer; border: none; transition: all 0.2s;
+    padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 13px;
+    cursor: pointer; border: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
 }
 .btn-hide { background: #fee2e2; color: #ef4444; }
 .btn-hide:hover { background: #fca5a5; }
+.btn-unhide { background: #dcfce7; color: #16a34a; }
+.btn-unhide:hover { background: #bbf7d0; }
+
 .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
 .pagination button {
     padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff;
@@ -35,18 +80,31 @@
 
 <div class="page-header">
     <h2 class="page-title">Đánh giá hệ thống</h2>
-    <p class="page-desc">Quản lý phản hồi của bệnh nhân dành cho các bác sĩ</p>
+    <p class="page-desc">Quản lý và thanh lọc phản hồi của bệnh nhân dành cho các bác sĩ</p>
 </div>
 
 <div class="admin-card">
+    <div class="filter-bar">
+        <div class="tab-group">
+            <button class="tab-btn active" onclick="setTab('all', this)">Tất cả</button>
+            <button class="tab-btn" onclick="setTab('visible', this)">Đang hiển thị</button>
+            <button class="tab-btn" onclick="setTab('hidden', this)">Đã ẩn</button>
+            <button class="tab-btn warning-tab" onclick="setTab('profane', this)">⚠️ Nghi vấn thô tục</button>
+        </div>
+        <div class="search-box">
+            <span style="color: #94a3b8; margin-right: 8px;">🔍</span>
+            <input type="text" id="searchKeyword" placeholder="Tìm theo tên hoặc nội dung..." oninput="handleSearch()" />
+        </div>
+    </div>
+
     <table class="premium-table">
         <thead>
             <tr>
-                <th>Khách hàng</th>
-                <th>Bác sĩ</th>
-                <th>Đánh giá</th>
-                <th>Bình luận</th>
-                <th>Hành động</th>
+                <th style="width: 22%;">Khách hàng</th>
+                <th style="width: 20%;">Bác sĩ</th>
+                <th style="width: 12%;">Đánh giá</th>
+                <th style="width: 30%;">Bình luận</th>
+                <th style="width: 16%;">Trạng thái & Hành động</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -58,7 +116,26 @@
 
 @section Scripts {
     <script>
+        let rawReviews = [];
+        let filteredReviews = [];
         let state = { page: 0, size: 10, totalPages: 1 };
+        let currentTab = 'all';
+        let searchKeyword = '';
+
+        const VULGAR_WORDS = [
+            'đm', 'dm', 'đcm', 'dcm', 'vcl', 'vcll', 'vl', 'cl', 'đụ', 'cặc', 'lồn',
+            'địt', 'ngu', 'chó', 'khốn nạn', 'mẹ kiếp', 'lừa đảo', 'súc vật', 'con đĩ',
+            'đĩ', 'mất dạy', 'bố láo', 'khốn khiếp', 'đếch', 'mẹ mày', 'con mẹ',
+            'thằng điên', 'con điên', 'đồ chó', 'đéo', 'đeo', 'dmm', 'đmm'
+        ];
+
+        function isProfaneComment(text, aiLabels) {
+            if (aiLabels && aiLabels['Thô tục'] && aiLabels['Thô tục'] >= 50) return true;
+            if (!text) return false;
+            const lower = text.toLowerCase();
+            const words = lower.split(/[\s,.\!?;\:\-_\n\r\t]+/);
+            return VULGAR_WORDS.some(w => w.includes(' ') ? lower.includes(w) : words.includes(w));
+        }
 
         async function loadReviews() {
             const tbody = document.getElementById('tableBody');
@@ -70,52 +147,123 @@
                 });
                 const data = await res.json();
                 
-                const list = data.content || [];
+                rawReviews = data.content || [];
                 state.totalPages = data.totalPages || 1;
-
-                if (list.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">Không có đánh giá nào</td></tr>`;
-                } else {
-                    tbody.innerHTML = list.map(r => `
-                        <tr>
-                            <td>
-                                <div style="font-weight: 700; color: #1e293b;">${r.patientName || 'N/A'}</div>
-                                <div style="font-size: 12px; color: #64748b;">${r.createdAt ? new Date(r.createdAt).toLocaleDateString() : ''}</div>
-                            </td>
-                            <td>
-                                <div style="font-weight: 600; color: #1e293b;">BS. ${r.doctorName || 'N/A'}</div>
-                            </td>
-                            <td>
-                                <div style="color: #f59e0b; font-weight: 700;">★ ${r.rating}</div>
-                            </td>
-                            <td style="max-width: 300px;">
-                                <p style="margin: 0; color: #475569; font-size: 13px; line-height: 1.5;">${r.comment || '<i style="color: #94a3b8">Không có bình luận</i>'}</p>
-                            </td>
-                            <td>
-                                <button class="btn-action btn-hide" onclick="hideReview(${r.id || r.reviewId})">Ẩn / Xóa</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
-                renderPagination();
+                applyFilter();
             } catch (err) {
                 console.error(err);
                 tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Lỗi tải dữ liệu</td></tr>';
             }
         }
 
-        window.hideReview = async (id) => {
-            if (!confirm('Bạn có chắc chắn muốn ẩn/xóa đánh giá này?')) return;
+        function setTab(tab, btn) {
+            currentTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilter();
+        }
+
+        function handleSearch() {
+            searchKeyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
+            applyFilter();
+        }
+
+        function applyFilter() {
+            filteredReviews = rawReviews.filter(r => {
+                const isHidden = (r.isVisible === false);
+                const isToxic = isProfaneComment(r.comment, r.aiLabels);
+
+                if (currentTab === 'visible' && isHidden) return false;
+                if (currentTab === 'hidden' && !isHidden) return false;
+                if (currentTab === 'profane' && !isToxic) return false;
+
+                if (searchKeyword) {
+                    const patient = (r.patientName || '').toLowerCase();
+                    const doctor = (r.doctorName || '').toLowerCase();
+                    const comment = (r.comment || '').toLowerCase();
+                    if (!patient.includes(searchKeyword) && !doctor.includes(searchKeyword) && !comment.includes(searchKeyword)) {
+                        return false;
+                    }
+                }
+                return true;
+            });
+
+            renderTable();
+        }
+
+        function highlightProfanity(text) {
+            if (!text) return '<i style="color: #94a3b8">Không có bình luận</i>';
+            let escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            VULGAR_WORDS.forEach(w => {
+                const reg = new RegExp(`(^|\\s|[.,!?;:])(${w})($|\\s|[.,!?;:])`, 'gi');
+                escaped = escaped.replace(reg, '$1<mark style="background:#fee2e2;color:#ef4444;font-weight:700;padding:0 2px;border-radius:4px;">$2</mark>$3');
+            });
+            return escaped;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            if (filteredReviews.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">Không tìm thấy đánh giá nào phù hợp</td></tr>`;
+                renderPagination();
+                return;
+            }
+
+            tbody.innerHTML = filteredReviews.map(r => {
+                const id = r.id || r.reviewId;
+                const isHidden = (r.isVisible === false);
+                const isToxic = isProfaneComment(r.comment, r.aiLabels);
+
+                return `
+                    <tr style="${isHidden ? 'background: #fcfcfd; opacity: 0.8;' : ''}">
+                        <td>
+                            <div style="font-weight: 700; color: #1e293b;">${r.patientName || 'N/A'}</div>
+                            <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : ''}</div>
+                        </td>
+                        <td>
+                            <div style="font-weight: 700; color: #1e293b;">BS. ${r.doctorName || 'N/A'}</div>
+                        </td>
+                        <td>
+                            <div style="color: #f59e0b; font-weight: 800; font-size: 15px;">★ ${r.rating}</div>
+                            <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Đánh giá sao</div>
+                        </td>
+                        <td style="max-width: 320px;">
+                            <p style="margin: 0; color: #475569; font-size: 13px; line-height: 1.5;">${highlightProfanity(r.comment)}</p>
+                            ${isToxic ? '<div class="badge-toxic">⚠️ Nghi vấn thô tục / phản cảm</div>' : ''}
+                        </td>
+                        <td>
+                            <div style="margin-bottom: 8px;">
+                                ${isHidden 
+                                    ? '<span class="badge-status badge-hidden">● Đã ẩn</span>' 
+                                    : '<span class="badge-status badge-visible">● Đang hiển thị</span>'}
+                            </div>
+                            <button class="btn-action ${isHidden ? 'btn-unhide' : 'btn-hide'}" onclick="toggleHideReview(${id}, ${isHidden})">
+                                ${isHidden ? '👁️ Hiện lại' : '🚫 Ẩn'}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            renderPagination();
+        }
+
+        window.toggleHideReview = async (id, isCurrentlyHidden) => {
+            const actionText = isCurrentlyHidden ? 'hiển thị lại' : 'ẩn';
+            if (!confirm(`Bạn có chắc chắn muốn ${actionText} đánh giá này? Điểm số đánh giá vẫn sẽ được giữ nguyên và cập nhật.`)) return;
             try {
                 const res = await fetch(`/api/v1/admin/reviews/${id}/hide`, { 
                     method: 'PATCH',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
-                    Toastify({ text: "Đã ẩn đánh giá", style: { background: "#10b981" } }).showToast();
+                    Toastify({ 
+                        text: isCurrentlyHidden ? "Đã hiển thị lại đánh giá" : "Đã ẩn đánh giá", 
+                        style: { background: "#10b981" } 
+                    }).showToast();
                     loadReviews();
                 } else {
-                    Toastify({ text: "Lỗi khi ẩn", style: { background: "#ef4444" } }).showToast();
+                    Toastify({ text: "Lỗi khi cập nhật trạng thái", style: { background: "#ef4444" } }).showToast();
                 }
             } catch(e) { console.error(e); }
         };

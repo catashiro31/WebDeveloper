@@ -260,7 +260,11 @@
             document.getElementById('modalPatientName').innerText = apt.patientName;
             document.getElementById('modalVisitInfo').textContent = `Mã ca khám: #${id} | Ngày khám: ${apt.dateWorking} ${apt.timeSlot || ''} | Khoa: ${apt.specialtyName || 'Chưa cập nhật'}`;
             document.getElementById('followUpDate').value = apt.followUpDate || '';
-            document.getElementById('followUpDate').min = apt.dateWorking;
+            // Ngày tái khám phải ít nhất là ngày mai
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            document.getElementById('followUpDate').min = tomorrowStr;
             document.getElementById('prescriptionLink').value = '';
             
             document.getElementById('diagnosis').value = mode === 'edit' || apt.diagnosis ? (apt.diagnosis || '') : '';
