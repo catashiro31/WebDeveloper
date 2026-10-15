@@ -105,9 +105,34 @@
     background: #eef2ff; color: #4f46e5; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; border: 1px solid #e0e7ff;
 }
 
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.filter-card {
+    background: white; border-radius: 16px; padding: 14px 20px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    border: 1px solid #e2e8f0; margin-bottom: 24px;
+}
+.filter-select {
+    padding: 8px 12px; border-radius: 10px; border: 1.5px solid #e2e8f0; font-size: 13px;
+    font-weight: 600; color: #1e293b; background: white; outline: none; cursor: pointer; transition: all 0.2s; font-family: var(--font-app);
+}
+.filter-select:focus { border-color: #6366f1; }
+.filter-btn-reset {
+    padding: 8px 16px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #f8fafc;
+    color: #64748b; font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+}
+.filter-btn-reset:hover { background: #f1f5f9; color: #1e293b; }
+
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    padding: 24px 16px; box-sizing: border-box; overflow-y: auto;
+}
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content { background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 560px; transform: scale(0.95); transition: transform 0.3s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
+.modal-content {
+    background: white; border-radius: 24px; padding: 24px 28px; width: 100%; max-width: 580px;
+    max-height: calc(100vh - 48px); overflow-y: auto; box-sizing: border-box;
+    transform: scale(0.95); transition: transform 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+}
 .modal-overlay.active .modal-content { transform: scale(1); }
 </style>
 
@@ -127,26 +152,32 @@
     </div>
 </div>
 
-<div class="admin-card" style="margin-bottom: 24px; padding: 20px;">
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto; gap: 16px; align-items: flex-end;">
-        <div>
-            <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">👨‍⚕️ Lọc theo Bác sĩ</label>
-            <select id="filterDoctor" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background: #fff; color: #1e293b; outline: none;">
-                <option value="">Tất cả bác sĩ</option>
+<!-- Thanh lọc nằm ngang gọn gàng -->
+<div class="filter-card">
+    <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">🏥 Chuyên khoa:</label>
+            <select id="filterSpecialty" class="filter-select" style="min-width: 170px;">
+                <option value="">Tất cả chuyên khoa</option>
             </select>
         </div>
-        <div>
-            <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🏥 Lọc theo Cơ sở y tế</label>
-            <select id="filterFacility" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background: #fff; color: #1e293b; outline: none;">
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">📍 Cơ sở y tế:</label>
+            <select id="filterFacility" class="filter-select" style="min-width: 170px;">
                 <option value="">Tất cả cơ sở</option>
             </select>
         </div>
-        <div>
-            <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">📅 Lọc theo Ngày khám</label>
-            <input type="date" id="filterDate" style="width: 100%; padding: 9px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background: #fff; color: #1e293b; outline: none; box-sizing: border-box;" />
+
+        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">📅 Ngày khám từ:</label>
+            <input type="date" id="filterWorkDateFrom" class="filter-select" style="padding: 7px 10px;" />
+            <span style="font-size: 13px; font-weight: 700; color: #94a3b8;">đến</span>
+            <input type="date" id="filterWorkDateTo" class="filter-select" style="padding: 7px 10px;" />
         </div>
-        <div>
-            <button id="resetFilterBtn" onclick="resetFilters()" style="padding: 10px 18px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='#f8fafc'">
+
+        <div style="margin-left: auto;">
+            <button id="resetFilterBtn" onclick="resetFilters()" class="filter-btn-reset">
                 🔄 Đặt lại
             </button>
         </div>
@@ -174,7 +205,7 @@
 <!-- Modal Chi tiết lịch hẹn -->
 <div id="appointmentDetailModal" class="modal-overlay" onclick="closeAppointmentModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
             <div>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Chi tiết lịch hẹn</h3>
@@ -185,9 +216,9 @@
             <div id="modalAptStatusSlot"></div>
         </div>
 
-        <div style="background: #f8fafc; border-radius: 16px; padding: 18px; margin-bottom: 20px; border: 1px solid #f1f5f9;">
-            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6366f1; letter-spacing: 0.05em; margin-bottom: 12px;">👤 Thông tin bệnh nhân</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; border-radius: 16px; padding: 14px 18px; margin-bottom: 14px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6366f1; letter-spacing: 0.05em; margin-bottom: 10px;">👤 Thông tin bệnh nhân</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
                 <div>
                     <span style="color: #94a3b8; display: block;">Họ và tên:</span>
                     <b id="modalPatientName" style="color: #1e293b; font-size: 14px;">—</b>
@@ -207,9 +238,9 @@
             </div>
         </div>
 
-        <div style="background: #f8fafc; border-radius: 16px; padding: 18px; margin-bottom: 20px; border: 1px solid #f1f5f9;">
-            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6366f1; letter-spacing: 0.05em; margin-bottom: 12px;">👨‍⚕️ Thông tin khám bệnh</div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+        <div style="background: #f8fafc; border-radius: 16px; padding: 14px 18px; margin-bottom: 14px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6366f1; letter-spacing: 0.05em; margin-bottom: 10px;">👨‍⚕️ Thông tin khám bệnh</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px;">
                 <div>
                     <span style="color: #94a3b8; display: block;">Bác sĩ phụ trách:</span>
                     <b id="modalDoctorName" style="color: #1e293b; font-size: 14px;">—</b>
@@ -228,15 +259,15 @@
                 </div>
                 <div style="grid-column: span 2;">
                     <span style="color: #94a3b8; display: block; margin-bottom: 4px;">Lý do khám / Ghi chú:</span>
-                    <div id="modalReason" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; color: #334155; font-size: 13px; line-height: 1.5; white-space: pre-wrap;"></div>
+                    <div id="modalReason" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 8px 12px; color: #334155; font-size: 13px; line-height: 1.5; white-space: pre-wrap;"></div>
                 </div>
             </div>
         </div>
 
         <!-- Thông tin hủy / từ chối lịch hẹn -->
-        <div id="modalCancellationBox" style="display: none; background: #fef2f2; border-radius: 16px; padding: 18px; margin-bottom: 20px; border: 1px solid #fee2e2;">
-            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #dc2626; letter-spacing: 0.05em; margin-bottom: 10px;">❌ Thông tin hủy / từ chối lịch hẹn</div>
-            <div style="display: grid; grid-template-columns: 1fr; gap: 10px; font-size: 13px;">
+        <div id="modalCancellationBox" style="display: none; background: #fef2f2; border-radius: 16px; padding: 14px 18px; margin-bottom: 14px; border: 1px solid #fee2e2;">
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #dc2626; letter-spacing: 0.05em; margin-bottom: 8px;">❌ Thông tin hủy / từ chối lịch hẹn</div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 8px; font-size: 13px;">
                 <div>
                     <span style="color: #991b1b; font-weight: 700;">Người hủy / từ chối:</span>
                     <span id="modalCancelledBy" style="font-weight: 700; color: #b91c1c; margin-left: 6px;">—</span>
@@ -258,9 +289,10 @@
     <script>
         let state = {
             status: '',
-            doctorId: '',
+            specialtyId: '',
             facilityId: '',
-            appointmentDate: '',
+            workDateFrom: '',
+            workDateTo: '',
             page: 0,
             size: 10,
             totalPages: 1
@@ -294,9 +326,10 @@
             
             let query = `?page=${state.page}&size=${state.size}`;
             if (state.status) query += `&status=${state.status}`;
-            if (state.doctorId) query += `&doctorId=${state.doctorId}`;
+            if (state.specialtyId) query += `&specialtyId=${state.specialtyId}`;
             if (state.facilityId) query += `&facilityId=${state.facilityId}`;
-            if (state.appointmentDate) query += `&appointmentDate=${state.appointmentDate}`;
+            if (state.workDateFrom) query += `&workDateFrom=${state.workDateFrom}`;
+            if (state.workDateTo) query += `&workDateTo=${state.workDateTo}`;
 
             try {
                 const res = await fetch('/api/v1/admin/appointments' + query, {
@@ -407,8 +440,8 @@
         });
 
         // Dropdown filters
-        document.getElementById('filterDoctor').addEventListener('change', (e) => {
-            state.doctorId = e.target.value;
+        document.getElementById('filterSpecialty').addEventListener('change', (e) => {
+            state.specialtyId = e.target.value;
             state.page = 0;
             loadAppointments();
         });
@@ -419,21 +452,29 @@
             loadAppointments();
         });
 
-        document.getElementById('filterDate').addEventListener('change', (e) => {
-            state.appointmentDate = e.target.value;
+        document.getElementById('filterWorkDateFrom').addEventListener('change', (e) => {
+            state.workDateFrom = e.target.value;
+            state.page = 0;
+            loadAppointments();
+        });
+
+        document.getElementById('filterWorkDateTo').addEventListener('change', (e) => {
+            state.workDateTo = e.target.value;
             state.page = 0;
             loadAppointments();
         });
 
         window.resetFilters = function() {
-            state.doctorId = '';
+            state.specialtyId = '';
             state.facilityId = '';
-            state.appointmentDate = '';
+            state.workDateFrom = '';
+            state.workDateTo = '';
             state.status = '';
             state.page = 0;
-            document.getElementById('filterDoctor').value = '';
+            document.getElementById('filterSpecialty').value = '';
             document.getElementById('filterFacility').value = '';
-            document.getElementById('filterDate').value = '';
+            document.getElementById('filterWorkDateFrom').value = '';
+            document.getElementById('filterWorkDateTo').value = '';
             document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
             document.querySelector('.filter-tab[data-status=""]').classList.add('active');
             loadAppointments();
@@ -441,18 +482,18 @@
 
         async function loadCatalogs() {
             try {
-                const [docRes, facRes] = await Promise.all([
-                    fetch('/api/v1/admin/doctors/catalog'),
+                const [specRes, facRes] = await Promise.all([
+                    fetch('/api/v1/admin/specialties'),
                     fetch('/api/v1/admin/facilities')
                 ]);
-                if (docRes.ok) {
-                    const docs = await docRes.json();
-                    const docSel = document.getElementById('filterDoctor');
-                    docs.forEach(d => {
+                if (specRes.ok) {
+                    const specs = await specRes.json();
+                    const specSel = document.getElementById('filterSpecialty');
+                    specs.forEach(s => {
                         const opt = document.createElement('option');
-                        opt.value = d.id;
-                        opt.textContent = `BS. ${d.name} (${d.specialty || 'Chưa phân khoa'})`;
-                        docSel.appendChild(opt);
+                        opt.value = s.id;
+                        opt.textContent = s.name;
+                        specSel.appendChild(opt);
                     });
                 }
                 if (facRes.ok) {

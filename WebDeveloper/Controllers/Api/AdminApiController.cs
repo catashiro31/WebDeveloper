@@ -147,9 +147,12 @@ namespace WebDeveloper.Controllers.Api
             [FromQuery] int size = 10,
             [FromQuery] int? doctorId = null,
             [FromQuery] int? facilityId = null,
-            [FromQuery] DateOnly? appointmentDate = null)
+            [FromQuery] DateOnly? appointmentDate = null,
+            [FromQuery] int? specialtyId = null,
+            [FromQuery] DateOnly? workDateFrom = null,
+            [FromQuery] DateOnly? workDateTo = null)
         {
-            return Ok(await _adminService.GetAllAppointments(dateFrom, dateTo, status, page, size, doctorId, facilityId, appointmentDate));
+            return Ok(await _adminService.GetAllAppointments(dateFrom, dateTo, status, page, size, doctorId, facilityId, appointmentDate, specialtyId, workDateFrom, workDateTo));
         }
 
         // Reviews

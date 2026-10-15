@@ -457,7 +457,7 @@ namespace WebDeveloper.Services
             return $"Đã mở khóa tài khoản {id}";
         }
 
-        public async Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size, int? doctorId = null, int? facilityId = null, DateOnly? appointmentDate = null)
+        public async Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size, int? doctorId = null, int? facilityId = null, DateOnly? appointmentDate = null, int? specialtyId = null, DateOnly? workDateFrom = null, DateOnly? workDateTo = null)
         {
             var query = _db.Appointments.AsNoTracking().AsQueryable();
 
@@ -466,7 +466,10 @@ namespace WebDeveloper.Services
             if (status.HasValue) query = query.Where(a => a.BookingStatus == status.Value);
             if (doctorId.HasValue) query = query.Where(a => a.Schedule.DoctorId == doctorId.Value);
             if (facilityId.HasValue) query = query.Where(a => a.Schedule.Doctor.FacilityId == facilityId.Value);
+            if (specialtyId.HasValue) query = query.Where(a => a.Schedule.Doctor.SpecialtyId == specialtyId.Value);
             if (appointmentDate.HasValue) query = query.Where(a => a.Schedule.DateWorking == appointmentDate.Value);
+            if (workDateFrom.HasValue) query = query.Where(a => a.Schedule.DateWorking >= workDateFrom.Value);
+            if (workDateTo.HasValue) query = query.Where(a => a.Schedule.DateWorking <= workDateTo.Value);
 
             query = query.OrderByDescending(a => a.CreatedAt);
             var total = await query.CountAsync();

@@ -63,7 +63,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<PagedResult<object>> GetAllUsers(int page, int size, string? search = null, RoleStatus? role = null, bool? isActive = null);
         Task<string> BlockUser(int id, string reason);
         Task<string> UnblockUser(int id, string reason);
-        Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size, int? doctorId = null, int? facilityId = null, DateOnly? appointmentDate = null);
+        Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size, int? doctorId = null, int? facilityId = null, DateOnly? appointmentDate = null, int? specialtyId = null, DateOnly? workDateFrom = null, DateOnly? workDateTo = null);
         Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size, string? category = null, string? search = null);
         Task<string> RejectReview(int id);
         Dictionary<string, double> AnalyzeComment(string text);
