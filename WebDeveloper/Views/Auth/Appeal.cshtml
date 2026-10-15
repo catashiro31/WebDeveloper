@@ -1,36 +1,456 @@
-@{ ViewData["Title"] = "Yêu cầu mở khóa tài khoản"; Layout = "_Layout"; }
-<section style="max-width:560px;margin:60px auto;padding:32px;background:white;border-radius:20px;">
-    <h1>Yêu cầu mở khóa tài khoản</h1>
-    <p>Xác minh bằng email và mật khẩu để gửi phiếu hoặc xem lý do khóa và kết quả xử lý.</p>
-    <form id="appealForm" style="display:grid;gap:16px;">
-        <label>Email <input id="appealEmail" type="email" required autocomplete="username" style="width:100%;padding:12px;" /></label>
-        <label>Mật khẩu <input id="appealPassword" type="password" required autocomplete="current-password" style="width:100%;padding:12px;" /></label>
-        <label>Lý do xin mở khóa <textarea id="appealReason" maxlength="1000" style="width:100%;padding:12px;min-height:100px;"></textarea></label>
-        <button type="submit" class="btn-primary">Gửi phiếu xin mở khóa</button>
-        <button id="appealStatus" type="button">Kiểm tra kết quả / lý do khóa</button>
-        <p id="appealMessage" role="status" style="white-space:pre-wrap;"></p>
-        <a href="/Auth/Login">Quay lại đăng nhập</a>
-    </form>
-</section>
+@{
+    ViewData["Title"] = "Yêu cầu mở khóa tài khoản";
+    Layout = "_Layout";
+}
+
+<style>
+.appeal-page-wrapper {
+    min-height: calc(100vh - 120px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 16px;
+    background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    position: relative;
+    overflow: hidden;
+}
+.appeal-page-wrapper::before {
+    content: '';
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    top: -150px;
+    right: -150px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.appeal-page-wrapper::after {
+    content: '';
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    bottom: -150px;
+    left: -150px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+}
+.appeal-card {
+    width: 100%;
+    max-width: 540px;
+    background: #ffffff;
+    border-radius: 28px;
+    padding: 40px 36px;
+    box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+    position: relative;
+    z-index: 1;
+}
+.appeal-icon-box {
+    width: 56px;
+    height: 56px;
+    border-radius: 18px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.25);
+}
+.appeal-title {
+    margin: 0 0 8px;
+    font-size: 24px;
+    font-weight: 800;
+    color: #0f172a;
+    text-align: center;
+    letter-spacing: -0.02em;
+}
+.appeal-desc {
+    margin: 0 0 28px;
+    font-size: 14px;
+    color: #64748b;
+    text-align: center;
+    line-height: 1.6;
+}
+.appeal-field {
+    margin-bottom: 20px;
+}
+.appeal-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 8px;
+}
+.appeal-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+.appeal-input-icon {
+    position: absolute;
+    left: 14px;
+    font-size: 16px;
+    color: #94a3b8;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+}
+.appeal-input {
+    width: 100%;
+    padding: 12px 16px 12px 42px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #0f172a;
+    background: #f8fafc;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+.appeal-input:focus {
+    background: #ffffff;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.appeal-input-toggle {
+    position: absolute;
+    right: 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #94a3b8;
+    padding: 0;
+    font-size: 16px;
+    transition: color 0.2s;
+}
+.appeal-input-toggle:hover {
+    color: #6366f1;
+}
+.appeal-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #0f172a;
+    background: #f8fafc;
+    outline: none;
+    font-family: inherit;
+    box-sizing: border-box;
+    min-height: 110px;
+    resize: vertical;
+    transition: all 0.2s ease;
+}
+.appeal-textarea:focus {
+    background: #ffffff;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+.appeal-char-counter {
+    font-size: 11px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+.appeal-btn-primary {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.25);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-family: inherit;
+}
+.appeal-btn-primary:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 24px rgba(99, 102, 241, 0.35);
+}
+.appeal-btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.appeal-btn-secondary {
+    width: 100%;
+    padding: 12px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+    transition: all 0.2s;
+    font-family: inherit;
+}
+.appeal-btn-secondary:hover:not(:disabled) {
+    background: #f8fafc;
+    border-color: #94a3b8;
+    color: #1e293b;
+}
+.appeal-btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+.appeal-msg-card {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: none;
+    animation: fadeIn 0.3s ease;
+}
+.appeal-msg-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+.appeal-msg-error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+}
+.appeal-msg-warning {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #92400e;
+}
+.appeal-msg-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+.appeal-back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 24px;
+    color: #64748b;
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+.appeal-back-link:hover {
+    color: #6366f1;
+}
+@@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+
+<div class="appeal-page-wrapper">
+    <div class="appeal-card">
+        <div class="appeal-icon-box">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+            </svg>
+        </div>
+
+        <h1 class="appeal-title">Yêu cầu mở khóa tài khoản</h1>
+        <p class="appeal-desc">Xác minh bằng thông tin tài khoản để gửi đơn giải trình hoặc tra cứu lý do khóa & tiến độ xử lý từ quản trị viên.</p>
+
+        <form id="appealForm" onsubmit="return false;">
+            <div class="appeal-field">
+                <label class="appeal-label" for="appealEmail">
+                    <span>Email tài khoản <span style="color: #ef4444;">*</span></span>
+                </label>
+                <div class="appeal-input-wrap">
+                    <span class="appeal-input-icon">✉️</span>
+                    <input id="appealEmail" type="email" required autocomplete="username" placeholder="nhap.email@example.com" class="appeal-input" />
+                </div>
+            </div>
+
+            <div class="appeal-field">
+                <label class="appeal-label" for="appealPassword">
+                    <span>Mật khẩu <span style="color: #ef4444;">*</span></span>
+                </label>
+                <div class="appeal-input-wrap">
+                    <span class="appeal-input-icon">🔒</span>
+                    <input id="appealPassword" type="password" required autocomplete="current-password" placeholder="Nhập mật khẩu của bạn" class="appeal-input" style="padding-right: 42px;" />
+                    <button type="button" class="appeal-input-toggle" onclick="togglePasswordVisibility()" title="Ẩn/Hiện mật khẩu">👁️</button>
+                </div>
+            </div>
+
+            <div class="appeal-field">
+                <label class="appeal-label" for="appealReason">
+                    <span>Lý do xin mở khóa <span style="color: #ef4444;">*</span></span>
+                    <span class="appeal-char-counter" id="charCounter">0/1000 ký tự (tối thiểu 10)</span>
+                </label>
+                <textarea id="appealReason" maxlength="1000" placeholder="Trình bày chi tiết lý do bạn cho rằng tài khoản bị khóa nhầm hoặc cam kết tuân thủ quy định..." class="appeal-textarea" oninput="updateCharCounter()"></textarea>
+            </div>
+
+            <button type="submit" id="submitAppealBtn" class="appeal-btn-primary">
+                <span>📨 Gửi phiếu xin mở khóa</span>
+            </button>
+
+            <button type="button" id="appealStatus" class="appeal-btn-secondary">
+                <span>🔍 Kiểm tra kết quả & lý do khóa</span>
+            </button>
+
+            <div id="appealMessageBox" class="appeal-msg-card"></div>
+
+            <a href="/Auth/Login" class="appeal-back-link">
+                ← Quay lại trang đăng nhập
+            </a>
+        </form>
+    </div>
+</div>
+
 @section Scripts {
 <script>
-const appealForm = document.getElementById('appealForm');
-async function sendAppeal(check) {
-    const output = document.getElementById('appealMessage');
-    const payload = { email:document.getElementById('appealEmail').value.trim(), password:document.getElementById('appealPassword').value, reason:document.getElementById('appealReason').value.trim() };
-    if (!appealForm.reportValidity()) return;
-    if (!check && payload.reason.length < 10) { output.textContent = 'Lý do cần ít nhất 10 ký tự.'; return; }
-    appealForm.querySelectorAll('button').forEach(b => b.disabled = true);
-    try {
-        const res = await fetch('/api/v1/auth/appeals' + (check ? '/status' : ''), { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
-        if (!res.ok) { output.textContent = res.status === 429 ? 'Bạn thao tác quá nhanh. Vui lòng thử lại sau một phút.' : await readApiMessage(res); return; }
-        const data = await res.json();
-        if (!check) output.textContent = data.message;
-        else output.textContent = (data.isActive ? 'Tài khoản đang hoạt động.' : 'Tài khoản chưa được mở khóa. Lý do: ' + (data.reasonBanned || 'Chưa ghi nhận')) + '\n' + (data.appeal ? ({PENDING:'Phiếu đang chờ duyệt',APPROVED:'Phiếu đã được duyệt',REJECTED:'Phiếu bị từ chối'}[data.appeal.status] + (data.appeal.adminReason ? '\nLý do xử lý: ' + data.appeal.adminReason : '')) : 'Bạn chưa gửi phiếu.');
-    } catch { output.textContent = 'Không thể kết nối. Vui lòng thử lại.'; }
-    finally { appealForm.querySelectorAll('button').forEach(b => b.disabled = false); }
-}
-appealForm.onsubmit = e => { e.preventDefault(); sendAppeal(false); };
-document.getElementById('appealStatus').onclick = () => sendAppeal(true);
+    const appealForm = document.getElementById('appealForm');
+    const msgBox = document.getElementById('appealMessageBox');
+    const reasonInput = document.getElementById('appealReason');
+    const charCounter = document.getElementById('charCounter');
+
+    function updateCharCounter() {
+        const len = reasonInput.value.length;
+        charCounter.textContent = `${len}/1000 ký tự (tối thiểu 10)`;
+        if (len < 10 && len > 0) {
+            charCounter.style.color = '#ef4444';
+        } else {
+            charCounter.style.color = '#94a3b8';
+        }
+    }
+
+    function togglePasswordVisibility() {
+        const pass = document.getElementById('appealPassword');
+        pass.type = pass.type === 'password' ? 'text' : 'password';
+    }
+
+    function escapeHtml(value) {
+        if (!value) return '';
+        const span = document.createElement('span');
+        span.textContent = value;
+        return span.innerHTML;
+    }
+
+    function showAppealMessage(type, content, isHtml = false) {
+        msgBox.className = 'appeal-msg-card appeal-msg-' + type;
+        if (isHtml) {
+            msgBox.innerHTML = content;
+        } else {
+            msgBox.textContent = content;
+        }
+        msgBox.style.display = 'block';
+    }
+
+    async function getApiMessage(res) {
+        if (typeof readApiMessage === 'function') {
+            try { return await readApiMessage(res); } catch {}
+        }
+        try {
+            const data = await res.json();
+            return data.message || data.error || '';
+        } catch {
+            return '';
+        }
+    }
+
+    async function sendAppeal(check) {
+        msgBox.style.display = 'none';
+        
+        const emailInput = document.getElementById('appealEmail');
+        const passInput = document.getElementById('appealPassword');
+        
+        if (!emailInput.reportValidity()) return;
+        if (!passInput.reportValidity()) return;
+
+        const email = emailInput.value.trim();
+        const password = passInput.value;
+        const reason = reasonInput.value.trim();
+
+        if (!check && reason.length < 10) {
+            showAppealMessage('warning', 'Vui lòng nhập lý do xin mở khóa tối thiểu 10 ký tự.');
+            reasonInput.focus();
+            return;
+        }
+
+        const payload = { email, password, reason };
+        const buttons = appealForm.querySelectorAll('button');
+        buttons.forEach(b => b.disabled = true);
+
+        try {
+            const res = await fetch('/api/v1/auth/appeals' + (check ? '/status' : ''), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) {
+                const msg = res.status === 429
+                    ? 'Bạn thao tác quá nhanh. Vui lòng thử lại sau 1 phút.'
+                    : await getApiMessage(res);
+                showAppealMessage('error', msg || 'Đã có lỗi xảy ra. Vui lòng thử lại.');
+                return;
+            }
+
+            const data = await res.json();
+            if (!check) {
+                showAppealMessage('success', data.message || 'Đã gửi phiếu xin mở khóa. Bạn có thể bấm "Kiểm tra kết quả" để theo dõi.');
+            } else {
+                if (data.isActive) {
+                    showAppealMessage('success', '✓ Tài khoản của bạn hiện đang HOẠT ĐỘNG bình thường. Bạn có thể đăng nhập ngay.');
+                } else {
+                    let html = `
+                        <div style="font-weight: 800; font-size: 14px; margin-bottom: 6px; color: #991b1b;">⚠️ Tài khoản hiện đang bị khóa</div>
+                        <div style="margin-bottom: 6px;"><strong>Lý do khóa:</strong> ${escapeHtml(data.reasonBanned || 'Không có lý do chi tiết ghi nhận.')}</div>
+                    `;
+                    if (data.appeal) {
+                        const statusMap = {
+                            'PENDING': { label: '⏳ Phiếu đang chờ Admin duyệt', color: '#b45309' },
+                            'APPROVED': { label: '✓ Phiếu đã được duyệt mở khóa', color: '#15803d' },
+                            'REJECTED': { label: '✕ Phiếu đã bị từ chối', color: '#b91c1c' }
+                        };
+                        const st = statusMap[data.appeal.status] || { label: data.appeal.status, color: '#475569' };
+                        html += `
+                            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,0.12);">
+                                <div><strong>Trạng thái phiếu:</strong> <span style="font-weight: 700; color: ${st.color};">${st.label}</span></div>
+                                ${data.appeal.adminReason ? `<div style="margin-top: 6px;"><strong>Phản hồi từ Admin:</strong> ${escapeHtml(data.appeal.adminReason)}</div>` : ''}
+                            </div>
+                        `;
+                        const alertType = data.appeal.status === 'APPROVED' ? 'success' : (data.appeal.status === 'REJECTED' ? 'error' : 'warning');
+                        showAppealMessage(alertType, html, true);
+                    } else {
+                        html += `<div style="margin-top: 6px; font-style: italic; color: #64748b;">Bạn chưa gửi phiếu xin mở khóa nào.</div>`;
+                        showAppealMessage('warning', html, true);
+                    }
+                }
+            }
+        } catch {
+            showAppealMessage('error', 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền mạng.');
+        } finally {
+            buttons.forEach(b => b.disabled = false);
+        }
+    }
+
+    appealForm.onsubmit = e => {
+        e.preventDefault();
+        sendAppeal(false);
+    };
+
+    document.getElementById('appealStatus').onclick = () => sendAppeal(true);
 </script>
 }

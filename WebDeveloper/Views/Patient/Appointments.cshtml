@@ -3,6 +3,26 @@
     Layout = "_PatientLayout";
 }
 
+<style>
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+    opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+    background: white; border-radius: 28px; width: 100%; max-width: 500px; padding: 32px;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); box-sizing: border-box; max-height: 90dvh; overflow-y: auto;
+    transform: scale(0.95) translateY(20px); transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+.quick-reason-btn {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc;
+    color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.quick-reason-btn:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
+</style>
+
 <div class="reveal">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px;">
         <h2 style="margin: 0; font-size: 20px; font-weight: 800; color: #1e293b;">Lịch hẹn sắp tới</h2>
@@ -17,6 +37,55 @@
     </div>
 </div>
 
+<!-- Modal Hủy lịch hẹn của Bệnh nhân -->
+<div id="patientCancelModal" class="modal-overlay" onclick="closePatientCancelModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 48px; height: 48px; border-radius: 16px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                ⚠️
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Hủy lịch hẹn khám bệnh</h3>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Bạn có chắc chắn muốn hủy lịch hẹn khám này? Bác sĩ sẽ nhận được thông báo về việc hủy hẹn.</p>
+            </div>
+            <button type="button" onclick="closePatientCancelModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <div id="patientCancelAptInfo" style="background: #f8fafc; border-radius: 14px; padding: 12px 16px; margin-bottom: 18px; border: 1px solid #e2e8f0; font-size: 13px; color: #334155;">
+            <div>Bác sĩ khám: <b id="cancelModalDoctorName" style="color: #0f172a;">—</b></div>
+            <div style="margin-top: 4px; color: #64748b;">Thời gian: <span id="cancelModalTime" style="font-weight: 600; color: #475569;">—</span></div>
+            <div style="margin-top: 4px; color: #64748b;">Cơ sở: <span id="cancelModalFacility" style="color: #475569;">—</span></div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em;">Chọn nhanh lý do</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <button type="button" class="quick-reason-btn" onclick="selectPatientReason('Bận việc gia đình / công việc đột xuất')">Bận đột xuất</button>
+                <button type="button" class="quick-reason-btn" onclick="selectPatientReason('Sức khỏe đã ổn định hơn')">Sức khỏe đã ổn</button>
+                <button type="button" class="quick-reason-btn" onclick="selectPatientReason('Muốn đổi sang ngày hoặc giờ khám khác')">Đổi lịch khác</button>
+                <button type="button" class="quick-reason-btn" onclick="selectPatientReason('Đã đi khám tại cơ sở y tế khác')">Đã khám nơi khác</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label for="patientCancelReasonInput" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                Lý do hủy lịch <span style="color: #ef4444;">*</span>
+            </label>
+            <textarea id="patientCancelReasonInput" placeholder="Nhập lý do bạn muốn hủy lịch hẹn..." rows="3" style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 14px; color: #1e293b; outline: none; font-family: inherit; box-sizing: border-box; resize: vertical; min-height: 85px; transition: border-color 0.2s;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
+            <div id="patientCancelError" style="display: none; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 6px;">Vui lòng nhập lý do hủy lịch hẹn.</div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" onclick="closePatientCancelModal()" style="padding: 11px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
+                Quay lại
+            </button>
+            <button type="button" id="confirmPatientCancelBtn" onclick="confirmPatientCancel()" style="padding: 11px 24px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); transition: all 0.2s;" onmouseenter="this.style.background='#dc2626'" onmouseleave="this.style.background='#ef4444'">
+                Xác nhận hủy
+            </button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         const token = localStorage.getItem('token');
@@ -26,6 +95,9 @@
 
         const container = document.getElementById('appointmentsContainer');
         const countSpan = document.getElementById('appointmentCount');
+
+        let currentAppointments = [];
+        let currentCancelAptId = null;
 
         function fetchAppointments() {
             container.innerHTML = `
@@ -43,6 +115,7 @@
             })
             .then(data => {
                 const list = (data.content || data || []).filter(apt => ['PENDING', 'CONFIRMED'].includes(apt.bookingStatus));
+                currentAppointments = list;
                 countSpan.innerText = `Tất cả (${list.length})`;
                 renderAppointments(list);
             })
@@ -70,40 +143,63 @@
             }
         }
 
-        window.cancelAppointment = function(id, btn) {
-            const reason = prompt("Vui lòng nhập lý do hủy lịch hẹn:");
-            if (reason === null) return;
-            if (!reason.trim()) {
-                Toastify({ text: "Vui lòng nhập lý do hủy lịch hẹn", style: { background: "#f59e0b" } }).showToast();
+        window.openPatientCancelModal = function(id) {
+            currentCancelAptId = id;
+            const apt = currentAppointments.find(a => (a.appointmentId || a.id) == id);
+            document.getElementById('cancelModalDoctorName').innerText = apt ? `BS. ${apt.doctorName}` : '—';
+            document.getElementById('cancelModalTime').innerText = apt ? `${apt.dateWorking} (${apt.timeSlot || apt.startTime || '—'})` : '—';
+            document.getElementById('cancelModalFacility').innerText = apt ? (apt.facilityName || '—') : '—';
+            document.getElementById('patientCancelReasonInput').value = '';
+            document.getElementById('patientCancelError').style.display = 'none';
+            document.getElementById('confirmPatientCancelBtn').disabled = false;
+            document.getElementById('confirmPatientCancelBtn').innerText = 'Xác nhận hủy';
+            document.getElementById('patientCancelModal').classList.add('active');
+        };
+
+        window.closePatientCancelModal = function() {
+            document.getElementById('patientCancelModal').classList.remove('active');
+            currentCancelAptId = null;
+        };
+
+        window.selectPatientReason = function(txt) {
+            const input = document.getElementById('patientCancelReasonInput');
+            input.value = txt;
+            document.getElementById('patientCancelError').style.display = 'none';
+            input.focus();
+        };
+
+        window.confirmPatientCancel = function() {
+            if (!currentCancelAptId) return;
+            const reason = document.getElementById('patientCancelReasonInput').value.trim();
+            if (!reason) {
+                document.getElementById('patientCancelError').style.display = 'block';
                 return;
             }
-            
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '⌛ Đang hủy...';
-            btn.disabled = true;
-            btn.style.cursor = 'not-allowed';
 
-            fetch(`/api/v1/patient/appointments/${id}/cancel?reason=${encodeURIComponent(reason.trim())}`, {
+            const btn = document.getElementById('confirmPatientCancelBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang xử lý...';
+
+            fetch(`/api/v1/patient/appointments/${currentCancelAptId}/cancel?reason=${encodeURIComponent(reason)}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(async res => {
                 if (res.ok) {
+                    closePatientCancelModal();
                     Toastify({ text: "Đã hủy lịch hẹn thành công", style: { background: "#10b981" } }).showToast();
                     fetchAppointments();
                 } else {
                     const msg = await readApiMessage(res);
                     Toastify({ text: msg || "Không thể hủy lịch hẹn", style: { background: "#ef4444" } }).showToast();
-                    btn.innerHTML = originalText;
                     btn.disabled = false;
-                    btn.style.cursor = 'pointer';
+                    btn.innerText = 'Xác nhận hủy';
                 }
             })
             .catch(() => {
                 Toastify({ text: "Không thể hủy lịch hẹn", style: { background: "#ef4444" } }).showToast();
-                btn.innerHTML = originalText;
                 btn.disabled = false;
-                btn.style.cursor = 'pointer';
+                btn.innerText = 'Xác nhận hủy';
             });
         };
 
@@ -157,7 +253,7 @@
                         </div>
 
                         <div style="padding-left: 24px;">
-                            <button onclick="cancelAppointment(${apt.appointmentId || apt.id}, this)" 
+                            <button onclick="openPatientCancelModal(${apt.appointmentId || apt.id})" 
                                 style="padding: 10px 20px; border-radius: 12px; border: 1px solid #fee2e2; background: #fff; color: #ef4444; cursor: pointer; font-size: 13px; font-weight: 700; transition: all 0.2s; display: flex; align-items: center; gap: 8px;"
                                 onmouseenter="this.style.background='#fef2f2'"
                                 onmouseleave="this.style.background='#fff'">

@@ -25,6 +25,11 @@
     box-sizing: border-box; max-height: 90dvh; overflow-y: auto; transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+.quick-reason-btn {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc;
+    color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.quick-reason-btn:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
 </style>
 
 <div class="reveal">
@@ -100,6 +105,55 @@
                 <button type="submit" id="submitResultBtn" style="flex: 2; padding: 14px; border-radius: 14px; border: none; background: linear-gradient(135deg, #5f6dfc, #3b82f6); color: white; cursor: pointer; font-weight: 700; font-size: 15px; box-shadow: 0 8px 20px rgba(95,109,252,0.3); transition: all 0.2s;">Lưu kết quả & Hoàn tất</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Modal Từ chối lịch hẹn của Bác sĩ -->
+<div id="doctorRejectModal" class="modal-overlay" onclick="closeDoctorRejectModal()">
+    <div class="modal-content" style="max-width: 500px; padding: 32px;" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 46px; height: 46px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">
+                ✕
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Từ chối lịch hẹn khám</h3>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Vui lòng nêu lý do từ chối để hệ thống gửi thông báo giải thích cho bệnh nhân.</p>
+            </div>
+            <button type="button" onclick="closeDoctorRejectModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <div id="doctorRejectAptInfo" style="background: #f8fafc; border-radius: 14px; padding: 12px 16px; margin-bottom: 18px; border: 1px solid #e2e8f0; font-size: 13px; color: #334155;">
+            <div>Bệnh nhân: <b id="rejectModalPatientName" style="color: #0f172a;">—</b></div>
+            <div style="margin-top: 4px; color: #64748b;">Thời gian khám: <span id="rejectModalTime" style="font-weight: 600; color: #475569;">—</span></div>
+        </div>
+
+        <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em;">Chọn nhanh lý do</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                <button type="button" class="quick-reason-btn" onclick="selectDoctorReason('Bác sĩ có lịch phẫu thuật / cấp cứu đột xuất')">Lịch mổ đột xuất</button>
+                <button type="button" class="quick-reason-btn" onclick="selectDoctorReason('Bác sĩ bận lịch công tác ngoài bệnh viện')">Bận công tác</button>
+                <button type="button" class="quick-reason-btn" onclick="selectDoctorReason('Trùng lịch hội chẩn chuyên môn')">Trùng hội chẩn</button>
+                <button type="button" class="quick-reason-btn" onclick="selectDoctorReason('Bác sĩ nghỉ vì lý do sức khỏe')">Lý do sức khỏe</button>
+                <button type="button" class="quick-reason-btn" onclick="selectDoctorReason('Triệu chứng phù hợp với chuyên khoa khác')">Sai chuyên khoa</button>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 24px;">
+            <label for="doctorRejectReasonInput" style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 8px;">
+                Lý do từ chối cụ thể <span style="color: #ef4444;">*</span>
+            </label>
+            <textarea id="doctorRejectReasonInput" placeholder="Nhập lý do chi tiết từ chối lịch hẹn này..." rows="3" style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 14px; color: #1e293b; outline: none; font-family: var(--font-app); box-sizing: border-box; resize: vertical; min-height: 85px; transition: border-color 0.2s;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
+            <div id="doctorRejectError" style="display: none; color: #ef4444; font-size: 12px; font-weight: 600; margin-top: 6px;">Vui lòng nhập lý do từ chối.</div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" onclick="closeDoctorRejectModal()" style="padding: 11px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
+                Quay lại
+            </button>
+            <button type="button" id="confirmDoctorRejectBtn" onclick="confirmDoctorReject()" style="padding: 11px 24px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); transition: all 0.2s;" onmouseenter="this.style.background='#dc2626'" onmouseleave="this.style.background='#ef4444'">
+                Xác nhận từ chối
+            </button>
+        </div>
     </div>
 </div>
 
@@ -183,7 +237,7 @@
                 if (apt.bookingStatus === 'PENDING') {
                     actionsHtml = `
                         <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'CONFIRMED')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #10b981, #059669); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Xác nhận</button>
-                        <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'CANCELLED')" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #ef4444; background: white; color: #ef4444; cursor: pointer; font-weight: 700; font-size: 13px;">Từ chối</button>
+                        <button onclick="openDoctorRejectModal(${apt.appointmentId || apt.id})" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #ef4444; background: white; color: #ef4444; cursor: pointer; font-weight: 700; font-size: 13px;">Từ chối</button>
                     `;
                 } else if (apt.bookingStatus === 'CONFIRMED') {
                     actionsHtml = `
@@ -240,28 +294,79 @@
             container.innerHTML = html;
         }
 
-        window.updateStatus = function(id, status) {
-            let reason = '';
-            if (status === 'CANCELLED') {
-                reason = prompt('Vui lòng nhập lý do từ chối lịch hẹn:');
-                if (reason === null) return;
-                if (!reason.trim()) {
-                    showApiToast('Vui lòng nhập lý do từ chối', 'warning');
-                    return;
-                }
-            } else {
-                const msgs = { 'CONFIRMED': 'Xác nhận lịch hẹn này?', 'NO_SHOW': 'Đánh dấu bệnh nhân không đến?', 'COMPLETED': 'Đánh dấu đã hoàn thành khám?' };
-                if (!confirm(msgs[status] || 'Xác nhận thay đổi?')) return;
+        let currentRejectAptId = null;
+
+        window.openDoctorRejectModal = function(id) {
+            currentRejectAptId = id;
+            const apt = allAppointments.find(a => (a.appointmentId || a.id) == id);
+            document.getElementById('rejectModalPatientName').innerText = apt ? apt.patientName : '—';
+            document.getElementById('rejectModalTime').innerText = apt ? `${apt.dateWorking} (${formatSlotLabel(apt.timeSlot || apt.startTime)})` : '—';
+            document.getElementById('doctorRejectReasonInput').value = '';
+            document.getElementById('doctorRejectError').style.display = 'none';
+            document.getElementById('confirmDoctorRejectBtn').disabled = false;
+            document.getElementById('confirmDoctorRejectBtn').innerText = 'Xác nhận từ chối';
+            document.getElementById('doctorRejectModal').classList.add('active');
+        };
+
+        window.closeDoctorRejectModal = function() {
+            document.getElementById('doctorRejectModal').classList.remove('active');
+            currentRejectAptId = null;
+        };
+
+        window.selectDoctorReason = function(txt) {
+            const input = document.getElementById('doctorRejectReasonInput');
+            input.value = txt;
+            document.getElementById('doctorRejectError').style.display = 'none';
+            input.focus();
+        };
+
+        window.confirmDoctorReject = function() {
+            if (!currentRejectAptId) return;
+            const reason = document.getElementById('doctorRejectReasonInput').value.trim();
+            if (!reason) {
+                document.getElementById('doctorRejectError').style.display = 'block';
+                return;
             }
 
-            const url = `/api/v1/doctor/appointment/${id}/status?status=${status}` + (reason ? `&reason=${encodeURIComponent(reason.trim())}` : '');
+            const btn = document.getElementById('confirmDoctorRejectBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang xử lý...';
+
+            const url = `/api/v1/doctor/appointment/${currentRejectAptId}/status?status=CANCELLED&reason=${encodeURIComponent(reason)}`;
             fetch(url, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(async res => {
                 if (res.ok) {
-                    showApiToast(status === 'CANCELLED' ? 'Đã từ chối lịch hẹn' : 'Cập nhật trạng thái thành công', 'success');
+                    closeDoctorRejectModal();
+                    showApiToast('Đã từ chối lịch hẹn', 'success');
+                    fetchAppointments();
+                } else {
+                    showApiToast(await readApiMessage(res) || "Lỗi khi từ chối lịch hẹn", "error");
+                    btn.disabled = false;
+                    btn.innerText = 'Xác nhận từ chối';
+                }
+            })
+            .catch(() => {
+                showApiToast("Lỗi mạng", "error");
+                btn.disabled = false;
+                btn.innerText = 'Xác nhận từ chối';
+            });
+        };
+
+        window.updateStatus = function(id, status) {
+            const msgs = { 'CONFIRMED': 'Xác nhận lịch hẹn này?', 'NO_SHOW': 'Đánh dấu bệnh nhân không đến?', 'COMPLETED': 'Đánh dấu đã hoàn thành khám?' };
+            if (!confirm(msgs[status] || 'Xác nhận thay đổi?')) return;
+
+            const url = `/api/v1/doctor/appointment/${id}/status?status=${status}`;
+            fetch(url, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    showApiToast('Cập nhật trạng thái thành công', 'success');
                     fetchAppointments();
                 }
                 else showApiToast(await readApiMessage(res) || "Lỗi", "error");

@@ -356,7 +356,6 @@
                 } else {
                     tbody.innerHTML = list.map(apt => {
                         const st = getStatusStyle(apt.bookingStatus || apt.status);
-                        const isCancelled = (apt.bookingStatus || apt.status) === 'CANCELLED';
                         return `
                             <tr>
                                 <td>
@@ -383,16 +382,6 @@
                                     <span class="status-pill" style="background: ${st.bg}; color: ${st.color}; border-color: ${st.border};">
                                         ${st.label}
                                     </span>
-                                    ${isCancelled ? `
-                                        <div style="font-size: 11px; color: #dc2626; margin-top: 4px; font-weight: 700;">
-                                            ${apt.cancelledBy === 'DOCTOR' ? '👨‍⚕️ Bác sĩ từ chối' : (apt.cancelledBy === 'PATIENT' ? '👤 Bệnh nhân hủy' : 'Đã hủy')}
-                                        </div>
-                                        ${apt.cancellationReason ? `
-                                            <div style="font-size: 11px; color: #64748b; margin-top: 2px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(apt.cancellationReason)}">
-                                                Lý do: ${escapeHtml(apt.cancellationReason)}
-                                            </div>
-                                        ` : ''}
-                                    ` : ''}
                                 </td>
                             </tr>
                         `;
