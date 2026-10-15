@@ -121,6 +121,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
     {
         public int ReviewId { get; set; }
         public int? Rating { get; set; }
+        public bool IsVisible { get; set; }
         public string? Comment { get; set; }
         public string? PatientName { get; set; }
         public DateTime? CreatedAt { get; set; }

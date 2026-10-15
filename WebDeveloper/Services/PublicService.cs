@@ -175,7 +175,7 @@ namespace WebDeveloper.Services
         {
             var reviews = await _db.Reviews
                 .Include(r => r.Appointment).ThenInclude(a => a.Patient).ThenInclude(p => p.User)
-                .Where(r => r.Appointment.Schedule.DoctorId == doctorId && r.IsVisible != false)
+                .Where(r => r.Appointment.Schedule.DoctorId == doctorId)
                 .OrderByDescending(r => r.CreatedAt)
                 .ToListAsync();
 
@@ -183,6 +183,7 @@ namespace WebDeveloper.Services
             {
                 ReviewId = r.ReviewId,
                 Rating = r.Rating,
+                IsVisible = r.IsVisible != false,
                 Comment = r.Comment,
                 PatientName = r.Appointment.Patient.User?.FullName ?? r.Appointment.Patient.FullName,
                 CreatedAt = r.CreatedAt

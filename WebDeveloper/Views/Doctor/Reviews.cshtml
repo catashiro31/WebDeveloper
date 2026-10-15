@@ -110,7 +110,7 @@
                                 </div>
                                 <div style="color: #94a3b8; font-size: 13px; font-weight: 500;">${dateStr}</div>
                             </div>
-                            ${review.comment ? `<p style="margin: 8px 0 0; color: #475569; line-height: 1.6; font-size: 15px;">"${review.comment}"</p>` : ''}
+                            <p style="margin: 8px 0 0; color: ${review.isVisible === false ? '#94a3b8' : '#475569'}; line-height: 1.6; font-size: 15px;">${review.isVisible === false ? 'Nội dung tiêu cực đã được ẩn' : (review.comment ? `"${review.comment}"` : 'Không có nội dung')}</p>
                             ${review.appointmentDate ? `<div style="margin-top: 12px; font-size: 13px; color: #94a3b8; font-weight: 500;">Khám ngày: ${review.appointmentDate}</div>` : ''}
                         </div>
                     `;

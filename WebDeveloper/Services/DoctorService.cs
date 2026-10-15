@@ -478,7 +478,7 @@ namespace WebDeveloper.Services
             var query = _db.Reviews
                 .Include(r => r.Appointment).ThenInclude(a => a.Patient).ThenInclude(p => p.User)
                 .Include(r => r.Appointment).ThenInclude(a => a.Schedule).ThenInclude(s => s.Doctor)
-                .Where(r => r.Appointment.Schedule.Doctor.UserId == user.UserId && r.IsVisible != false)
+                .Where(r => r.Appointment.Schedule.Doctor.UserId == user.UserId)
                 .OrderByDescending(r => r.CreatedAt);
 
             var total = await query.CountAsync();
@@ -488,6 +488,7 @@ namespace WebDeveloper.Services
             {
                 ReviewId = r.ReviewId,
                 Rating = r.Rating,
+                    IsVisible = r.IsVisible != false,
                 Comment = r.Comment,
                 PatientName = r.Appointment.Patient.User?.FullName ?? r.Appointment.Patient.FullName,
                 CreatedAt = r.CreatedAt

@@ -57,7 +57,7 @@ namespace WebDeveloper.Services
                 TotalAppointments = await _db.Appointments.CountAsync(),
                 PendingDoctors = await _db.DoctorDetails.CountAsync(d => d.VerificationStatus == VerificationStatus.PENDING),
                 TodayAppointments = todayApps,
-                TotalReviews = await _db.Reviews.CountAsync(r => r.IsVisible == true)
+                TotalReviews = await _db.Reviews.CountAsync()
             };
         }
 
@@ -448,7 +448,7 @@ namespace WebDeveloper.Services
             {
                 var docId = review.Appointment.Schedule.DoctorId;
                 var stats = await _db.Reviews
-                    .Where(r => r.Appointment.Schedule.DoctorId == docId && r.IsVisible != false)
+                    .Where(r => r.Appointment.Schedule.DoctorId == docId)
                     .GroupBy(r => r.Appointment.Schedule.DoctorId)
                     .Select(g => new { Count = g.Count(), Avg = g.Average(x => (double?)(x.Rating ?? 0)) })
                     .FirstOrDefaultAsync();

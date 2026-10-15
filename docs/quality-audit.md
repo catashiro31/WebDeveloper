@@ -101,3 +101,7 @@ từng biểu mẫu tải tệp.
 ### Phông tiếng Việt thống nhất (2026-10-14)
 
 Thay các font hệ thống và cấu hình Inter còn sót bằng Noto Sans variable tự lưu trong wwwroot/fonts/noto-sans, kèm giấy phép OFL. typography.css định nghĩa chung --font-app; tất cả layout, trang auth độc lập, nội dung, tiêu đề, form và cấu hình widget dùng cùng font. WOFF2 giữ nguyên glyph, kiểm tra đầy đủ vùng ký tự tiếng Việt U+1EA0–U+1EF9. Build thành công; Chromium kiểm tra sáu trang công khai/auth, font tải từ ứng dụng ngay cả khi chặn toàn bộ yêu cầu HTTPS bên ngoài. Chưa triển khai VPS.
+
+### Giữ sao khi ẩn nội dung đánh giá (2026-10-15)
+
+Đánh giá bị admin ẩn vì nội dung tiêu cực vẫn được trả về trong danh sách công khai và danh sách bác sĩ, giữ nguyên số sao và được tính vào ReviewCount/RatingAverage. Chỉ trường Comment được thay bằng “Nội dung tiêu cực đã được ẩn” ở giao diện. Dashboard admin cũng đếm toàn bộ đánh giá. Không xóa dữ liệu và vẫn cho admin hiện lại bài.

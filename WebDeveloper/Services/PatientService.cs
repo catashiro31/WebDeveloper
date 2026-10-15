@@ -380,7 +380,7 @@ namespace WebDeveloper.Services
         private async Task UpdateDoctorRating(int doctorId)
         {
             var stats = await _db.Reviews
-                .Where(r => r.Appointment.Schedule.DoctorId == doctorId && r.IsVisible == true)
+                .Where(r => r.Appointment.Schedule.DoctorId == doctorId)
                 .GroupBy(r => r.Appointment.Schedule.DoctorId)
                 .Select(g => new
                 {

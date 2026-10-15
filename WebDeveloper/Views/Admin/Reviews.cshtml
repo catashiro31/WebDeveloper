@@ -228,7 +228,7 @@
                             <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">Đánh giá sao</div>
                         </td>
                         <td style="max-width: 320px;">
-                            <p style="margin: 0; color: #475569; font-size: 13px; line-height: 1.5;">${highlightProfanity(r.comment)}</p>
+                            <p style="margin: 0; color: #475569; font-size: 13px; line-height: 1.5;">${isHidden ? 'Nội dung tiêu cực đã được ẩn' : highlightProfanity(r.comment)}</p>
                             ${isToxic ? '<div class="badge-toxic">⚠️ Nghi vấn thô tục / phản cảm</div>' : ''}
                         </td>
                         <td>
