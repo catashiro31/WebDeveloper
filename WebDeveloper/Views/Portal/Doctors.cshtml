@@ -579,7 +579,7 @@
                     elGrid.innerHTML = docs.map(doc => {
                         const name = doc.doctorName || doc.name || doc.fullName || "Bác sĩ";
                         const photo = doc.photo || doc.avatarUrl || doc.imageUrl;
-                        const rating = doc.ratingAverage != null ? doc.ratingAverage : (doc.rating || 5.0);
+                        const rating = (doc.totalReviews || 0) > 0 ? Number(doc.ratingAverage || 0).toFixed(1) : "Chưa có đánh giá";
                         const exp = doc.experience || doc.experienceYears || 0;
                         const fee = doc.fee || doc.price || doc.consultationFee || 0;
                         const isPlaceholder = !photo || photo.includes("placeholder") || photo.includes("dicebear");
@@ -612,7 +612,7 @@
                                 <div class="meta-row">
                                     <span class="meta-badge">
                                         <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                                        ${Number(rating).toFixed(1)}
+                                        ${rating}
                                     </span>
                                     <span class="meta-badge">
                                         <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>

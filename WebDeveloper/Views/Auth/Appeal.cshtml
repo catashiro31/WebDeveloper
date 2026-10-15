@@ -1,0 +1,36 @@
+@{ ViewData["Title"] = "Yêu cầu mở khóa tài khoản"; Layout = "_Layout"; }
+<section style="max-width:560px;margin:60px auto;padding:32px;background:white;border-radius:20px;">
+    <h1>Yêu cầu mở khóa tài khoản</h1>
+    <p>Xác minh bằng email và mật khẩu để gửi phiếu hoặc xem lý do khóa và kết quả xử lý.</p>
+    <form id="appealForm" style="display:grid;gap:16px;">
+        <label>Email <input id="appealEmail" type="email" required autocomplete="username" style="width:100%;padding:12px;" /></label>
+        <label>Mật khẩu <input id="appealPassword" type="password" required autocomplete="current-password" style="width:100%;padding:12px;" /></label>
+        <label>Lý do xin mở khóa <textarea id="appealReason" maxlength="1000" style="width:100%;padding:12px;min-height:100px;"></textarea></label>
+        <button type="submit" class="btn-primary">Gửi phiếu xin mở khóa</button>
+        <button id="appealStatus" type="button">Kiểm tra kết quả / lý do khóa</button>
+        <p id="appealMessage" role="status" style="white-space:pre-wrap;"></p>
+        <a href="/Auth/Login">Quay lại đăng nhập</a>
+    </form>
+</section>
+@section Scripts {
+<script>
+const appealForm = document.getElementById('appealForm');
+async function sendAppeal(check) {
+    const output = document.getElementById('appealMessage');
+    const payload = { email:document.getElementById('appealEmail').value.trim(), password:document.getElementById('appealPassword').value, reason:document.getElementById('appealReason').value.trim() };
+    if (!appealForm.reportValidity()) return;
+    if (!check && payload.reason.length < 10) { output.textContent = 'Lý do cần ít nhất 10 ký tự.'; return; }
+    appealForm.querySelectorAll('button').forEach(b => b.disabled = true);
+    try {
+        const res = await fetch('/api/v1/auth/appeals' + (check ? '/status' : ''), { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+        if (!res.ok) { output.textContent = res.status === 429 ? 'Bạn thao tác quá nhanh. Vui lòng thử lại sau một phút.' : await readApiMessage(res); return; }
+        const data = await res.json();
+        if (!check) output.textContent = data.message;
+        else output.textContent = (data.isActive ? 'Tài khoản đang hoạt động.' : 'Tài khoản chưa được mở khóa. Lý do: ' + (data.reasonBanned || 'Chưa ghi nhận')) + '\n' + (data.appeal ? ({PENDING:'Phiếu đang chờ duyệt',APPROVED:'Phiếu đã được duyệt',REJECTED:'Phiếu bị từ chối'}[data.appeal.status] + (data.appeal.adminReason ? '\nLý do xử lý: ' + data.appeal.adminReason : '')) : 'Bạn chưa gửi phiếu.');
+    } catch { output.textContent = 'Không thể kết nối. Vui lòng thử lại.'; }
+    finally { appealForm.querySelectorAll('button').forEach(b => b.disabled = false); }
+}
+appealForm.onsubmit = e => { e.preventDefault(); sendAppeal(false); };
+document.getElementById('appealStatus').onclick = () => sendAppeal(true);
+</script>
+}

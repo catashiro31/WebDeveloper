@@ -48,8 +48,8 @@ namespace WebDeveloper.Services.Interfaces
     public interface IAdminService
     {
         Task<StatResponse> GetStats(DateOnly? start, DateOnly? end);
-        Task<PagedResult<object>> GetAllDoctors(int page, int size);
-        Task<List<object>> GetPendingDoctors();
+        Task<PagedResult<object>> GetAllDoctors(int page, int size, string? search = null);
+        Task<List<object>> GetPendingDoctors(string? search = null);
         Task<object> GetDoctorDetail(int id);
         Task<object> ApproveDoctor(int doctorId);
         Task<object> RejectDoctor(int doctorId, string reason);
@@ -62,7 +62,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> DeleteFacility(int id);
         Task<PagedResult<object>> GetAllUsers(int page, int size);
         Task<string> BlockUser(int id, string reason);
-        Task<string> UnblockUser(int id);
+        Task<string> UnblockUser(int id, string reason);
         Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size);
         Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size, string? category = null, string? search = null);
         Task<string> RejectReview(int id);

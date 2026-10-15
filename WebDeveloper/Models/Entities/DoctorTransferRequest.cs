@@ -17,6 +17,10 @@ namespace WebDeveloper.Models.Entities
         [ForeignKey("DoctorId")]
         public DoctorDetail Doctor { get; set; } = null!;
 
+        // Snapshot at submission; the doctor can move again or the facility can be renamed.
+        [MaxLength(500)]
+        public string? OldFacilityName { get; set; }
+
         [Column("target_facility_id")]
         public int TargetFacilityId { get; set; }
 

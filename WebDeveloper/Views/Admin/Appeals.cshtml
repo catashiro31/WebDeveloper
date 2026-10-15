@@ -1,0 +1,46 @@
+@{ ViewData["Title"] = "Yêu cầu mở khóa"; Layout = "_AdminLayout"; }
+<h1>Yêu cầu mở khóa tài khoản</h1>
+<label>Trạng thái <select id="appealFilter"><option value="PENDING">Chờ duyệt</option><option value="APPROVED">Đã duyệt</option><option value="REJECTED">Từ chối</option></select></label>
+<p id="appealError" role="status"></p>
+<div id="appeals"></div>
+<button id="appealPrev">Trang trước</button> <span id="appealPage"></span> <button id="appealNext">Trang sau</button>
+@section Scripts {
+<script>
+let appealPage = 0;
+const appealError = document.getElementById('appealError');
+async function loadAppeals() {
+    const list = document.getElementById('appeals'); list.replaceChildren(); appealError.textContent = 'Đang tải…';
+    try {
+        const res = await fetch(`/api/v1/admin/appeals?status=${document.getElementById('appealFilter').value}&page=${appealPage}`);
+        if (!res.ok) throw new Error(await readApiMessage(res));
+        const items = await res.json(); appealError.textContent = items.length ? '' : 'Không có phiếu.';
+        document.getElementById('appealPrev').disabled = appealPage === 0;
+        document.getElementById('appealNext').disabled = items.length < 20;
+        document.getElementById('appealPage').textContent = appealPage + 1;
+        items.forEach(item => {
+            const card = document.createElement('section'); card.style.cssText = 'padding:24px;margin:16px 0;background:white;border-radius:16px;';
+            for (const text of [`${item.fullName || ''} (${item.email})`, 'Lý do khóa: ' + (item.reasonBanned || '—'), 'Lý do xin mở khóa: ' + item.reason, 'Ngày gửi: ' + new Date(item.createdAt).toLocaleString('vi-VN'), item.adminReason ? 'Kết quả: ' + item.adminReason : '']) {
+                if (!text) continue; const p = document.createElement('p'); p.textContent = text; card.append(p);
+            }
+            if (item.status === 'PENDING') [true,false].forEach(approve => {
+                const button = document.createElement('button'); button.textContent = approve ? 'Duyệt mở khóa' : 'Từ chối';
+                button.onclick = async () => {
+                    const reason = prompt('Nhập lý do ' + (approve ? 'mở khóa' : 'từ chối') + ' (3–1000 ký tự):');
+                    if (!reason || reason.trim().length < 3 || reason.length > 1000) return;
+                    card.querySelectorAll('button').forEach(b => b.disabled = true);
+                    try {
+                        const response = await fetch(`/api/v1/admin/appeals/${item.id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({approve,reason:reason.trim()})});
+                        if (!response.ok) throw new Error(await readApiMessage(response));
+                        await loadAppeals();
+                    } catch(error) { appealError.textContent = error.message; card.querySelectorAll('button').forEach(b => b.disabled = false); }
+                }; card.append(button);
+            }); list.append(card);
+        });
+    } catch(error) { appealError.textContent = error.message; }
+}
+document.getElementById('appealFilter').onchange = () => { appealPage = 0; loadAppeals(); };
+document.getElementById('appealPrev').onclick = () => { if (appealPage > 0) { appealPage--; loadAppeals(); } };
+document.getElementById('appealNext').onclick = () => { appealPage++; loadAppeals(); };
+loadAppeals();
+</script>
+}

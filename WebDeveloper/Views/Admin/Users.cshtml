@@ -66,6 +66,8 @@
     </div>
 </div>
 
+<p><a href="/Admin/Appeals">Xem và xử lý yêu cầu mở khóa tài khoản</a></p>
+
 @section Scripts {
     <script>
         let currentPage = 0;
@@ -146,7 +148,7 @@
                                 </div>
                             </div>
                         </td>
-                        <td>${getRoleBadge(u.role?.replace('ROLE_', '') || '')}</td>
+                        <td>${getRoleBadge(u.role?.replace('ROLE_', '') || '')}${u.role?.replace('ROLE_', '') === 'DOCTOR' ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">${({APPROVED:'Hồ sơ đã duyệt', PENDING:'Hồ sơ chờ duyệt', REJECTED:'Hồ sơ bị từ chối'})[u.doctorProfileStatus] || 'Chưa có hồ sơ chuyên môn'}</div>` : ''}</td>
                         <td>${statusHtml}</td>
                         <td style="text-align: right;">${actionHtml}</td>
                     </tr>`;
@@ -217,9 +219,11 @@
         };
 
         window.unblockUser = function(id) {
-            if (pendingUnblocks.has(id) || !confirm("Mở khóa tài khoản này?")) return;
+            if (pendingUnblocks.has(id)) return;
+            const reason = prompt("Nhập lý do mở khóa (ít nhất 3 ký tự):");
+            if (!reason || reason.trim().length < 3) return;
             pendingUnblocks.add(id);
-            fetch(`/api/v1/admin/users/${id}/unblock`, {
+            fetch(`/api/v1/admin/users/${id}/unblock?reason=${encodeURIComponent(reason.trim())}`, {
                 method: 'PATCH',
                 credentials: 'same-origin'
             })

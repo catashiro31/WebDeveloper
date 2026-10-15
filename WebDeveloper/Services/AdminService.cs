@@ -52,7 +52,7 @@ namespace WebDeveloper.Services
                 NumberOfPendingAppointments = pending,
                 NumberOfFailingAppointments = cancelled,
                 TotalUsers = await _db.Users.CountAsync(),
-                TotalDoctors = await _db.DoctorDetails.CountAsync(d => d.VerificationStatus == VerificationStatus.APPROVED && d.User.IsActive == true),
+                TotalDoctors = await ApprovedDoctors().CountAsync(),
                 TotalPatients = await _db.Users.CountAsync(u => u.Role == RoleStatus.PATIENT && u.IsActive == true),
                 TotalAppointments = await _db.Appointments.CountAsync(),
                 PendingDoctors = await _db.DoctorDetails.CountAsync(d => d.VerificationStatus == VerificationStatus.PENDING),
@@ -61,13 +61,26 @@ namespace WebDeveloper.Services
             };
         }
 
-        public async Task<PagedResult<object>> GetAllDoctors(int page, int size)
+        // Admin inventory includes blocked accounts; approval and account access are separate states.
+        private IQueryable<DoctorDetail> ApprovedDoctors() => _db.DoctorDetails
+            .Where(d => d.User.Role == RoleStatus.DOCTOR && d.VerificationStatus == VerificationStatus.APPROVED);
+
+        private static IQueryable<DoctorDetail> SearchDoctors(IQueryable<DoctorDetail> query, string? search)
         {
-            var query = _db.DoctorDetails
+            foreach (var word in (search ?? "").Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+            {
+                var pattern = "%" + word.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+                query = query.Where(d => EF.Functions.ILike(EF.Functions.Unaccent((d.User.FullName ?? "") + " " + d.User.Email), EF.Functions.Unaccent(pattern), "\\"));
+            }
+            return query;
+        }
+
+        public async Task<PagedResult<object>> GetAllDoctors(int page, int size, string? search = null)
+        {
+            var query = SearchDoctors(ApprovedDoctors(), search)
                 .Include(d => d.User)
                 .Include(d => d.Specialty)
                 .Include(d => d.Facility)
-                .Where(d => d.VerificationStatus == VerificationStatus.APPROVED)
                 .OrderByDescending(d => d.DoctorId);
 
             var total = await query.CountAsync();
@@ -83,16 +96,16 @@ namespace WebDeveloper.Services
                 VerificationStatus = d.VerificationStatus.ToString(),
                 SpecialtyName = d.Specialty?.SpecialtyName,
                 FacilityName = d.Facility?.FacilityName,
-                d.RatingAverage,
-                d.ReviewCount
+                RatingAverage = d.ReviewCount > 0 ? d.RatingAverage : null,
+                ReviewCount = d.ReviewCount ?? 0
             }).Cast<object>().ToList();
 
             return PagedResult<object>.Create(dtos, page, size, total);
         }
 
-        public async Task<List<object>> GetPendingDoctors()
+        public async Task<List<object>> GetPendingDoctors(string? search = null)
         {
-            var items = await _db.DoctorDetails
+            var items = await SearchDoctors(_db.DoctorDetails, search)
                 .Include(d => d.User)
                 .Include(d => d.Specialty)
                 .Include(d => d.Facility)
@@ -142,8 +155,8 @@ namespace WebDeveloper.Services
                 d.IdCardUrl,
                 d.CertificateUrl,
                 VerificationStatus = d.VerificationStatus.ToString(),
-                d.RatingAverage,
-                d.ReviewCount
+                RatingAverage = d.ReviewCount > 0 ? d.RatingAverage : null,
+                ReviewCount = d.ReviewCount ?? 0
             };
         }
 
@@ -327,6 +340,10 @@ namespace WebDeveloper.Services
                 u.Email,
                 u.FullName,
                 u.Role,
+                DoctorProfileStatus = u.Role == RoleStatus.DOCTOR
+                    ? _db.DoctorDetails.Where(d => d.UserId == u.UserId)
+                        .Select(d => (VerificationStatus?)d.VerificationStatus).FirstOrDefault()
+                    : null,
                 u.IsActive,
                 u.ReasonBanned,
                 u.CreatedAt
@@ -337,9 +354,17 @@ namespace WebDeveloper.Services
 
         public async Task<string> BlockUser(int id, string reason)
         {
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-id})");
             var user = await _db.Users.FindAsync(id)
                 ?? throw new InvalidOperationException("Không tìm thấy người dùng");
             
+            if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 3 || reason.Length > 1000)
+                throw new InvalidOperationException("Vui lòng nhập lý do khóa từ 3 đến 1000 ký tự.");
+            if (user.Role == RoleStatus.ADMIN) throw new InvalidOperationException("Không thể khóa tài khoản quản trị.");
+            user.RefreshToken = null;
+            user.RefreshTokenExpiryTime = null;
+            _db.Notifications.Add(new Notification { UserId = id, Title = "Tài khoản bị khóa", Message = reason.Trim(), Url = "/Auth/Appeal" });
             user.IsActive = false;
             user.ReasonBanned = reason;
 
@@ -363,17 +388,29 @@ namespace WebDeveloper.Services
             }
 
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
             await _emailService.SendPermanentBanEmail(user.Email, user.FullName ?? "", reason);
             return $"Đã khóa tài khoản {id}";
         }
 
-        public async Task<string> UnblockUser(int id)
+        public async Task<string> UnblockUser(int id, string reason)
         {
+            if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 3 || reason.Length > 1000)
+                throw new InvalidOperationException("Vui lòng nhập lý do mở khóa từ 3 đến 1000 ký tự.");
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-id})");
             var user = await _db.Users.FindAsync(id)
                 ?? throw new InvalidOperationException("Không tìm thấy người dùng");
+            if (user.VerificationCode != null) throw new InvalidOperationException("Tài khoản cần xác thực email trước.");
             user.IsActive = true;
             user.ReasonBanned = null;
+            foreach (var appeal in await _db.AccountAppeals.Where(a => a.UserId == id && a.Status == "PENDING").ToListAsync())
+            {
+                appeal.Status = "APPROVED"; appeal.AdminReason = reason.Trim(); appeal.ProcessedAt = DateTime.UtcNow;
+            }
+            _db.Notifications.Add(new Notification { UserId = id, Title = "Tài khoản được mở khóa", Message = reason.Trim(), Url = "/" });
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
             return $"Đã mở khóa tài khoản {id}";
         }
 

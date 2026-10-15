@@ -11,6 +11,8 @@ namespace WebDeveloper.Controllers
             return View();
         }
 
+        public IActionResult Appeals() => View();
+
         public IActionResult Users()
         {
             return View();

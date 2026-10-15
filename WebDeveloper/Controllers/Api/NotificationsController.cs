@@ -31,6 +31,20 @@ public class NotificationsController(ApplicationDbContext db) : ControllerBase
         return NoContent();
     }
 
+    [HttpDelete("read")]
+    public async Task<IActionResult> DeleteRead(CancellationToken ct)
+    {
+        var deleted = await db.Notifications.Where(n => n.UserId == UserId && n.ReadAt != null).ExecuteDeleteAsync(ct);
+        return Ok(new { deleted });
+    }
+
+    [HttpDelete("{id:long}")]
+    public async Task<IActionResult> Delete(long id, CancellationToken ct)
+    {
+        var deleted = await db.Notifications.Where(n => n.UserId == UserId && n.Id == id && n.ReadAt != null).ExecuteDeleteAsync(ct);
+        return deleted == 0 ? NotFound() : NoContent();
+    }
+
     [HttpPatch("read-all")]
     public async Task<IActionResult> ReadAll(CancellationToken ct)
     {

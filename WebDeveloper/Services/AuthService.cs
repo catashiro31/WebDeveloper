@@ -30,6 +30,9 @@ namespace WebDeveloper.Services
             if (user == null)
                 throw new InvalidOperationException("Tài khoản không tồn tại!");
 
+            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+                throw new InvalidOperationException("Mật khẩu không chính xác!");
+
             if (user.IsActive != true)
             {
                 if (user.VerificationCode != null)
@@ -37,8 +40,6 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Tài khoản đã bị khóa. Lý do: " + (user.ReasonBanned ?? "Vi phạm chính sách"));
             }
 
-            if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-                throw new InvalidOperationException("Mật khẩu không chính xác!");
 
             var token = _jwt.CreateToken(user);
             var refreshToken = _jwt.GenerateRefreshToken();

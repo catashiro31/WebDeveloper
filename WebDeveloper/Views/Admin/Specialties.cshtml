@@ -3,6 +3,7 @@
     Layout = "_AdminLayout";
 }
 
+<label style="display:block;margin:16px 0;">Tìm chuyên khoa<input id="adminSearch" type="search" placeholder="Tìm chuyên khoa…" style="display:block;width:min(100%,440px);padding:12px;border:1px solid #cbd5e1;border-radius:10px;" /></label>
 <style>
 .admin-card {
     background: #fff; border-radius: 24px; padding: 24px;
@@ -104,17 +105,22 @@
 
 @section Scripts {
     <script>
+        let searchTimer, searchVersion = 0;
+        document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => {  loadSpecialties(); }, 250); });
+
         let specialties = [];
 
         async function loadSpecialties() {
+            const version = ++searchVersion;
             const tbody = document.getElementById('tableBody');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
             
             try {
-                const res = await fetch('/api/v1/portal/specialties', { cache: 'no-store' });
+                const res = await fetch('/api/v1/admin/specialties?search=' + encodeURIComponent(document.getElementById('adminSearch').value), { cache: 'no-store' });
                 if (!res.ok) throw new Error(await readApiMessage(res));
                 const data = await res.json();
                 if (!Array.isArray(data)) throw new Error('Danh sách chuyên khoa không hợp lệ.');
+                if (version !== searchVersion) return;
                 specialties = data;
 
                 if (specialties.length === 0) {

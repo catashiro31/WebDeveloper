@@ -3,6 +3,7 @@
     Layout = "_AdminLayout";
 }
 
+<label style="display:block;margin:16px 0;">Tìm tên hoặc email bác sĩ<input id="adminSearch" type="search" placeholder="Tìm tên hoặc email bác sĩ…" style="display:block;width:min(100%,440px);padding:12px;border:1px solid #cbd5e1;border-radius:10px;" /></label>
 <style>
 .view-toggle-container { display: flex; background: #f1f5f9; padding: 4px; border-radius: 14px; width: fit-content; margin-bottom: 32px; }
 .view-toggle-btn { padding: 10px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: #64748b; background: transparent; }
@@ -26,7 +27,7 @@
     </div>
 
     <div class="view-toggle-container">
-        <button id="btnViewAll" class="view-toggle-btn active" onclick="setViewMode('all')">Tất cả bác sĩ</button>
+        <button id="btnViewAll" class="view-toggle-btn active" onclick="setViewMode('all')">Hồ sơ đã duyệt</button>
         <button id="btnViewPending" class="view-toggle-btn" onclick="setViewMode('pending')">Đang chờ duyệt</button>
     </div>
 
@@ -121,6 +122,9 @@
 
 @section Scripts {
     <script>
+        let searchTimer, searchVersion = 0;
+        document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { currentPage = 0; fetchData(); }, 250); });
+
         let viewMode = 'all';
         let currentPage = 0;
         let totalPages = 1;
@@ -150,6 +154,7 @@
         }
 
         function fetchData() {
+            const version = ++searchVersion;
             document.getElementById('loading').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('doctorsContainer').style.display = 'none';
@@ -157,9 +162,11 @@
 
             let url = viewMode === 'pending' ? '/api/v1/admin/doctor-pending' : `/api/v1/admin/doctor-all?page=${currentPage}&size=10`;
 
+            url += (url.includes('?') ? '&' : '?') + 'search=' + encodeURIComponent(document.getElementById('adminSearch').value);
             fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
+                if (version !== searchVersion) return;
                 document.getElementById('loading').style.display = 'none';
                 
                 let docs = [];
@@ -195,7 +202,7 @@
                                         <div style="margin-top: 4px;">
                                             <span class="chip">📧 ${email}</span>
                                             <span class="chip">🏥 ${spec}</span>
-                                            <span class="chip" style="color: #f59e0b; font-weight: 700;">⭐ ${(doc.ratingAverage != null ? Number(doc.ratingAverage).toFixed(1) : '5.0')} (${doc.reviewCount || 0} đánh giá)</span>
+                                            <span class="chip" style="color: #f59e0b; font-weight: 700;">⭐ ${doc.reviewCount > 0 ? Number(doc.ratingAverage || 0).toFixed(1) + ' (' + doc.reviewCount + ' đánh giá)' : 'Chưa có đánh giá'}</span>
                                             <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: ${badge.bg}; color: ${badge.color}; display: inline-block; margin-top: 4px;">${badge.label}</span>
                                         </div>
                                     </div>
@@ -271,7 +278,7 @@
                 }
 
                 document.getElementById('modalPrice').innerText = (data.price || 0).toLocaleString();
-                document.getElementById('modalRating').innerText = `⭐ ${(data.ratingAverage != null ? Number(data.ratingAverage).toFixed(1) : '5.0')} / 5.0 (${data.reviewCount || 0} đánh giá)`;
+                document.getElementById('modalRating').innerText = data.reviewCount > 0 ? `⭐ ${Number(data.ratingAverage || 0).toFixed(1)} / 5.0 (${data.reviewCount} đánh giá)` : 'Chưa có đánh giá';
                 document.getElementById('modalBio').innerText = data.bio || '';
 
                 if (data.certificateUrl) {

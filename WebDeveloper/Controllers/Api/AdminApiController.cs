@@ -29,17 +29,17 @@ namespace WebDeveloper.Controllers.Api
         }
 
         [HttpGet("doctor-pending")]
-        public async Task<IActionResult> GetPendingDoctors()
+        public async Task<IActionResult> GetPendingDoctors([FromQuery] string? search)
         {
-            return Ok(await _adminService.GetPendingDoctors());
+            return Ok(await _adminService.GetPendingDoctors(search));
         }
 
         [HttpGet("doctor-all")]
         public async Task<IActionResult> GetAllDoctors(
             [FromQuery] int page = 0,
-            [FromQuery] int size = 10)
+            [FromQuery] int size = 10, [FromQuery] string? search = null)
         {
-            return Ok(await _adminService.GetAllDoctors(page, size));
+            return Ok(await _adminService.GetAllDoctors(Math.Max(0, page), Math.Clamp(size, 1, 100), search));
         }
 
         [HttpGet("doctor/{id}")]
@@ -125,8 +125,8 @@ namespace WebDeveloper.Controllers.Api
             => Ok(await _adminService.BlockUser(id, reason));
 
         [HttpPatch("users/{id}/unblock")]
-        public async Task<IActionResult> UnblockUser(int id)
-            => Ok(await _adminService.UnblockUser(id));
+        public async Task<IActionResult> UnblockUser(int id, [FromQuery] string reason)
+            => Ok(await _adminService.UnblockUser(id, reason));
 
         // Appointments
         [HttpGet("appointments")]

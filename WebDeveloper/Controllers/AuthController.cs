@@ -5,6 +5,9 @@ namespace WebDeveloper.Controllers
     [Route("Auth")]
     public class AuthController : Controller
     {
+        [HttpGet("Appeal")]
+        public IActionResult Appeal() => View();
+
         [HttpGet("Login")]
         public IActionResult Login()
         {

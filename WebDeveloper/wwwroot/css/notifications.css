@@ -10,3 +10,5 @@
 .notification-item strong, .notification-item small, .notification-item span { display:block; margin-bottom:4px; }
 .notification-item small { color:#64748b; }
 #notificationStatus { font-size:14px; }
+
+#notificationList { max-height:50vh; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }

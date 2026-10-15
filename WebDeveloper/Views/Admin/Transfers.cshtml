@@ -37,6 +37,7 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
                     <th>Cơ sở mới</th>
                     <th>Lý do</th>
                     <th>Ngày gửi</th>
+                    <th id="colProcessed" style="display:none;">Ngày duyệt</th>
                     <th id="colAction">Hành động</th>
                 </tr>
             </thead>
@@ -78,6 +79,8 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             document.getElementById(`tab_${status}`).classList.add('active');
             document.getElementById('colAction').style.display = status === 'PENDING' ? 'table-cell' : 'none';
+            document.getElementById('colProcessed').style.display = status === 'PENDING' ? 'none' : 'table-cell';
+            document.getElementById('colProcessed').textContent = status === 'REJECTED' ? 'Ngày từ chối' : 'Ngày duyệt';
             currentPage = 0;
             fetchData();
         }
@@ -110,7 +113,7 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
                 let html = '';
                 list.forEach(req => {
                     const docName = req.doctor?.user?.fullName || req.doctorName || '';
-                    const oldFac = req.doctor?.facility?.facilityName || req.oldFacilityName || '';
+                    const oldFac = req.doctor?.facility?.facilityName || req.oldFacilityName || 'Chưa ghi nhận';
                     const newFac = req.targetFacility?.facilityName || req.targetFacilityName || '';
                     const reason = req.reason || '';
                     const date = new Date(req.createdAt).toLocaleDateString('vi-VN');
@@ -121,6 +124,7 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
                         <td style="color: #0ea47a; font-weight: 600;">${newFac}</td>
                         <td style="max-width: 200px;">${reason}</td>
                         <td>${date}</td>
+                        ${currentStatus !== 'PENDING' ? `<td>${req.processedAt ? new Date(req.processedAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : 'Chưa ghi nhận'}</td>` : ''}
                         ${currentStatus === 'PENDING' ? `
                         <td>
                             <button onclick='openModal(${JSON.stringify(req).replace(/'/g, "&apos;")})' style="border: none; background: #e8faf3; color: #0ea47a; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer;">Xử lý</button>

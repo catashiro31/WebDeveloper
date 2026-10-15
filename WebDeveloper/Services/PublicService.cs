@@ -127,7 +127,7 @@ namespace WebDeveloper.Services
                 DoctorEmail = d.User.Email,
                 DoctorPhone = d.User.PhoneNumber,
                 AvatarUrl = d.User.AvatarUrl,
-                RatingAverage = d.RatingAverage,
+                RatingAverage = d.ReviewCount > 0 ? d.RatingAverage : null,
                 TotalReviews = d.ReviewCount,
                 Price = d.Price,
                 Experience = d.ExperienceYears
@@ -166,7 +166,7 @@ namespace WebDeveloper.Services
                 DoctorEmail = d.User.Email,
                 DoctorPhone = d.User.PhoneNumber,
                 AvatarUrl = d.User.AvatarUrl,
-                RatingAverage = d.RatingAverage,
+                RatingAverage = d.ReviewCount > 0 ? d.RatingAverage : null,
                 TotalReviews = d.ReviewCount
             };
         }

@@ -3,6 +3,7 @@
     Layout = "_AdminLayout";
 }
 
+<label style="display:block;margin:16px 0;">Tìm cơ sở y tế<input id="adminSearch" type="search" placeholder="Tìm cơ sở y tế…" style="display:block;width:min(100%,440px);padding:12px;border:1px solid #cbd5e1;border-radius:10px;" /></label>
 <style>
 .facility-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 24px; }
 .facility-card { background: #ffffff; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; display: flex; flex-direction: column; }
@@ -153,6 +154,9 @@
 
 @section Scripts {
     <script>
+        let searchTimer, searchVersion = 0;
+        document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => {  fetchFacilities(); }, 250); });
+
         let facilitiesList = [];
         let editingFacility = null;
         let imageFile = null;
@@ -175,12 +179,13 @@
         }
 
         function fetchFacilities() {
+            const version = ++searchVersion;
             document.getElementById('loading').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('loadError').style.display = 'none';
             document.getElementById('facilitiesContainer').style.display = 'none';
 
-            fetch('/api/v1/portal/facilities', { cache: 'no-store' })
+            fetch('/api/v1/admin/facilities?search=' + encodeURIComponent(document.getElementById('adminSearch').value), { cache: 'no-store' })
             .then(async res => {
                 if (!res.ok) throw new Error(await readApiMessage(res));
                 const data = await res.json();
@@ -188,6 +193,7 @@
                 return data;
             })
             .then(data => {
+                if (version !== searchVersion) return;
                 document.getElementById('loading').style.display = 'none';
                 facilitiesList = data;
                 

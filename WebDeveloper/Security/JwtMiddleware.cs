@@ -17,6 +17,18 @@ namespace WebDeveloper.Security
             _next = next;
         }
 
+        private async Task<bool> ContinueAsGuest(HttpContext context)
+        {
+            foreach (var name in new[] { "accessToken", "refreshToken", "user_info" })
+                context.Response.Cookies.Delete(name, new CookieOptions { Path = "/" });
+            if (context.Request.Path.StartsWithSegments("/api")) return false;
+            context.User = new ClaimsPrincipal(new ClaimsIdentity());
+            if (context.Request.Path.StartsWithSegments("/Admin") || context.Request.Path.StartsWithSegments("/Doctor") || context.Request.Path.StartsWithSegments("/Patient"))
+                context.Response.Redirect("/Auth/Login");
+            else await _next(context);
+            return true;
+        }
+
         public async Task InvokeAsync(HttpContext context, ApplicationDbContext db)
         {
             // Bỏ qua các endpoint public
@@ -54,6 +66,7 @@ namespace WebDeveloper.Security
                     var isBlacklisted = await db.TokenBlacklists.AnyAsync(t => t.Token == tokenKey || t.Token == token);
                     if (isBlacklisted)
                     {
+                        if (await ContinueAsGuest(context)) return;
                         context.Response.StatusCode = 401;
                         context.Response.ContentType = "application/json; charset=utf-8";
                         await context.Response.WriteAsync("{\"error\": \"Token đã bị vô hiệu hóa. Vui lòng đăng nhập lại.\"}");
@@ -67,6 +80,7 @@ namespace WebDeveloper.Security
                         var user = await db.Users.FindAsync(userId);
                         if (user != null && user.IsActive != true)
                         {
+                            if (await ContinueAsGuest(context)) return;
                             context.Response.StatusCode = 403;
                             context.Response.ContentType = "application/json; charset=utf-8";
                             await context.Response.WriteAsync("{\"error\": \"Tài khoản của bạn đã bị khóa.\"}");

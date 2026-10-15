@@ -70,6 +70,12 @@
         catch (error) { status.textContent = error.message; }
         finally { all.disabled = false; }
     };
+    document.getElementById('notificationDeleteRead').onclick = async function () {
+        this.disabled = true;
+        try { await request('/api/v1/notifications/read', { method:'DELETE' }); await load(); }
+        catch (error) { status.textContent = error.message; }
+        finally { this.disabled = false; }
+    };
     load(false, true);
     setInterval(() => { if (!document.hidden) load(false, true); }, 30000);
 })();
