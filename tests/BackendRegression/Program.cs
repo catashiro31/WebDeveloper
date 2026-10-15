@@ -41,6 +41,19 @@ var elapsed = Enum.GetValues<TimeSlot>().FirstOrDefault(s => VietnamTime.HasStar
 if (VietnamTime.HasStarted(today, elapsed, now)) await Reject(() => service.CreateSchedule(doctorUser, new ScheduleRequest { Date=today, SlotIds=[elapsed.ToString()] }));
 await service.CreateSchedule(doctorUser,new ScheduleRequest { Date=today.AddDays(2),SlotIds=["SLOT_09_00"] });
 await Reject(() => service.CreateSchedule(doctorUser,new ScheduleRequest { Date=today.AddDays(2),SlotIds=["SLOT_09_00"] }));
+var reopen = await db.DoctorSchedules.SingleAsync(s=>s.DoctorId==doctor.DoctorId && s.DateWorking==today.AddDays(2));
+await service.DeleteSchedule(doctorUser,reopen.ScheduleId);
+Check(!(await service.GetSchedules(doctorUser)).Any(s=>s.ScheduleId==reopen.ScheduleId),"Closed slot displayed");
+await service.CreateSchedule(doctorUser,new ScheduleRequest {Date=today.AddDays(2),SlotIds=["SLOT_09_00"]});
+Check(reopen.SlotStatus==SlotStatus.AVAILABLE && await db.DoctorSchedules.CountAsync(s=>s.DoctorId==doctor.DoctorId && s.DateWorking==today.AddDays(2))==1,"Reopening created duplicate or failed");
+reopen.SlotStatus=SlotStatus.BOOKED;await db.SaveChangesAsync();
+await Reject(()=>service.DeleteSchedule(doctorUser,reopen.ScheduleId));
+await Reject(()=>service.CreateSchedule(doctorUser,new ScheduleRequest {Date=today.AddDays(2),SlotIds=["SLOT_09_00"]}));
+if (VietnamTime.HasStarted(today, elapsed, now)) {
+ db.Add(new DoctorSchedule {Doctor=doctor,Facility=oldFacility,DateWorking=today,TimeSlot=elapsed,SlotStatus=SlotStatus.AVAILABLE});
+ await db.SaveChangesAsync();
+ Check(!(await service.GetSchedules(doctorUser)).Any(s=>s.DateWorking==today && s.TimeSlot==elapsed.GetDisplayValue()),"Elapsed same-day slot displayed");
+}
 db.Add(new DoctorSchedule { Doctor=doctor, Facility=oldFacility,DateWorking=today.AddDays(-1),TimeSlot=TimeSlot.SLOT_09_00,SlotStatus=SlotStatus.AVAILABLE });
 await db.SaveChangesAsync();
 Check((await service.GetSchedules(doctorUser)).All(s => s.DateWorking >= today),"Past schedules exposed");

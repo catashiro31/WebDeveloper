@@ -89,10 +89,16 @@
             return slot.replace('SLOT_', '').replace('_', ':');
         }
 
+        function slotHasStarted(slot) {
+            const date = document.getElementById('selectedDate').value;
+            return !date || new Date(`${date}T${formatTimeSlot(slot)}:00+07:00`).getTime() <= Date.now();
+        }
+        document.getElementById('selectedDate').addEventListener('change', renderSlots);
         function renderSlots() {
+            selectedSlots = selectedSlots.filter(slot => !slotHasStarted(slot));
             const container = document.getElementById('slotsContainer');
             container.innerHTML = TIME_SLOTS.map(slot => `
-                <button type="button" class="slot-btn ${selectedSlots.includes(slot) ? 'selected' : ''}" onclick="toggleSlot('${slot}')">
+                <button type="button" class="slot-btn ${selectedSlots.includes(slot) ? 'selected' : ''}" onclick="toggleSlot('${slot}')" ${slotHasStarted(slot) ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>
                     ${formatTimeSlot(slot)}
                 </button>
             `).join('');
@@ -100,6 +106,7 @@
         }
 
         window.toggleSlot = function(slot) {
+            if (slotHasStarted(slot)) return;
             if (selectedSlots.includes(slot)) {
                 selectedSlots = selectedSlots.filter(s => s !== slot);
             } else {
@@ -108,20 +115,15 @@
             renderSlots();
         };
 
-        window.selectAllSlots = function() { selectedSlots = [...TIME_SLOTS]; renderSlots(); };
+        window.selectAllSlots = function() { selectedSlots = TIME_SLOTS.filter(slot => !slotHasStarted(slot)); renderSlots(); };
         window.clearAllSlots = function() { selectedSlots = []; renderSlots(); };
 
         window.openModal = function() {
-            const tomorrow = new Date();
-            tomorrow.setDate(tomorrow.getDate() + 1);
-            const yyyy = tomorrow.getFullYear();
-            const mm = String(tomorrow.getMonth() + 1).padStart(2, '0');
-            const dd = String(tomorrow.getDate()).padStart(2, '0');
-            
+            const today = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Ho_Chi_Minh', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
             const dateInput = document.getElementById('selectedDate');
-            dateInput.min = `${yyyy}-${mm}-${dd}`;
-            dateInput.value = `${yyyy}-${mm}-${dd}`;
-            
+            dateInput.min = today;
+            dateInput.value = today;
+
             selectedSlots = [];
             renderSlots();
             document.getElementById('scheduleModal').classList.add('active');
@@ -228,6 +230,7 @@
         };
 
         fetchSchedules();
+        setInterval(() => { if (!document.hidden && !document.getElementById("scheduleModal").classList.contains("active")) fetchSchedules(); }, 60000);
     </script>
 }
 

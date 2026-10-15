@@ -232,13 +232,14 @@ namespace WebDeveloper.Services
             var doctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId)
                 ?? throw new InvalidOperationException("Bác sĩ không tồn tại");
 
-            var today = DateOnly.FromDateTime(VietnamTime.Now);
+            var now = VietnamTime.Now;
+            var today = DateOnly.FromDateTime(now);
             var schedules = await _db.DoctorSchedules
                 .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking >= today)
                 .OrderBy(s => s.DateWorking).ThenBy(s => s.TimeSlot)
                 .ToListAsync();
 
-            return schedules.Select(s => new DoctorScheduleResponse
+            return schedules.Where(s => s.SlotStatus != SlotStatus.CLOSED && !VietnamTime.HasStarted(s.DateWorking, s.TimeSlot, now)).Select(s => new DoctorScheduleResponse
             {
                 ScheduleId = s.ScheduleId,
                 DateWorking = s.DateWorking,
@@ -274,28 +275,28 @@ namespace WebDeveloper.Services
                 .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking == req.Date)
                 .ToListAsync();
 
-            if (existingSchedules.Any(s => slots.Contains(s.TimeSlot)))
+            var selectedExisting = existingSchedules.Where(s => slots.Contains(s.TimeSlot)).ToList();
+            if (selectedExisting.Any(s => s.SlotStatus != SlotStatus.CLOSED))
                 throw new InvalidOperationException("Ngày và giờ này đã có lịch làm việc. Vui lòng chọn ca khác.");
-            int addedCount = 0;
-            foreach (var slotStr in req.SlotIds.Distinct())
+            var existingIds = selectedExisting.Select(s => s.ScheduleId).ToList();
+            if (await _db.Appointments.AnyAsync(a => existingIds.Contains(a.ScheduleId) && a.BookingStatus != BookingStatus.CANCELLED))
+                throw new InvalidOperationException("Ca làm việc đã có lịch khám, không thể mở lại.");
+            foreach (var slot in slots)
             {
-                if (!Enum.TryParse<TimeSlot>(slotStr, out var slot))
-                    continue;
-
-                if (!existingSchedules.Any(s => s.TimeSlot == slot))
+                var existing = selectedExisting.SingleOrDefault(s => s.TimeSlot == slot);
+                if (existing != null)
                 {
-                    _db.DoctorSchedules.Add(new DoctorSchedule
-                    {
-                        DoctorId = doctor.DoctorId,
-                        FacilityId = doctor.FacilityId,
-                        DateWorking = req.Date,
-                        TimeSlot = slot,
-                        SlotStatus = SlotStatus.AVAILABLE,
-                        Version = 0
-                    });
-                    addedCount++;
+                    existing.SlotStatus = SlotStatus.AVAILABLE;
+                    existing.FacilityId = doctor.FacilityId;
+                    existing.Version = (existing.Version ?? 0) + 1;
                 }
+                else _db.DoctorSchedules.Add(new DoctorSchedule
+                {
+                    DoctorId = doctor.DoctorId, FacilityId = doctor.FacilityId,
+                    DateWorking = req.Date, TimeSlot = slot, SlotStatus = SlotStatus.AVAILABLE, Version = 0
+                });
             }
+            var addedCount = slots.Count;
 
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -307,6 +308,8 @@ namespace WebDeveloper.Services
             var doctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId)
                 ?? throw new InvalidOperationException("Bác sĩ không tồn tại");
 
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({doctor.DoctorId})");
             var schedule = await _db.DoctorSchedules.FindAsync(scheduleId)
                 ?? throw new InvalidOperationException("Ca làm việc không tồn tại");
 
@@ -316,8 +319,14 @@ namespace WebDeveloper.Services
             if (schedule.SlotStatus == SlotStatus.BOOKED)
                 throw new InvalidOperationException("Ca làm việc đã có người đặt, không thể xóa");
 
+            if (VietnamTime.HasStarted(schedule.DateWorking, schedule.TimeSlot, VietnamTime.Now))
+                throw new InvalidOperationException("Ca làm việc đã đến giờ hoặc đã qua, không thể hủy.");
+            if (await _db.Appointments.AnyAsync(a => a.ScheduleId == scheduleId && a.BookingStatus != BookingStatus.CANCELLED))
+                throw new InvalidOperationException("Ca làm việc đã có lịch khám, không thể hủy.");
             schedule.SlotStatus = SlotStatus.CLOSED;
+            schedule.Version = (schedule.Version ?? 0) + 1;
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
             return "Đã đóng ca làm việc";
         }
 

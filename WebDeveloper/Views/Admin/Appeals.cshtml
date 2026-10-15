@@ -1,9 +1,33 @@
 @{ ViewData["Title"] = "Yêu cầu mở khóa"; Layout = "_AdminLayout"; }
-<h1>Yêu cầu mở khóa tài khoản</h1>
-<label>Trạng thái <select id="appealFilter"><option value="PENDING">Chờ duyệt</option><option value="APPROVED">Đã duyệt</option><option value="REJECTED">Từ chối</option></select></label>
-<p id="appealError" role="status"></p>
-<div id="appeals"></div>
-<button id="appealPrev">Trang trước</button> <span id="appealPage"></span> <button id="appealNext">Trang sau</button>
+<style>
+.appeals-panel { background:#fff; border:1px solid #e8ecf4; border-radius:24px; padding:28px; box-shadow:0 8px 30px #17255406; }
+.appeals-heading { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; }
+.appeals-heading h1 { font-size:24px; font-weight:800; color:#172033; margin:0 0 8px; }
+.appeals-heading p { font-size:14px; color:#64748b; margin:0; }
+.appeals-filter { display:grid; gap:8px; color:#475569; font-size:13px; font-weight:600; }
+.appeals-filter select { background:#f8fafc; border:1px solid #dce3ef; border-radius:10px; padding:10px 36px 10px 14px; font:inherit; }
+#appealError { text-align:center; padding:32px 16px; color:#64748b; background:#f8fafc; border-radius:16px; margin-top:24px; }
+#appealError:empty { display:none; }
+.appeal-card { border:1px solid #e2e8f0; border-radius:16px; padding:24px; margin-top:20px; overflow-wrap:anywhere; }
+.appeal-card p { margin:0 0 12px; color:#475569; font-size:14px; white-space:pre-wrap; }
+.appeal-card p:first-child { font-size:16px; color:#172033; font-weight:700; }
+.appeals-panel button { border:1px solid #e2e8f0; border-radius:10px; padding:10px 16px; font:inherit; font-size:13px; font-weight:600; cursor:pointer; background:#fff; color:#475569; margin-right:8px; }
+.appeals-panel button.approve { background:#7c3aed; color:white; border-color:#7c3aed; }
+.appeals-panel button.reject { background:#fff1f2; color:#e11d48; border-color:#ffe4e6; }
+.appeals-panel button:disabled { opacity:.45; cursor:not-allowed; }
+.appeal-pagination { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:24px; font-size:13px; }
+.appeal-pagination[hidden] { display:none; }
+@@media(max-width:600px) { .appeals-panel { padding:18px; } .appeals-heading h1 { font-size:20px; } .appeals-filter { width:100%; } }
+</style>
+<section class="appeals-panel">
+    <div class="appeals-heading">
+        <div><h1>Yêu cầu mở khóa tài khoản</h1><p>Xem xét yêu cầu và phản hồi lý do xử lý cho người dùng.</p></div>
+        <label class="appeals-filter">Trạng thái <select id="appealFilter"><option value="PENDING">Chờ duyệt</option><option value="APPROVED">Đã duyệt</option><option value="REJECTED">Từ chối</option></select></label>
+    </div>
+    <p id="appealError" role="status"></p>
+    <div id="appeals"></div>
+    <nav class="appeal-pagination" id="appealPagination" aria-label="Phân trang yêu cầu" hidden><button id="appealPrev">Trang trước</button><span id="appealPage"></span><button id="appealNext">Trang sau</button></nav>
+</section>
 @section Scripts {
 <script>
 let appealPage = 0;
@@ -16,14 +40,15 @@ async function loadAppeals() {
         const items = await res.json(); appealError.textContent = items.length ? '' : 'Không có phiếu.';
         document.getElementById('appealPrev').disabled = appealPage === 0;
         document.getElementById('appealNext').disabled = items.length < 20;
-        document.getElementById('appealPage').textContent = appealPage + 1;
+        document.getElementById('appealPage').textContent = 'Trang ' + (appealPage + 1);
+        document.getElementById('appealPagination').hidden = appealPage === 0 && items.length < 20;
         items.forEach(item => {
-            const card = document.createElement('section'); card.style.cssText = 'padding:24px;margin:16px 0;background:white;border-radius:16px;';
+            const card = document.createElement('section'); card.className = 'appeal-card';
             for (const text of [`${item.fullName || ''} (${item.email})`, 'Lý do khóa: ' + (item.reasonBanned || '—'), 'Lý do xin mở khóa: ' + item.reason, 'Ngày gửi: ' + new Date(item.createdAt).toLocaleString('vi-VN'), item.adminReason ? 'Kết quả: ' + item.adminReason : '']) {
                 if (!text) continue; const p = document.createElement('p'); p.textContent = text; card.append(p);
             }
             if (item.status === 'PENDING') [true,false].forEach(approve => {
-                const button = document.createElement('button'); button.textContent = approve ? 'Duyệt mở khóa' : 'Từ chối';
+                const button = document.createElement('button'); button.textContent = approve ? 'Duyệt mở khóa' : 'Từ chối'; button.className = approve ? 'approve' : 'reject';
                 button.onclick = async () => {
                     const reason = prompt('Nhập lý do ' + (approve ? 'mở khóa' : 'từ chối') + ' (3–1000 ký tự):');
                     if (!reason || reason.trim().length < 3 || reason.length > 1000) return;

@@ -190,6 +190,7 @@ namespace WebDeveloper.Services
                     throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có một lịch hẹn khác vào cùng thời gian!");
 
                 schedule.SlotStatus = SlotStatus.BOOKED;
+                schedule.Version = (schedule.Version ?? 0) + 1;
 
                 var appointment = new Appointment
                 {
