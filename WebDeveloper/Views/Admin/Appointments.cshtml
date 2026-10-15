@@ -72,6 +72,7 @@
     padding: 20px 24px;
     border-bottom: 1px solid #f1f5f9;
     font-size: 14px;
+    vertical-align: middle;
 }
 .premium-table tr:hover {
     background: #fafbfc;
@@ -88,10 +89,26 @@
 .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
 .pagination button {
     padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff;
-    border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569;
+    border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569; font-size: 14px;
+    transition: all 0.2s;
 }
-.pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; }
-.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+.pagination button:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
+.pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; font-weight: 700; }
+.pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.patient-name-link {
+    font-weight: 700; color: #1e293b; text-decoration: none; cursor: pointer; transition: color 0.2s;
+    border-bottom: 1px dashed #cbd5e1;
+}
+.patient-name-link:hover { color: #6366f1; border-color: #6366f1; }
+.patient-id-badge {
+    background: #eef2ff; color: #4f46e5; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; border: 1px solid #e0e7ff;
+}
+
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content { background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 560px; transform: scale(0.95); transition: transform 0.3s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
+.modal-overlay.active .modal-content { transform: scale(1); }
 </style>
 
 <div class="header-area">
@@ -128,6 +145,74 @@
     <div class="pagination" id="pagination"></div>
 </div>
 
+<!-- Modal Chi tiết lịch hẹn -->
+<div id="appointmentDetailModal" class="modal-overlay" onclick="closeAppointmentModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Chi tiết lịch hẹn</h3>
+                    <span id="modalAptIdBadge" class="patient-id-badge" style="font-size: 12px; padding: 3px 8px;"></span>
+                </div>
+                <p id="modalAptCreatedAt" style="margin: 4px 0 0; font-size: 13px; color: #64748b;"></p>
+            </div>
+            <div id="modalAptStatusSlot"></div>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 16px; padding: 18px; margin-bottom: 20px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6366f1; letter-spacing: 0.05em; margin-bottom: 12px;">👤 Thông tin bệnh nhân</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                <div>
+                    <span style="color: #94a3b8; display: block;">Họ và tên:</span>
+                    <b id="modalPatientName" style="color: #1e293b; font-size: 14px;">—</b>
+                </div>
+                <div>
+                    <span style="color: #94a3b8; display: block;">Mã bệnh nhân:</span>
+                    <b id="modalPatientId" style="color: #4f46e5; font-size: 14px;">—</b>
+                </div>
+                <div>
+                    <span style="color: #94a3b8; display: block;">Email:</span>
+                    <span id="modalPatientEmail" style="color: #1e293b; font-weight: 600;">—</span>
+                </div>
+                <div>
+                    <span style="color: #94a3b8; display: block;">Số điện thoại:</span>
+                    <span id="modalPatientPhone" style="color: #1e293b; font-weight: 600;">—</span>
+                </div>
+            </div>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 16px; padding: 18px; margin-bottom: 20px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #6366f1; letter-spacing: 0.05em; margin-bottom: 12px;">👨‍⚕️ Thông tin khám bệnh</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 13px;">
+                <div>
+                    <span style="color: #94a3b8; display: block;">Bác sĩ phụ trách:</span>
+                    <b id="modalDoctorName" style="color: #1e293b; font-size: 14px;">—</b>
+                </div>
+                <div>
+                    <span style="color: #94a3b8; display: block;">Chuyên khoa:</span>
+                    <b id="modalSpecialtyName" style="color: #4f46e5; font-size: 14px;">—</b>
+                </div>
+                <div>
+                    <span style="color: #94a3b8; display: block;">Thời gian khám:</span>
+                    <b id="modalAppointmentTime" style="color: #1e293b;">—</b>
+                </div>
+                <div>
+                    <span style="color: #94a3b8; display: block;">Cơ sở y tế:</span>
+                    <b id="modalFacilityName" style="color: #1e293b;">—</b>
+                </div>
+                <div style="grid-column: span 2;">
+                    <span style="color: #94a3b8; display: block; margin-bottom: 4px;">Lý do khám / Ghi chú:</span>
+                    <div id="modalReason" style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; color: #334155; font-size: 13px; line-height: 1.5; white-space: pre-wrap;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <button onclick="closeAppointmentModal()" style="padding: 10px 24px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; font-weight: 700; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='white'">Đóng</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
         let state = {
@@ -136,6 +221,15 @@
             size: 10,
             totalPages: 1
         };
+
+        let currentAppointmentsList = [];
+
+        function escapeHtml(value) {
+            if (!value) return '';
+            const span = document.createElement('span');
+            span.textContent = value;
+            return span.innerHTML.replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+        }
 
         const getStatusStyle = (status) => {
             const styles = {
@@ -152,7 +246,7 @@
         async function loadAppointments() {
             const version = ++requestVersion;
             const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">Đang tải dữ liệu...</td></tr>';
             
             let query = `?page=${state.page}&size=${state.size}`;
             if (state.status) query += `&status=${state.status}`;
@@ -166,14 +260,16 @@
                 if (version !== requestVersion) return;
                 
                 const list = data.content || [];
+                currentAppointmentsList = list;
                 state.totalPages = data.totalPages || 1;
 
                 if (list.length === 0) {
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 80px;">
-                                <div style="font-size: 48px; margin-bottom: 20px;">📅</div>
-                                <div style="color: #64748b; font-weight: 600;">Không có lịch hẹn nào thõa mãn</div>
+                            <td colspan="5" style="text-align: center; padding: 80px 20px;">
+                                <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
+                                <div style="color: #1e293b; font-size: 16px; font-weight: 700;">Không có lịch hẹn nào thỏa mãn</div>
+                                <div style="color: #64748b; font-size: 13px; margin-top: 4px;">Hãy thử chọn bộ lọc trạng thái khác.</div>
                             </td>
                         </tr>
                     `;
@@ -183,20 +279,24 @@
                         return `
                             <tr>
                                 <td>
-                                    <div style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">${apt.patientName || 'N/A'}</div>
-                                    <div style="font-size: 12px; color: #64748b;">📞 ${apt.patientPhone || 'N/A'}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                                        <span class="patient-id-badge">#${apt.patientId || '—'}</span>
+                                        <a href="javascript:void(0)" onclick="openAppointmentModal(${apt.appointmentId})" class="patient-name-link" title="Bấm để xem chi tiết lịch hẹn">${escapeHtml(apt.patientName || 'N/A')}</a>
+                                    </div>
+                                    <div style="font-size: 12px; color: #64748b; margin-bottom: 2px;">✉️ ${escapeHtml(apt.patientEmail || 'Chưa cập nhật')}</div>
+                                    <div style="font-size: 12px; color: #64748b;">📞 ${escapeHtml(apt.patientPhone || 'N/A')}</div>
                                 </td>
                                 <td>
-                                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">BS. ${apt.doctorName || 'N/A'}</div>
-                                    <div style="font-size: 12px; color: #4f46e5; font-weight: 700;">${apt.specialtyName || apt.specialty || ''}</div>
+                                    <div style="font-weight: 700; color: #1e293b; margin-bottom: 4px;">BS. ${escapeHtml(apt.doctorName || 'N/A')}</div>
+                                    <div style="font-size: 12px; color: #4f46e5; font-weight: 700;">${escapeHtml(apt.specialtyName || apt.specialty || '')}</div>
                                 </td>
                                 <td>
                                     <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px;">${apt.dateWorking || apt.appointmentDate}</div>
                                     <div style="font-size: 12px; color: #64748b;">${apt.timeSlot || apt.time}</div>
                                 </td>
                                 <td style="color: #475569; font-size: 13px; font-weight: 500;">
-                                    <div style="font-weight: 700;">${apt.facilityName || 'N/A'}</div>
-                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">${apt.facilityAddress || ''}</div>
+                                    <div style="font-weight: 700;">${escapeHtml(apt.facilityName || 'N/A')}</div>
+                                    <div style="font-size: 11px; opacity: 0.8; margin-top: 2px;">${escapeHtml(apt.facilityAddress || '')}</div>
                                 </td>
                                 <td>
                                     <span class="status-pill" style="background: ${st.bg}; color: ${st.color}; border-color: ${st.border};">
@@ -210,7 +310,7 @@
                 renderPagination();
             } catch (err) {
                 if (version !== requestVersion) return;
-                tbody.innerHTML = '<tr><td colspan="5">Không thể tải lịch hẹn. <button onclick="loadAppointments()">Thử lại</button></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:30px; color:#ef4444;">Không thể tải lịch hẹn. <button onclick="loadAppointments()" style="margin-left:8px; padding:4px 12px; background:#ef4444; color:white; border:none; border-radius:6px; cursor:pointer;">Thử lại</button></td></tr>';
                 console.error(err);
             }
         }
@@ -247,6 +347,35 @@
                 loadAppointments();
             });
         });
+
+        // Modal Chi tiết lịch hẹn
+        window.openAppointmentModal = function(appointmentId) {
+            const apt = currentAppointmentsList.find(a => a.appointmentId === appointmentId);
+            if (!apt) return;
+
+            document.getElementById('modalAptIdBadge').innerText = '#APT-' + apt.appointmentId;
+            document.getElementById('modalAptCreatedAt').innerText = apt.createdAt ? ('Ngày đặt: ' + new Date(apt.createdAt).toLocaleString('vi-VN')) : '';
+
+            const st = getStatusStyle(apt.bookingStatus || apt.status);
+            document.getElementById('modalAptStatusSlot').innerHTML = `<span class="status-pill" style="background: ${st.bg}; color: ${st.color}; border-color: ${st.border};">${st.label}</span>`;
+
+            document.getElementById('modalPatientName').innerText = apt.patientName || 'N/A';
+            document.getElementById('modalPatientId').innerText = apt.patientId ? ('#' + apt.patientId) : '—';
+            document.getElementById('modalPatientEmail').innerText = apt.patientEmail || 'Chưa cập nhật';
+            document.getElementById('modalPatientPhone').innerText = apt.patientPhone || 'Chưa cập nhật';
+
+            document.getElementById('modalDoctorName').innerText = 'BS. ' + (apt.doctorName || 'N/A');
+            document.getElementById('modalSpecialtyName').innerText = apt.specialtyName || '—';
+            document.getElementById('modalAppointmentTime').innerText = (apt.dateWorking || '—') + ' (' + (apt.timeSlot || '—') + ')';
+            document.getElementById('modalFacilityName').innerText = apt.facilityName || '—';
+            document.getElementById('modalReason').innerText = apt.reason || 'Không có ghi chú thêm.';
+
+            document.getElementById('appointmentDetailModal').classList.add('active');
+        };
+
+        window.closeAppointmentModal = function() {
+            document.getElementById('appointmentDetailModal').classList.remove('active');
+        };
 
         loadAppointments();
     </script>

@@ -117,8 +117,11 @@ namespace WebDeveloper.Controllers.Api
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers(
             [FromQuery] int page = 0,
-            [FromQuery] int size = 10)
-            => Ok(await _adminService.GetAllUsers(page, size));
+            [FromQuery] int size = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] RoleStatus? role = null,
+            [FromQuery] bool? isActive = null)
+            => Ok(await _adminService.GetAllUsers(page, size, search, role, isActive));
 
         [HttpPatch("users/{id}/block")]
         public async Task<IActionResult> BlockUser(int id, [FromQuery] string reason)

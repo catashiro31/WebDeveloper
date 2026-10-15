@@ -330,15 +330,49 @@ namespace WebDeveloper.Services
             return "Đã xóa";
         }
 
-        public async Task<PagedResult<object>> GetAllUsers(int page, int size)
+        public async Task<PagedResult<object>> GetAllUsers(int page, int size, string? search = null, RoleStatus? role = null, bool? isActive = null)
         {
-            var query = _db.Users.OrderByDescending(u => u.CreatedAt);
+            var query = _db.Users.AsNoTracking().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var trimmed = search.Trim();
+                if (int.TryParse(trimmed, out int uid))
+                {
+                    query = query.Where(u => u.UserId == uid 
+                        || (u.FullName != null && EF.Functions.ILike(EF.Functions.Unaccent(u.FullName), EF.Functions.Unaccent($"%{trimmed}%"), "\\"))
+                        || EF.Functions.ILike(u.Email, $"%{trimmed}%"));
+                }
+                else
+                {
+                    foreach (var word in trimmed.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var pattern = "%" + word.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+                        query = query.Where(u => (u.FullName != null && EF.Functions.ILike(EF.Functions.Unaccent(u.FullName), EF.Functions.Unaccent(pattern), "\\"))
+                            || EF.Functions.ILike(u.Email, pattern, "\\")
+                            || (u.PhoneNumber != null && EF.Functions.ILike(u.PhoneNumber, pattern, "\\")));
+                    }
+                }
+            }
+
+            if (role.HasValue)
+            {
+                query = query.Where(u => u.Role == role.Value);
+            }
+
+            if (isActive.HasValue)
+            {
+                query = query.Where(u => u.IsActive == isActive.Value);
+            }
+
+            query = query.OrderByDescending(u => u.CreatedAt);
             var total = await query.CountAsync();
             var items = await query.Skip(page * size).Take(size).Select(u => new
             {
                 u.UserId,
                 u.Email,
                 u.FullName,
+                u.PhoneNumber,
                 u.Role,
                 DoctorProfileStatus = u.Role == RoleStatus.DOCTOR
                     ? _db.DoctorDetails.Where(d => d.UserId == u.UserId)

@@ -60,7 +60,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> UpdateFacility(int id, FacilityRequest request);
         Task<string> VerifyFacility(int id);
         Task<string> DeleteFacility(int id);
-        Task<PagedResult<object>> GetAllUsers(int page, int size);
+        Task<PagedResult<object>> GetAllUsers(int page, int size, string? search = null, RoleStatus? role = null, bool? isActive = null);
         Task<string> BlockUser(int id, string reason);
         Task<string> UnblockUser(int id, string reason);
         Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size);

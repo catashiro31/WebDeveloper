@@ -5,25 +5,92 @@
 
 <style>
 .premium-table { width: 100%; border-collapse: separate; border-spacing: 0 12px; }
-.premium-table th { padding: 16px; text-align: left; color: #64748b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
-.premium-table tr td { padding: 16px; background: white; transition: all 0.2s; }
+.premium-table th { padding: 16px 20px; text-align: left; color: #64748b; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+.premium-table tr td { padding: 16px 20px; background: white; transition: all 0.2s; vertical-align: middle; }
 .premium-table tr td:first-child { border-radius: 16px 0 0 16px; border-left: 1px solid #f1f5f9; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
 .premium-table tr td:last-child { border-radius: 0 16px 16px 0; border-right: 1px solid #f1f5f9; border-top: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; }
-.premium-table tr:hover td { background: #f8fafc; transform: scaleY(1.02); border-color: #e2e8f0; }
+.premium-table tr:hover td { background: #f8fafc; border-color: #e2e8f0; }
+
 .user-avatar { width: 44px; height: 44px; border-radius: 50%; background: #f1f5f9; overflow: hidden; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #64748b; border: 1.5px solid #f1f5f9; flex-shrink: 0; }
-.pagination-dot { width: 8px; height: 8px; border-radius: 50%; background: #e2e8f0; cursor: pointer; transition: all 0.2s; }
-.pagination-dot.active { background: #6366f1; transform: scale(1.5); }
+
+.user-name-link {
+    font-weight: 800; color: #1e293b; font-size: 15px; text-decoration: none; cursor: pointer; transition: color 0.2s;
+    border-bottom: 1px dashed #cbd5e1;
+}
+.user-name-link:hover { color: #6366f1; border-color: #6366f1; }
+.user-id-badge {
+    background: #eef2ff; color: #4f46e5; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; border: 1px solid #e0e7ff;
+}
+
+.filter-card {
+    background: white; border-radius: 20px; padding: 18px 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
+    border: 1px solid #f1f5f9; margin-bottom: 24px; display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between;
+}
+.filter-search-wrap { position: relative; flex: 1; min-width: 260px; }
+.filter-search-wrap input {
+    width: 100%; padding: 11px 16px 11px 42px; border-radius: 12px; border: 1.5px solid #e2e8f0;
+    font-size: 14px; outline: none; transition: all 0.2s; box-sizing: border-box; font-family: var(--font-app);
+}
+.filter-search-wrap input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+.filter-search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #94a3b8; pointer-events: none; }
+
+.filter-select {
+    padding: 10px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 13px;
+    font-weight: 600; color: #1e293b; background: white; outline: none; cursor: pointer; transition: all 0.2s; font-family: var(--font-app);
+}
+.filter-select:focus { border-color: #6366f1; }
+
+.pagination { display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 32px; }
+.pagination button {
+    padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff;
+    border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569; font-size: 14px;
+    transition: all 0.2s;
+}
+.pagination button:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
+.pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; font-weight: 700; }
+.pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
+
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content { background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 480px; transform: scale(0.95); transition: transform 0.3s; }
+.modal-content { background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 480px; transform: scale(0.95); transition: transform 0.3s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
 .modal-overlay.active .modal-content { transform: scale(1); }
 </style>
 
 <div class="reveal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
             <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Quản lý người dùng</h2>
             <p style="margin: 4px 0 0; font-size: 15px; color: #64748b;">Phân quyền, kiểm soát trạng thái hoạt động toàn hệ thống.</p>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-card">
+        <div class="filter-search-wrap">
+            <span class="filter-search-icon">🔍</span>
+            <input type="text" id="userSearch" placeholder="Tìm theo tên, email, SĐT hoặc mã người dùng..." />
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 700; color: #64748b;">Vai trò:</label>
+                <select id="userRoleFilter" class="filter-select">
+                    <option value="">Tất cả</option>
+                    <option value="PATIENT">Bệnh nhân</option>
+                    <option value="DOCTOR">Bác sĩ</option>
+                    <option value="ADMIN">Quản trị viên</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <label style="font-size: 13px; font-weight: 700; color: #64748b;">Trạng thái:</label>
+                <select id="userStatusFilter" class="filter-select">
+                    <option value="">Tất cả</option>
+                    <option value="true">Hoạt động</option>
+                    <option value="false">Đã khóa</option>
+                </select>
+            </div>
+            <button onclick="resetFilters()" style="padding: 10px 16px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; font-size: 13px; font-weight: 700; color: #64748b; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='#f8fafc'">
+                Đặt lại
+            </button>
         </div>
     </div>
 
@@ -31,7 +98,9 @@
         <div class="skeleton" style="height: 400px; border-radius: 24px;"></div>
     </div>
 
-    <div id="listError" hidden role="alert">Không thể tải danh sách người dùng. <button onclick="fetchUsers()">Thử lại</button></div>
+    <div id="listError" hidden role="alert" style="background: #fef2f2; border: 1px solid #fee2e2; border-radius: 16px; padding: 24px; text-align: center; color: #b91c1c; font-weight: 600; margin-bottom: 24px;">
+        Không thể tải danh sách người dùng. <button onclick="fetchUsers()" style="margin-left: 8px; padding: 6px 14px; background: #ef4444; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;">Thử lại</button>
+    </div>
 
     <div id="tableContainer" style="display: none;">
         <table class="premium-table">
@@ -46,27 +115,109 @@
             <tbody id="userTableBody"></tbody>
         </table>
 
-        <div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 32px;">
-            <button id="btnPrev" onclick="setPage(currentPage - 1)" style="background: none; border: none; font-weight: 800; cursor: pointer;">← Trước</button>
-            <div id="paginationDots" style="display: flex; gap: 8px;"></div>
-            <button id="btnNext" onclick="setPage(currentPage + 1)" style="background: none; border: none; font-weight: 800; cursor: pointer;">Sau →</button>
-        </div>
+        <!-- Pagination formatted as [Trang trước] [1] [2] [Trang sau] -->
+        <div class="pagination" id="userPagination"></div>
     </div>
 </div>
 
+<!-- Modal Khóa tài khoản -->
 <div id="blockModal" class="modal-overlay" onclick="closeBlockModal()">
     <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 style="margin: 0 0 12px; font-size: 20px; font-weight: 800;">Khóa tài khoản</h3>
-        <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">Lý do khóa tài khoản của <b id="blockUserName"></b>:</p>
-        <textarea id="blockReason" placeholder="Nhập lý do chi tiết..." style="width: 100%; min-height: 100px; padding: 16px; border-radius: 16px; border: 1.5px solid #e2e8f0; outline: none; font-size: 14px; margin-bottom: 24px; box-sizing: border-box; font-family: var(--font-app);"></textarea>
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 22px;">🔒</div>
+            <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Khóa tài khoản</h3>
+                <p style="margin: 2px 0 0; font-size: 13px; color: #64748b;">Tạm ngừng quyền đăng nhập của người dùng.</p>
+            </div>
+        </div>
+        <p style="color: #475569; font-size: 14px; margin-bottom: 16px;">Tài khoản: <b id="blockUserName" style="color: #0f172a;"></b></p>
+        <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">Lý do khóa <span style="color: #ef4444;">*</span> (tối thiểu 3 ký tự):</label>
+        <textarea id="blockReason" placeholder="Nhập lý do chi tiết..." style="width: 100%; min-height: 100px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid #e2e8f0; outline: none; font-size: 14px; margin-bottom: 24px; box-sizing: border-box; font-family: var(--font-app);"></textarea>
         <div style="display: flex; gap: 12px;">
-            <button onclick="closeBlockModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; font-weight: 700; cursor: pointer;">Hủy</button>
-            <button id="btnSubmitBlock" onclick="submitBlock()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; cursor: pointer;">Gửi lệnh khóa</button>
+            <button onclick="closeBlockModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; font-weight: 700; color: #475569; cursor: pointer;">Hủy</button>
+            <button id="btnSubmitBlock" onclick="submitBlock()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; cursor: pointer; transition: background 0.2s;">Gửi lệnh khóa</button>
         </div>
     </div>
 </div>
 
-<p><a href="/Admin/Appeals">Xem và xử lý yêu cầu mở khóa tài khoản</a></p>
+<!-- Modal Mở khóa tài khoản -->
+<div id="unblockModal" class="modal-overlay" onclick="closeUnblockModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 14px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 22px;">🔓</div>
+            <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Mở khóa tài khoản</h3>
+                <p style="margin: 2px 0 0; font-size: 13px; color: #64748b;">Khôi phục quyền truy cập hệ thống cho người dùng.</p>
+            </div>
+        </div>
+        <p style="color: #475569; font-size: 14px; margin-bottom: 16px;">Tài khoản: <b id="unblockUserName" style="color: #0f172a;"></b></p>
+        <div id="unblockReasonPrevBox" style="display: none; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 14px; padding: 12px 16px; margin-bottom: 16px; font-size: 13px; color: #991b1b;">
+            <div style="font-weight: 700; margin-bottom: 2px;">Lý do đã bị khóa trước đó:</div>
+            <div id="unblockUserPrevReason" style="font-style: italic;"></div>
+        </div>
+        <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">Lý do mở khóa <span style="color: #ef4444;">*</span> (tối thiểu 3 ký tự):</label>
+        <textarea id="unblockReason" placeholder="Nhập lý do mở khóa chi tiết..." style="width: 100%; min-height: 100px; padding: 14px 16px; border-radius: 14px; border: 1.5px solid #e2e8f0; outline: none; font-size: 14px; margin-bottom: 24px; box-sizing: border-box; font-family: var(--font-app);"></textarea>
+        <div style="display: flex; gap: 12px;">
+            <button onclick="closeUnblockModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; font-weight: 700; color: #475569; cursor: pointer;">Hủy</button>
+            <button id="btnSubmitUnblock" onclick="submitUnblock()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #16a34a; color: white; font-weight: 700; cursor: pointer; transition: background 0.2s;">Xác nhận mở khóa</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Chi tiết người dùng -->
+<div id="userDetailModal" class="modal-overlay" onclick="closeUserDetailModal()">
+    <div class="modal-content" style="max-width: 540px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div id="detailAvatar" class="user-avatar" style="width: 56px; height: 56px; font-size: 20px;"></div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <h3 id="detailFullName" style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;"></h3>
+                        <span id="detailUserIdBadge" class="user-id-badge"></span>
+                    </div>
+                    <div id="detailEmail" style="color: #64748b; font-size: 13px; margin-top: 2px;"></div>
+                </div>
+            </div>
+            <button onclick="closeUserDetailModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 15px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 16px; padding: 18px; display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; font-size: 13px; border: 1px solid #f1f5f9;">
+            <div>
+                <span style="color: #94a3b8; display: block; margin-bottom: 4px;">Số điện thoại</span>
+                <b id="detailPhone" style="color: #1e293b; font-size: 14px;">—</b>
+            </div>
+            <div>
+                <span style="color: #94a3b8; display: block; margin-bottom: 4px;">Vai trò</span>
+                <div id="detailRole"></div>
+            </div>
+            <div>
+                <span style="color: #94a3b8; display: block; margin-bottom: 4px;">Trạng thái tài khoản</span>
+                <div id="detailStatus"></div>
+            </div>
+            <div>
+                <span style="color: #94a3b8; display: block; margin-bottom: 4px;">Ngày tham gia</span>
+                <b id="detailCreatedAt" style="color: #1e293b; font-size: 14px;">—</b>
+            </div>
+            <div id="detailDoctorStatusBox" style="grid-column: span 2; display: none;">
+                <span style="color: #94a3b8; display: block; margin-bottom: 4px;">Hồ sơ bác sĩ</span>
+                <b id="detailDoctorStatus" style="color: #1e293b; font-size: 14px;">—</b>
+            </div>
+            <div id="detailBanReasonBox" style="grid-column: span 2; display: none; background: #fef2f2; border: 1px solid #fee2e2; border-radius: 12px; padding: 12px;">
+                <span style="color: #b91c1c; font-weight: 700; display: block; margin-bottom: 2px;">Lý do bị khóa:</span>
+                <span id="detailBanReason" style="color: #991b1b; font-style: italic;"></span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button onclick="closeUserDetailModal()" style="padding: 10px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; font-weight: 700; color: #475569; cursor: pointer;">Đóng</button>
+            <div id="detailActionBtnSlot"></div>
+        </div>
+    </div>
+</div>
+
+<div style="margin-top: 24px;">
+    <a href="/Admin/Appeals" style="color: #6366f1; text-decoration: none; font-weight: 700; font-size: 14px;">📩 Xem và xử lý yêu cầu mở khóa tài khoản →</a>
+</div>
 
 @section Scripts {
     <script>
@@ -74,38 +225,75 @@
         let totalPages = 0;
         let selectedUserId = null;
         let blockPending = false;
-        const pendingUnblocks = new Set();
+        let unblockPending = false;
+        let usersDataList = [];
+        let searchTimer = null;
 
         function escapeHtml(value) {
+            if (!value) return '';
             const span = document.createElement('span');
             span.textContent = value;
             return span.innerHTML.replaceAll('"', '&quot;').replaceAll("'", '&#39;');
         }
 
         function getRoleBadge(role) {
+            const cleanRole = (role || '').replace('ROLE_', '');
             const styles = {
-                'ADMIN': { bg: '#fee2e2', color: '#dc2626', icon: '👑' },
-                'DOCTOR': { bg: '#eef2ff', color: '#4f46e5', icon: '👨‍⚕️' },
-                'PATIENT': { bg: '#f0fdf4', color: '#16a34a', icon: '👤' }
+                'ADMIN': { bg: '#fee2e2', color: '#dc2626', icon: '👑', label: 'Quản trị viên' },
+                'DOCTOR': { bg: '#eef2ff', color: '#4f46e5', icon: '👨‍⚕️', label: 'Bác sĩ' },
+                'PATIENT': { bg: '#f0fdf4', color: '#16a34a', icon: '👤', label: 'Bệnh nhân' }
             };
-            const s = styles[role] || { bg: '#f1f5f9', color: '#475569', icon: '❓' };
-            return `<span style="background: ${s.bg}; color: ${s.color}; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">${s.icon} ${role}</span>`;
+            const s = styles[cleanRole] || { bg: '#f1f5f9', color: '#475569', icon: '❓', label: cleanRole };
+            return `<span style="background: ${s.bg}; color: ${s.color}; padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">${s.icon} ${cleanRole}</span>`;
         }
 
         function setPage(page) {
-            if (page < 0 || page >= totalPages) return;
+            if (page < 0 || (totalPages > 0 && page >= totalPages)) return;
             currentPage = page;
             fetchUsers();
         }
+
+        function resetFilters() {
+            document.getElementById('userSearch').value = '';
+            document.getElementById('userRoleFilter').value = '';
+            document.getElementById('userStatusFilter').value = '';
+            currentPage = 0;
+            fetchUsers();
+        }
+
+        document.getElementById('userSearch').addEventListener('input', () => {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                currentPage = 0;
+                fetchUsers();
+            }, 300);
+        });
+
+        document.getElementById('userRoleFilter').addEventListener('change', () => {
+            currentPage = 0;
+            fetchUsers();
+        });
+
+        document.getElementById('userStatusFilter').addEventListener('change', () => {
+            currentPage = 0;
+            fetchUsers();
+        });
 
         function fetchUsers() {
             document.getElementById('listError').hidden = true;
             document.getElementById('loading').style.display = 'block';
             document.getElementById('tableContainer').style.display = 'none';
 
-            fetch(`/api/v1/admin/users?page=${currentPage}&size=10`, {
-                credentials: 'same-origin', cache: 'no-store'
-            })
+            const search = document.getElementById('userSearch').value.trim();
+            const role = document.getElementById('userRoleFilter').value;
+            const status = document.getElementById('userStatusFilter').value;
+
+            let url = `/api/v1/admin/users?page=${currentPage}&size=10`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+            if (role) url += `&role=${encodeURIComponent(role)}`;
+            if (status !== '') url += `&isActive=${encodeURIComponent(status)}`;
+
+            fetch(url, { credentials: 'same-origin', cache: 'no-store' })
             .then(async res => {
                 if (!res.ok) throw new Error(await readApiMessage(res));
                 return res.json();
@@ -113,7 +301,23 @@
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
                 const users = data.content || [];
+                usersDataList = users;
                 totalPages = data.totalPages || 0;
+
+                if (users.length === 0) {
+                    document.getElementById('userTableBody').innerHTML = `
+                        <tr>
+                            <td colspan="4" style="text-align: center; padding: 60px 20px; color: #64748b;">
+                                <div style="font-size: 40px; margin-bottom: 12px;">👥</div>
+                                <div style="font-size: 16px; font-weight: 700; color: #1e293b;">Không tìm thấy người dùng phù hợp</div>
+                                <div style="font-size: 13px; margin-top: 4px;">Hãy thử thay đổi điều kiện tìm kiếm hoặc bộ lọc.</div>
+                            </td>
+                        </tr>
+                    `;
+                    document.getElementById('tableContainer').style.display = 'block';
+                    document.getElementById('userPagination').innerHTML = '';
+                    return;
+                }
 
                 let html = '';
                 users.forEach(u => {
@@ -125,16 +329,17 @@
                     } else {
                         statusHtml = `<div>
                             <span style="color: #ef4444; display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span> Bị khóa</span>
-                            ${u.reasonBanned ? `<div style="font-size: 11px; color: #94a3b8; margin-top: 2px; max-width: 150px;">${escapeHtml(u.reasonBanned)}</div>` : ''}
+                            ${u.reasonBanned ? `<div style="font-size: 11px; color: #94a3b8; margin-top: 2px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(u.reasonBanned)}">Lý do: ${escapeHtml(u.reasonBanned)}</div>` : ''}
                         </div>`;
                     }
 
                     let actionHtml = '';
-                    if (u.role !== 'ROLE_ADMIN' && u.role !== 'ADMIN') {
+                    const cleanRole = (u.role || '').replace('ROLE_', '');
+                    if (cleanRole !== 'ADMIN') {
                         if (u.isActive) {
-                            actionHtml = `<button data-name="${escapeHtml(u.fullName || '')}" onclick="openBlockModal(${u.userId}, this.dataset.name)" style="background: #fee2e2; color: #ef4444; border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">Khóa</button>`;
+                            actionHtml = `<button data-id="${u.userId}" data-name="${escapeHtml(u.fullName || '')}" onclick="openBlockModal(${u.userId}, this.dataset.name)" style="background: #fee2e2; color: #ef4444; border: none; padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;" onmouseenter="this.style.background='#fecaca'" onmouseleave="this.style.background='#fee2e2'">Khóa</button>`;
                         } else {
-                            actionHtml = `<button onclick="unblockUser(${u.userId})" style="background: #dcfce7; color: #16a34a; border: none; padding: 8px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer;">Mở khóa</button>`;
+                            actionHtml = `<button data-id="${u.userId}" data-name="${escapeHtml(u.fullName || '')}" data-reason="${escapeHtml(u.reasonBanned || '')}" onclick="openUnblockModal(${u.userId}, this.dataset.name, this.dataset.reason)" style="background: #dcfce7; color: #16a34a; border: none; padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s;" onmouseenter="this.style.background='#bbf7d0'" onmouseleave="this.style.background='#dcfce7'">Mở khóa</button>`;
                         }
                     }
 
@@ -143,12 +348,18 @@
                             <div style="display: flex; align-items: center; gap: 16px;">
                                 <div class="user-avatar">${avatar}</div>
                                 <div>
-                                    <div style="font-weight: 800; color: #1e293b; font-size: 15px;">${escapeHtml(u.fullName || '')}</div>
-                                    <div style="color: #94a3b8; font-size: 12px;">${escapeHtml(u.email || '')}</div>
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <span class="user-id-badge">#${u.userId}</span>
+                                        <a href="javascript:void(0)" onclick="openUserDetailModal(${u.userId})" class="user-name-link" title="Bấm để xem chi tiết người dùng">${escapeHtml(u.fullName || 'Chưa đặt tên')}</a>
+                                    </div>
+                                    <div style="color: #64748b; font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                                        <span>✉️ ${escapeHtml(u.email || '')}</span>
+                                        ${u.phoneNumber ? `<span style="color: #94a3b8;">📞 ${escapeHtml(u.phoneNumber)}</span>` : ''}
+                                    </div>
                                 </div>
                             </div>
                         </td>
-                        <td>${getRoleBadge(u.role?.replace('ROLE_', '') || '')}${u.role?.replace('ROLE_', '') === 'DOCTOR' ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">${({APPROVED:'Hồ sơ đã duyệt', PENDING:'Hồ sơ chờ duyệt', REJECTED:'Hồ sơ bị từ chối'})[u.doctorProfileStatus] || 'Chưa có hồ sơ chuyên môn'}</div>` : ''}</td>
+                        <td>${getRoleBadge(u.role || '')}${cleanRole === 'DOCTOR' ? `<div style="margin-top:6px;font-size:12px;color:#64748b;">${({APPROVED:'Hồ sơ đã duyệt', PENDING:'Hồ sơ chờ duyệt', REJECTED:'Hồ sơ bị từ chối'})[u.doctorProfileStatus] || 'Chưa có hồ sơ'}</div>` : ''}</td>
                         <td>${statusHtml}</td>
                         <td style="text-align: right;">${actionHtml}</td>
                     </tr>`;
@@ -157,16 +368,7 @@
                 document.getElementById('userTableBody').innerHTML = html;
                 document.getElementById('tableContainer').style.display = 'block';
 
-                let dotsHtml = '';
-                for (let i = 0; i < totalPages; i++) {
-                    dotsHtml += `<div class="pagination-dot ${currentPage === i ? 'active' : ''}" onclick="setPage(${i})"></div>`;
-                }
-                document.getElementById('paginationDots').innerHTML = dotsHtml;
-
-                document.getElementById('btnPrev').style.color = currentPage === 0 ? '#cbd5e1' : '#6366f1';
-                document.getElementById('btnPrev').disabled = currentPage === 0;
-                document.getElementById('btnNext').style.color = currentPage >= totalPages - 1 ? '#cbd5e1' : '#6366f1';
-                document.getElementById('btnNext').disabled = currentPage >= totalPages - 1;
+                renderPagination();
             })
             .catch(error => {
                 document.getElementById('loading').style.display = 'none';
@@ -175,9 +377,28 @@
             });
         }
 
+        function renderPagination() {
+            const pagi = document.getElementById('userPagination');
+            if (totalPages <= 1) {
+                pagi.innerHTML = '';
+                return;
+            }
+
+            let html = `<button ${currentPage === 0 ? 'disabled' : ''} onclick="setPage(${currentPage - 1})">Trang trước</button>`;
+            for (let i = 0; i < totalPages; i++) {
+                if (i >= currentPage - 2 && i <= currentPage + 2) {
+                    html += `<button class="${currentPage === i ? 'active' : ''}" onclick="setPage(${i})">${i + 1}</button>`;
+                }
+            }
+            html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="setPage(${currentPage + 1})">Trang sau</button>`;
+            pagi.innerHTML = html;
+        }
+
+        // Modal Khóa
         window.openBlockModal = function(id, name) {
+            closeUserDetailModal();
             selectedUserId = id;
-            document.getElementById('blockUserName').innerText = name;
+            document.getElementById('blockUserName').innerText = name || ('Người dùng #' + id);
             document.getElementById('blockReason').value = '';
             document.getElementById('blockModal').classList.add('active');
         };
@@ -222,34 +443,122 @@
             .finally(() => { blockPending = false; btn.disabled = false; btn.innerText = 'Gửi lệnh khóa'; });
         };
 
-        window.unblockUser = function(id) {
-            if (pendingUnblocks.has(id)) return;
-            const reason = prompt("Nhập lý do mở khóa (ít nhất 3 ký tự):");
-            if (reason === null) return;
-            const trimmedReason = reason.trim();
-            if (!trimmedReason) {
+        // Modal Mở khóa (Giao diện chuẩn như Khóa)
+        window.openUnblockModal = function(id, name, prevReason) {
+            closeUserDetailModal();
+            selectedUserId = id;
+            document.getElementById('unblockUserName').innerText = name || ('Người dùng #' + id);
+            document.getElementById('unblockReason').value = '';
+            
+            const prevBox = document.getElementById('unblockReasonPrevBox');
+            const prevText = document.getElementById('unblockUserPrevReason');
+            if (prevReason && prevReason.trim()) {
+                prevText.innerText = prevReason.trim();
+                prevBox.style.display = 'block';
+            } else {
+                prevBox.style.display = 'none';
+            }
+
+            document.getElementById('unblockModal').classList.add('active');
+        };
+
+        window.closeUnblockModal = function() {
+            if (unblockPending) return;
+            document.getElementById('unblockModal').classList.remove('active');
+            selectedUserId = null;
+        };
+
+        window.submitUnblock = function() {
+            if (unblockPending || selectedUserId === null) return;
+            const reason = document.getElementById('unblockReason').value.trim();
+            if (!reason) {
                 showApiToast("Vui lòng nhập lý do mở khóa", "warning");
                 return;
             }
-            if (trimmedReason.length < 3) {
+            if (reason.length < 3) {
                 showApiToast("Lý do mở khóa phải từ 3 ký tự trở lên", "warning");
                 return;
             }
-            pendingUnblocks.add(id);
-            fetch(`/api/v1/admin/users/${id}/unblock?reason=${encodeURIComponent(trimmedReason)}`, {
+
+            const btn = document.getElementById('btnSubmitUnblock');
+            unblockPending = true;
+            btn.disabled = true; btn.innerText = 'Đang xử lý...';
+
+            fetch(`/api/v1/admin/users/${selectedUserId}/unblock?reason=${encodeURIComponent(reason)}`, {
                 method: 'PATCH',
                 credentials: 'same-origin'
             })
             .then(async res => {
                 if (res.ok) {
                     showApiToast("Đã mở khóa tài khoản", "success");
+                    unblockPending = false;
+                    closeUnblockModal();
                     fetchUsers();
                 } else {
                     showApiToast(await readApiMessage(res) || "Không thể mở khóa", "error");
                 }
             })
             .catch(() => showApiToast("Lỗi mạng", "error"))
-            .finally(() => pendingUnblocks.delete(id));
+            .finally(() => { unblockPending = false; btn.disabled = false; btn.innerText = 'Xác nhận mở khóa'; });
+        };
+
+        // Modal Xem chi tiết người dùng
+        window.openUserDetailModal = function(userId) {
+            const user = usersDataList.find(u => u.userId === userId);
+            if (!user) return;
+
+            document.getElementById('detailFullName').innerText = user.fullName || 'Chưa đặt tên';
+            document.getElementById('detailUserIdBadge').innerText = '#' + user.userId;
+            document.getElementById('detailEmail').innerText = user.email || '—';
+            document.getElementById('detailPhone').innerText = user.phoneNumber || 'Chưa cập nhật';
+            document.getElementById('detailRole').innerHTML = getRoleBadge(user.role || '');
+
+            const avatarEl = document.getElementById('detailAvatar');
+            if (user.avatarUrl) {
+                avatarEl.innerHTML = `<img src="${user.avatarUrl}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerText='${user.fullName?.charAt(0) || 'U'}'"/>`;
+            } else {
+                avatarEl.innerText = user.fullName?.charAt(0) || 'U';
+            }
+
+            if (user.isActive) {
+                document.getElementById('detailStatus').innerHTML = `<span style="color: #10b981; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #10b981;"></span> Đang hoạt động</span>`;
+                document.getElementById('detailBanReasonBox').style.display = 'none';
+            } else {
+                document.getElementById('detailStatus').innerHTML = `<span style="color: #ef4444; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;"><span style="width: 8px; height: 8px; border-radius: 50%; background: #ef4444;"></span> Đang bị khóa</span>`;
+                if (user.reasonBanned) {
+                    document.getElementById('detailBanReason').innerText = user.reasonBanned;
+                    document.getElementById('detailBanReasonBox').style.display = 'block';
+                } else {
+                    document.getElementById('detailBanReasonBox').style.display = 'none';
+                }
+            }
+
+            document.getElementById('detailCreatedAt').innerText = user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+
+            const cleanRole = (user.role || '').replace('ROLE_', '');
+            const docBox = document.getElementById('detailDoctorStatusBox');
+            if (cleanRole === 'DOCTOR') {
+                const docLabels = { APPROVED: '✅ Hồ sơ đã phê duyệt', PENDING: '⏳ Hồ sơ chờ duyệt', REJECTED: '❌ Hồ sơ bị từ chối' };
+                document.getElementById('detailDoctorStatus').innerText = docLabels[user.doctorProfileStatus] || 'Chưa có hồ sơ chuyên môn';
+                docBox.style.display = 'block';
+            } else {
+                docBox.style.display = 'none';
+            }
+
+            const actionSlot = document.getElementById('detailActionBtnSlot');
+            if (cleanRole === 'ADMIN') {
+                actionSlot.innerHTML = '';
+            } else if (user.isActive) {
+                actionSlot.innerHTML = `<button onclick="openBlockModal(${user.userId}, '${escapeHtml(user.fullName || '')}')" style="padding: 10px 18px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; cursor: pointer;">Khóa tài khoản</button>`;
+            } else {
+                actionSlot.innerHTML = `<button onclick="openUnblockModal(${user.userId}, '${escapeHtml(user.fullName || '')}', '${escapeHtml(user.reasonBanned || '')}')" style="padding: 10px 18px; border-radius: 12px; border: none; background: #16a34a; color: white; font-weight: 700; cursor: pointer;">Mở khóa tài khoản</button>`;
+            }
+
+            document.getElementById('userDetailModal').classList.add('active');
+        };
+
+        window.closeUserDetailModal = function() {
+            document.getElementById('userDetailModal').classList.remove('active');
         };
 
         fetchUsers();
