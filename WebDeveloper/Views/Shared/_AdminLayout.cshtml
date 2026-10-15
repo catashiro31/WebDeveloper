@@ -129,5 +129,6 @@
     <script src="/js/auth-logout.js" asp-append-version="true"></script>
     <script src="/js/api-messages.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
+    @await Html.PartialAsync("_Notifications")
 </body>
 </html>

@@ -1,0 +1,16 @@
+@if (User.Identity?.IsAuthenticated == true)
+{
+    <link rel="stylesheet" href="~/css/notifications.css" asp-append-version="true" />
+    <div id="notificationCenter">
+        <button id="notificationBell" type="button" aria-label="Thông báo" aria-expanded="false" aria-controls="notificationPanel">🔔<span id="notificationBadge" hidden></span></button>
+        <section id="notificationPanel" hidden aria-label="Hộp thông báo">
+            <div class="notification-toolbar"><strong>Thông báo</strong><button id="notificationClose" type="button" aria-label="Đóng thông báo">×</button></div>
+            <button id="notificationReadAll" type="button">Đánh dấu tất cả đã đọc</button>
+            <p id="notificationStatus" role="status"></p>
+            <div id="notificationList"></div>
+            <button id="notificationMore" type="button" hidden>Xem thêm</button>
+            <button id="notificationRetry" type="button" hidden>Thử lại</button>
+        </section>
+    </div>
+    <script src="~/js/notifications.js" asp-append-version="true" defer></script>
+}

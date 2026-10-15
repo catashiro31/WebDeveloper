@@ -9,6 +9,7 @@ namespace WebDeveloper.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<User> Users => Set<User>();
+        public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
         public DbSet<DoctorDetail> DoctorDetails => Set<DoctorDetail>();
         public DbSet<DoctorSchedule> DoctorSchedules => Set<DoctorSchedule>();
@@ -189,10 +190,17 @@ namespace WebDeveloper.Data
             return base.SaveChanges();
         }
 
-        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateTimestamps();
-            return base.SaveChangesAsync(cancellationToken);
+            var notifications = await NotificationEvents.Collect(this, cancellationToken);
+            Notifications.AddRange(notifications);
+            try { return await base.SaveChangesAsync(cancellationToken); }
+            catch
+            {
+                foreach (var notification in notifications) Entry(notification).State = EntityState.Detached;
+                throw;
+            }
         }
 
         /// <summary>
