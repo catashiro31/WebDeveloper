@@ -105,3 +105,9 @@ Thay các font hệ thống và cấu hình Inter còn sót bằng Noto Sans var
 ### Giữ sao khi ẩn nội dung đánh giá (2026-10-15)
 
 Đánh giá bị admin ẩn vì nội dung tiêu cực vẫn được trả về trong danh sách công khai và danh sách bác sĩ, giữ nguyên số sao và được tính vào ReviewCount/RatingAverage. Chỉ trường Comment được thay bằng “Nội dung tiêu cực đã được ẩn” ở giao diện. Dashboard admin cũng đếm toàn bộ đánh giá. Không xóa dữ liệu và vẫn cho admin hiện lại bài.
+
+### Naive Bayes hỗ trợ kiểm duyệt (2026-10-15)
+
+Thay điểm cố định/dò từ khóa frontend bằng multinomial Naive Bayes ở server. Từ điển tiếng Việt Blue Eyes (MIT) được lưu kèm giấy phép, commit nguồn và SHA256 trong Moderation/README.md. Mẫu spam/quảng cáo/thông thường do dự án biên soạn, không phải corpus đã kiểm định. Điểm mô hình chỉ dùng gợi ý; không tự ẩn bài và không đổi sao. Thêm ba hàng đợi thô tục/spam/quảng cáo, lọc và tìm trên toàn danh sách trước phân trang. Không gửi nội dung đánh giá ra dịch vụ ngoài.
+
+Build đạt; ModerationRegression đạt 8 ca phân loại và kiểm thử PostgreSQL lọc trước phân trang, không sửa trạng thái/sao (dữ liệu thử rollback). Chromium chạy JavaScript view thật với API giả lập đạt chuyển tab spam/quảng cáo, không pageerror. CatalogRegression hiện thất bại ở kỳ vọng tìm bio `dau dau`, do PublicService hiện chủ động không tìm Bio/FacilityName; không thay đổi hành vi tìm kiếm trong task này. Restore báo cảnh báo dependency PKCS 10.0.0 đã có, không nâng dependency ngoài phạm vi.

@@ -408,29 +408,36 @@ namespace WebDeveloper.Services
             return PagedResult<AppointmentAdminResponse>.Create(dtos, page, size, total);
         }
 
-        public async Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size)
+        public async Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size, string? category = null, string? search = null)
         {
-            var query = _db.Reviews
-                .Include(r => r.Appointment).ThenInclude(a => a.Patient).ThenInclude(p => p.User)
-                .Include(r => r.Appointment).ThenInclude(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.User)
+            var query = _db.Reviews.AsNoTracking()
                 .OrderByDescending(r => r.CreatedAt);
 
-            var total = await query.CountAsync();
-            var items = await query.Skip(page * size).Take(size).ToListAsync();
-
-            var dtos = items.Select(r => new ReviewAdminResponse
+            var dtos = await query.Select(r => new ReviewAdminResponse
             {
                 ReviewId = r.ReviewId,
-                PatientName = r.Appointment.Patient.User?.FullName ?? r.Appointment.Patient.FullName,
+                PatientName = r.Appointment.Patient.User.FullName ?? r.Appointment.Patient.FullName,
                 DoctorName = r.Appointment.Schedule.Doctor.User.FullName,
                 Rating = r.Rating,
                 Comment = r.Comment,
                 CreatedAt = r.CreatedAt,
-                IsVisible = r.IsVisible,
-                AiLabels = AnalyzeComment(r.Comment ?? "")
-            }).ToList();
+                IsVisible = r.IsVisible
+            }).ToListAsync();
+            foreach (var review in dtos) review.AiLabels = AnalyzeComment(review.Comment ?? "");
 
-            return PagedResult<ReviewAdminResponse>.Create(dtos, page, size, total);
+            var filtered = dtos.AsEnumerable();
+            if (category == "visible") filtered = filtered.Where(r => r.IsVisible != false);
+            else if (category == "hidden") filtered = filtered.Where(r => r.IsVisible == false);
+            else if (category is "profane" or "spam" or "advertising")
+            {
+                var label = category == "profane" ? "Thô tục" : category == "spam" ? "Spam" : "Quảng cáo";
+                filtered = filtered.Where(r => WebDeveloper.Moderation.ReviewClassifier.Suggestion(r.AiLabels!) == label);
+            }
+            if (!string.IsNullOrWhiteSpace(search)) filtered = filtered.Where(r =>
+                string.Join(' ', r.PatientName, r.DoctorName, r.Comment).Contains(search.Trim(), StringComparison.OrdinalIgnoreCase));
+            var matching = filtered.ToList();
+            return PagedResult<ReviewAdminResponse>.Create(matching.Skip(Math.Max(0, page) * Math.Clamp(size, 1, 100)).Take(Math.Clamp(size, 1, 100)).ToList(), Math.Max(0, page), Math.Clamp(size, 1, 100), matching.Count);
+
         }
 
         public async Task<string> RejectReview(int id)
@@ -465,66 +472,7 @@ namespace WebDeveloper.Services
             return willBeVisible ? "Đã hiển thị lại bài đánh giá" : "Đã ẩn bài đánh giá";
         }
 
-        // Tự động phân tích và thanh lọc bình luận tiếng Việt (phát hiện từ ngữ thô tục / phản cảm)
         public Dictionary<string, double> AnalyzeComment(string text)
-        {
-            var results = new Dictionary<string, double>();
-            if (string.IsNullOrWhiteSpace(text)) return results;
-
-            var lower = text.ToLowerInvariant();
-            
-            // Danh sách các từ khóa thô tục, phản cảm thường gặp trong tiếng Việt
-            var vulgarKeywords = new[]
-            {
-                "đm", "dm", "đcm", "dcm", "vcl", "vcll", "vl", "cl", "đụ", "cặc", "lồn",
-                "địt", "ngu", "chó", "khốn nạn", "mẹ kiếp", "lừa đảo", "súc vật", "con đĩ",
-                "đĩ", "mất dạy", "bố láo", "khốn khiếp", "đếch", "mẹ mày", "con mẹ",
-                "thằng điên", "con điên", "đồ chó", "đéo", "đeo", "dmm", "đmm"
-            };
-
-            bool isVulgar = false;
-            // Tách từ để kiểm tra chính xác hoặc kiểm tra từ ghép
-            var words = lower.Split(new[] { ' ', ',', '.', '!', '?', ';', ':', '-', '_', '\n', '\r', '\t' }, StringSplitOptions.RemoveEmptyEntries);
-            foreach (var kw in vulgarKeywords)
-            {
-                if (kw.Contains(' '))
-                {
-                    if (lower.Contains(kw)) { isVulgar = true; break; }
-                }
-                else
-                {
-                    if (words.Contains(kw)) { isVulgar = true; break; }
-                }
-            }
-
-            if (isVulgar)
-            {
-                results["Thô tục"] = 95.0;
-                results["Cần xem xét"] = 100.0;
-                results["Tiêu cực"] = 80.0;
-                results["Tích cực"] = 5.0;
-            }
-            else
-            {
-                // Kiểm tra tiêu cực thông thường
-                var negativeKeywords = new[] { "tệ", "kém", "chán", "dở", "thất vọng", "bực", "chờ lâu", "chậm", "khó chịu" };
-                bool isNegative = negativeKeywords.Any(n => lower.Contains(n));
-
-                if (isNegative)
-                {
-                    results["Tiêu cực"] = 75.0;
-                    results["Tích cực"] = 20.0;
-                    results["Thô tục"] = 0.0;
-                }
-                else
-                {
-                    results["Tích cực"] = 85.0;
-                    results["Tiêu cực"] = 10.0;
-                    results["Thô tục"] = 0.0;
-                }
-            }
-
-            return results;
-        }
+            => WebDeveloper.Moderation.ReviewClassifier.Instance.Classify(text);
     }
 }

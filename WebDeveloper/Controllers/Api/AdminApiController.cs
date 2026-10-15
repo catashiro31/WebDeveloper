@@ -144,9 +144,9 @@ namespace WebDeveloper.Controllers.Api
         [HttpGet("reviews")]
         public async Task<IActionResult> GetAllReviews(
             [FromQuery] int page = 0,
-            [FromQuery] int size = 10)
+            [FromQuery] int size = 10, [FromQuery] string? category = null, [FromQuery] string? search = null)
         {
-            return Ok(await _adminService.GetAllReviews(page, size));
+            return Ok(await _adminService.GetAllReviews(page, size, category, search));
         }
 
         [HttpPatch("reviews/{id}/hide")]

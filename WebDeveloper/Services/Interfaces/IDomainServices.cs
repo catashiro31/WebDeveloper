@@ -64,7 +64,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> BlockUser(int id, string reason);
         Task<string> UnblockUser(int id);
         Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size);
-        Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size);
+        Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size, string? category = null, string? search = null);
         Task<string> RejectReview(int id);
         Dictionary<string, double> AnalyzeComment(string text);
     }
