@@ -4,7 +4,20 @@ function showApiToast(message, type = 'success') {
     const background = type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#10b981';
     if (typeof Toastify === 'function') {
         try {
-            Toastify({ text: message, duration: 5000, style: { background } }).showToast();
+            Toastify({
+                text: message,
+                duration: 2500,
+                gravity: 'top',
+                position: 'center',
+                style: {
+                    background,
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.18)',
+                    fontWeight: '600',
+                    fontSize: '14px',
+                    padding: '12px 24px'
+                }
+            }).showToast();
             return;
         } catch (_) {}
     }
@@ -17,7 +30,7 @@ function showApiToast(message, type = 'success') {
     notification.style.backgroundColor = background;
     notification.textContent = message;
     document.body.appendChild(notification);
-    setTimeout(() => notification.remove(), 5000);
+    setTimeout(() => notification.remove(), 2500);
 }
 
 async function fetchApiList(url) {

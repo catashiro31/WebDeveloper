@@ -1,21 +1,27 @@
 .toastify {
     box-sizing: border-box;
-    max-width: min(380px, calc(100vw - 32px));
+    max-width: min(420px, calc(100vw - 32px));
     white-space: normal;
     overflow-wrap: anywhere;
+    border-radius: 12px;
+    z-index: 99999 !important;
 }
 
 .api-toast {
     position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 2000;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 99999;
     box-sizing: border-box;
-    max-width: min(380px, calc(100vw - 32px));
-    padding: 12px 20px;
-    border-radius: 10px;
+    max-width: min(420px, calc(100vw - 32px));
+    padding: 12px 24px;
+    border-radius: 12px;
     color: white;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
     white-space: normal;
     overflow-wrap: anywhere;
+    text-align: center;
 }

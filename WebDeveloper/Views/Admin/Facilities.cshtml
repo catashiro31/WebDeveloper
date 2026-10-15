@@ -146,7 +146,7 @@
 
             <div style="display: flex; gap: 16px; margin-top: 32px;">
                 <button type="button" class="btn-card-action" style="flex: 1; padding: 14px;" onclick="closeModal()">Hủy bỏ</button>
-                <button type="submit" id="submitBtn" class="add-facility-btn" style="flex: 2; justify-content: center; padding: 14px;">Gia nhập mạng lưới</button>
+                <button type="submit" id="submitBtn" class="add-facility-btn" style="flex: 2; justify-content: center; padding: 14px;">Thêm cơ sở</button>
             </div>
         </form>
     </div>
@@ -305,7 +305,7 @@
                 document.getElementById('licenseText').textContent = 'Tải lên Giấy phép hoạt động (JPG, PNG hoặc PDF; tối đa 5 MB)';
                 document.getElementById('licenseBox').style.borderColor = '#ef4444';
                 document.getElementById('licenseLink').style.display = 'none';
-                document.getElementById('submitBtn').innerText = 'Gia nhập mạng lưới';
+                document.getElementById('submitBtn').innerText = 'Thêm cơ sở';
             }
             
             document.getElementById('facilityModal').classList.add('active');
@@ -393,7 +393,7 @@
                 }
             })
             .catch(() => showFacilityError("Lỗi mạng. Vui lòng thử lại."))
-            .finally(() => { btn.disabled = false; btn.innerText = editingFacility ? 'Lưu thay đổi' : 'Gia nhập mạng lưới'; });
+            .finally(() => { btn.disabled = false; btn.innerText = editingFacility ? 'Lưu thay đổi' : 'Thêm cơ sở'; });
         };
 
         window.deleteFacility = function(id) {

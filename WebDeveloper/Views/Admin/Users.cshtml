@@ -195,6 +195,10 @@
                 showApiToast("Vui lòng nhập lý do khóa", "warning");
                 return;
             }
+            if (reason.length < 3) {
+                showApiToast("Lý do khóa phải từ 3 ký tự trở lên", "warning");
+                return;
+            }
 
             const btn = document.getElementById('btnSubmitBlock');
             blockPending = true;
@@ -221,9 +225,18 @@
         window.unblockUser = function(id) {
             if (pendingUnblocks.has(id)) return;
             const reason = prompt("Nhập lý do mở khóa (ít nhất 3 ký tự):");
-            if (!reason || reason.trim().length < 3) return;
+            if (reason === null) return;
+            const trimmedReason = reason.trim();
+            if (!trimmedReason) {
+                showApiToast("Vui lòng nhập lý do mở khóa", "warning");
+                return;
+            }
+            if (trimmedReason.length < 3) {
+                showApiToast("Lý do mở khóa phải từ 3 ký tự trở lên", "warning");
+                return;
+            }
             pendingUnblocks.add(id);
-            fetch(`/api/v1/admin/users/${id}/unblock?reason=${encodeURIComponent(reason.trim())}`, {
+            fetch(`/api/v1/admin/users/${id}/unblock?reason=${encodeURIComponent(trimmedReason)}`, {
                 method: 'PATCH',
                 credentials: 'same-origin'
             })

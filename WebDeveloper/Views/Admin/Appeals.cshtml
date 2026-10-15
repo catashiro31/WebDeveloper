@@ -51,10 +51,19 @@ async function loadAppeals() {
                 const button = document.createElement('button'); button.textContent = approve ? 'Duyệt mở khóa' : 'Từ chối'; button.className = approve ? 'approve' : 'reject';
                 button.onclick = async () => {
                     const reason = prompt('Nhập lý do ' + (approve ? 'mở khóa' : 'từ chối') + ' (3–1000 ký tự):');
-                    if (!reason || reason.trim().length < 3 || reason.length > 1000) return;
+                    if (reason === null) return;
+                    const trimmedReason = reason.trim();
+                    if (!trimmedReason) {
+                        showApiToast('Vui lòng nhập lý do ' + (approve ? 'mở khóa' : 'từ chối'), 'warning');
+                        return;
+                    }
+                    if (trimmedReason.length < 3) {
+                        showApiToast('Lý do phải từ 3 ký tự trở lên', 'warning');
+                        return;
+                    }
                     card.querySelectorAll('button').forEach(b => b.disabled = true);
                     try {
-                        const response = await fetch(`/api/v1/admin/appeals/${item.id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({approve,reason:reason.trim()})});
+                        const response = await fetch(`/api/v1/admin/appeals/${item.id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({approve,reason:trimmedReason})});
                         if (!response.ok) throw new Error(await readApiMessage(response));
                         await loadAppeals();
                     } catch(error) { appealError.textContent = error.message; card.querySelectorAll('button').forEach(b => b.disabled = false); }
