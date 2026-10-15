@@ -81,10 +81,10 @@ namespace WebDeveloper.Controllers.Api
         }
 
         [HttpPut("appointments/{id}/cancel")]
-        public async Task<IActionResult> CancelAppointment(int id)
+        public async Task<IActionResult> CancelAppointment(int id, [FromQuery] string? reason = null)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
-            return Ok(await _patientService.CancelAppointment(user, id));
+            return Ok(await _patientService.CancelAppointment(user, id, reason));
         }
 
         [HttpGet("history")]

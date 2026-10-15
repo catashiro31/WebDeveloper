@@ -3,7 +3,6 @@
     Layout = "_AdminLayout";
 }
 
-<label style="display:block;margin:16px 0;">Tìm cơ sở y tế<input id="adminSearch" type="search" placeholder="Tìm cơ sở y tế…" style="display:block;width:min(100%,440px);padding:12px;border:1px solid #cbd5e1;border-radius:10px;" /></label>
 <style>
 .facility-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); gap: 24px; }
 .facility-card { background: #ffffff; border-radius: 24px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden; display: flex; flex-direction: column; }
@@ -34,7 +33,7 @@
 </style>
 
 <div class="reveal">
-    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
         <div>
             <h2 style="margin: 0; font-size: 28px; font-weight: 800; color: #1e293b;">Cơ sở y tế</h2>
             <p style="margin: 8px 0 0; font-size: 15px; color: #64748b;">Quản lý hệ thống bệnh viện, phòng khám liên kết trên nền tảng</p>
@@ -45,6 +44,35 @@
             </svg>
             <span>Thêm cơ sở</span>
         </button>
+    </div>
+
+    <!-- Thanh tìm kiếm & lọc theo khu vực -->
+    <div style="background: white; border-radius: 20px; padding: 18px 24px; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 240px;">
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🔍 Tìm kiếm cơ sở y tế</label>
+                <input id="adminSearch" type="search" placeholder="Nhập tên cơ sở y tế..." style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; box-sizing: border-box;" />
+            </div>
+            <div style="min-width: 200px;">
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">📍 Lọc theo khu vực</label>
+                <select id="provinceFilter" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; color: #1e293b; box-sizing: border-box;">
+                    <option value="">Tất cả khu vực</option>
+                    <option value="Hà Nội">Hà Nội</option>
+                    <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="Hải Phòng">Hải Phòng</option>
+                    <option value="Cần Thơ">Cần Thơ</option>
+                    <option value="Bình Dương">Bình Dương</option>
+                    <option value="Đồng Nai">Đồng Nai</option>
+                    <option value="Nghệ An">Nghệ An</option>
+                </select>
+            </div>
+            <div>
+                <button type="button" onclick="resetFacilityFilters()" style="padding: 10px 18px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='#f8fafc'">
+                    🔄 Đặt lại
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="loading" style="text-align: center; padding: 100px; color: #64748b;">Đang nạp dữ liệu cơ sở y tế...</div>
@@ -156,6 +184,13 @@
     <script>
         let searchTimer, searchVersion = 0;
         document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => {  fetchFacilities(); }, 250); });
+        document.getElementById('provinceFilter').addEventListener('change', () => { fetchFacilities(); });
+
+        window.resetFacilityFilters = function() {
+            document.getElementById('adminSearch').value = '';
+            document.getElementById('provinceFilter').value = '';
+            fetchFacilities();
+        };
 
         let facilitiesList = [];
         let editingFacility = null;
@@ -185,7 +220,11 @@
             document.getElementById('loadError').style.display = 'none';
             document.getElementById('facilitiesContainer').style.display = 'none';
 
-            fetch('/api/v1/admin/facilities?search=' + encodeURIComponent(document.getElementById('adminSearch').value), { cache: 'no-store' })
+            let url = '/api/v1/admin/facilities?search=' + encodeURIComponent(document.getElementById('adminSearch').value.trim());
+            const province = document.getElementById('provinceFilter').value;
+            if (province) url += '&province=' + encodeURIComponent(province);
+
+            fetch(url, { cache: 'no-store' })
             .then(async res => {
                 if (!res.ok) throw new Error(await readApiMessage(res));
                 const data = await res.json();

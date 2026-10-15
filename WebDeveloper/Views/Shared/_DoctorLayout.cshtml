@@ -151,13 +151,6 @@
 
                 if (isApproved) {
                     document.getElementById('mainNav').style.display = 'flex';
-                    if (profile.lastTransferStatus) {
-                        const notice = document.createElement('div');
-                        notice.setAttribute('role', 'status');
-                        notice.style.cssText = 'padding:16px;margin-bottom:16px;background:#eef2ff;color:#3730a3;border-radius:12px;';
-                        notice.textContent = (profile.lastTransferStatus === 'APPROVED' ? 'Yêu cầu chuyển công tác đã được duyệt.' : 'Yêu cầu chuyển công tác đã bị từ chối.') + (profile.lastTransferNote ? ' Ghi chú: ' + profile.lastTransferNote : '');
-                        document.getElementById('mainContentArea').prepend(notice);
-                    }
                     fetchOverdueCount();
                 } else {
                     document.getElementById('unverifiedMsg').style.display = 'block';

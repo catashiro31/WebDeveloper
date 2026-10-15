@@ -186,7 +186,11 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        context.Database.Migrate();
+        try { context.Database.Migrate(); } catch { }
+        context.Database.ExecuteSqlRaw(@"
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancellation_reason text;
+            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancelled_by text;
+        ");
     }
     catch (Exception ex)
     {

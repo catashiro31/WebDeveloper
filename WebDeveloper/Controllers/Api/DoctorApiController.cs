@@ -89,7 +89,7 @@ namespace WebDeveloper.Controllers.Api
 
         [HttpPut("appointment/{id}/status")]
         [Authorize(Roles = "DOCTOR")]
-        public async Task<IActionResult> UpdateBookStatus(int id, [FromQuery] BookingStatus status)
+        public async Task<IActionResult> UpdateBookStatus(int id, [FromQuery] BookingStatus status, [FromQuery] string? reason = null)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
             if (status == BookingStatus.CONFIRMED)
@@ -98,7 +98,7 @@ namespace WebDeveloper.Controllers.Api
                 return Ok(await _doctorService.CompleteAppointment(user, id));
             
             if (status == BookingStatus.CANCELLED || status == BookingStatus.NO_SHOW)
-                return Ok(await _doctorService.DeclineAppointment(user, id, status));
+                return Ok(await _doctorService.DeclineAppointment(user, id, status, reason));
             return BadRequest("Lỗi cập nhật trạng thái");
         }
 

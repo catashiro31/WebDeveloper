@@ -75,13 +75,18 @@ namespace WebDeveloper.Services
             return query;
         }
 
-        public async Task<PagedResult<object>> GetAllDoctors(int page, int size, string? search = null)
+        public async Task<PagedResult<object>> GetAllDoctors(int page, int size, string? search = null, int? specialtyId = null, int? facilityId = null)
         {
             var query = SearchDoctors(ApprovedDoctors(), search)
                 .Include(d => d.User)
                 .Include(d => d.Specialty)
                 .Include(d => d.Facility)
-                .OrderByDescending(d => d.DoctorId);
+                .AsQueryable();
+
+            if (specialtyId.HasValue) query = query.Where(d => d.SpecialtyId == specialtyId.Value);
+            if (facilityId.HasValue) query = query.Where(d => d.FacilityId == facilityId.Value);
+
+            query = query.OrderByDescending(d => d.DoctorId);
 
             var total = await query.CountAsync();
             var items = await query.Skip(page * size).Take(size).ToListAsync();
@@ -103,14 +108,18 @@ namespace WebDeveloper.Services
             return PagedResult<object>.Create(dtos, page, size, total);
         }
 
-        public async Task<List<object>> GetPendingDoctors(string? search = null)
+        public async Task<List<object>> GetPendingDoctors(string? search = null, int? specialtyId = null, int? facilityId = null)
         {
-            var items = await SearchDoctors(_db.DoctorDetails, search)
+            var query = SearchDoctors(_db.DoctorDetails, search)
                 .Include(d => d.User)
                 .Include(d => d.Specialty)
                 .Include(d => d.Facility)
-                .Where(d => d.VerificationStatus == VerificationStatus.PENDING)
-                .ToListAsync();
+                .Where(d => d.VerificationStatus == VerificationStatus.PENDING);
+
+            if (specialtyId.HasValue) query = query.Where(d => d.SpecialtyId == specialtyId.Value);
+            if (facilityId.HasValue) query = query.Where(d => d.FacilityId == facilityId.Value);
+
+            var items = await query.ToListAsync();
 
             return items.Select(d => new
             {
@@ -448,13 +457,16 @@ namespace WebDeveloper.Services
             return $"Đã mở khóa tài khoản {id}";
         }
 
-        public async Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size)
+        public async Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size, int? doctorId = null, int? facilityId = null, DateOnly? appointmentDate = null)
         {
             var query = _db.Appointments.AsNoTracking().AsQueryable();
 
             if (dateFrom.HasValue) query = query.Where(a => a.CreatedAt >= dateFrom.Value.ToDateTime(TimeOnly.MinValue));
             if (dateTo.HasValue) query = query.Where(a => a.CreatedAt < dateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue));
             if (status.HasValue) query = query.Where(a => a.BookingStatus == status.Value);
+            if (doctorId.HasValue) query = query.Where(a => a.Schedule.DoctorId == doctorId.Value);
+            if (facilityId.HasValue) query = query.Where(a => a.Schedule.Doctor.FacilityId == facilityId.Value);
+            if (appointmentDate.HasValue) query = query.Where(a => a.Schedule.DateWorking == appointmentDate.Value);
 
             query = query.OrderByDescending(a => a.CreatedAt);
             var total = await query.CountAsync();
@@ -472,6 +484,8 @@ namespace WebDeveloper.Services
                 DateWorking = a.Schedule.DateWorking,
                 TimeSlot = a.Schedule.TimeSlot.GetDisplayValue(),
                 Reason = a.Reason,
+                CancellationReason = a.CancellationReason,
+                CancelledBy = a.CancelledBy,
                 BookingStatus = a.BookingStatus,
                 CreatedAt = a.CreatedAt
             }).ToListAsync();

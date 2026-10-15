@@ -223,7 +223,7 @@ namespace WebDeveloper.Services
             }
         }
 
-        public async Task<string> CancelAppointment(User user, int appointmentId)
+        public async Task<string> CancelAppointment(User user, int appointmentId, string? reason = null)
         {
             var app = await _db.Appointments
                 .Include(a => a.Patient)
@@ -254,6 +254,9 @@ namespace WebDeveloper.Services
             }
 
             app.BookingStatus = BookingStatus.CANCELLED;
+            app.CancelledBy = "PATIENT";
+            app.CancellationReason = string.IsNullOrWhiteSpace(reason) ? "Bệnh nhân yêu cầu hủy" : reason.Trim();
+
             var today = DateOnly.FromDateTime(DateTime.UtcNow);
             if (app.Schedule.DateWorking >= today)
             {
@@ -299,6 +302,8 @@ namespace WebDeveloper.Services
                 DateWorking = a.Schedule.DateWorking,
                 TimeSlot = a.Schedule.TimeSlot.GetDisplayValue(),
                 BookingStatus = a.BookingStatus.ToString(),
+                CancellationReason = a.CancellationReason,
+                CancelledBy = a.CancelledBy,
                 CreatedAt = a.CreatedAt,
                 HasResult = results.Contains(a.Id)
             }).ToList();
@@ -333,6 +338,8 @@ namespace WebDeveloper.Services
                 DateWorking = a.Schedule.DateWorking,
                 TimeSlot = a.Schedule.TimeSlot.GetDisplayValue(),
                 BookingStatus = a.BookingStatus.ToString(),
+                CancellationReason = a.CancellationReason,
+                CancelledBy = a.CancelledBy,
                 CreatedAt = a.CreatedAt,
                 HasResult = result != null,
                 FollowUpDate = result?.FollowUpDate,

@@ -48,6 +48,8 @@ namespace WebDeveloper.Models.DTOs.Admin
         public string? TimeSlot { get; set; }
         public string? Reason { get; set; }
         public BookingStatus BookingStatus { get; set; }
+        public string? CancellationReason { get; set; }
+        public string? CancelledBy { get; set; }
         public DateTime? CreatedAt { get; set; }
     }
 

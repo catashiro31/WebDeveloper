@@ -14,7 +14,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> RegisterDoctor(User user, DoctorProfileRequest request);
         Task<DoctorProfileResponse> ChangeProfile(User user, ChangeProfileRequest request);
         Task<List<DoctorScheduleResponse>> GetSchedules(User user);
-        Task<string> DeclineAppointment(User user, int id, BookingStatus status);
+        Task<string> DeclineAppointment(User user, int id, BookingStatus status, string? reason = null);
         Task<string> CreateSchedule(User user, ScheduleRequest request);
         Task<string> DeleteSchedule(User user, int scheduleId);
         Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, int page, int size);
@@ -38,7 +38,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> UpdateRelative(User user, int id, RelativeRequest request);
         Task<string> DeleteRelative(User user, int id);
         Task<string> BookAppointment(User user, AppointmentRequest request);
-        Task<string> CancelAppointment(User user, int appointmentId);
+        Task<string> CancelAppointment(User user, int appointmentId, string? reason = null);
         Task<PagedResult<AppointmentResponse>> GetAppointments(User user, BookingStatus? status, DateOnly? startDate, DateOnly? endDate, int page, int size);
         Task<AppointmentDetailResponse> GetAppointmentDetail(User user, int appointmentId);
         Task<string> SubmitReview(User user, int appointmentId, ReviewRequest request);
@@ -48,8 +48,8 @@ namespace WebDeveloper.Services.Interfaces
     public interface IAdminService
     {
         Task<StatResponse> GetStats(DateOnly? start, DateOnly? end);
-        Task<PagedResult<object>> GetAllDoctors(int page, int size, string? search = null);
-        Task<List<object>> GetPendingDoctors(string? search = null);
+        Task<PagedResult<object>> GetAllDoctors(int page, int size, string? search = null, int? specialtyId = null, int? facilityId = null);
+        Task<List<object>> GetPendingDoctors(string? search = null, int? specialtyId = null, int? facilityId = null);
         Task<object> GetDoctorDetail(int id);
         Task<object> ApproveDoctor(int doctorId);
         Task<object> RejectDoctor(int doctorId, string reason);
@@ -63,7 +63,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<PagedResult<object>> GetAllUsers(int page, int size, string? search = null, RoleStatus? role = null, bool? isActive = null);
         Task<string> BlockUser(int id, string reason);
         Task<string> UnblockUser(int id, string reason);
-        Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size);
+        Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size, int? doctorId = null, int? facilityId = null, DateOnly? appointmentDate = null);
         Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size, string? category = null, string? search = null);
         Task<string> RejectReview(int id);
         Dictionary<string, double> AnalyzeComment(string text);

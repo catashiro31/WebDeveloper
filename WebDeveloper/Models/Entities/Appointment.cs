@@ -33,6 +33,12 @@ namespace WebDeveloper.Models.Entities
         [Column("booking_status")]
         public BookingStatus BookingStatus { get; set; }
 
+        [Column("cancellation_reason")]
+        public string? CancellationReason { get; set; }
+
+        [Column("cancelled_by")]
+        public string? CancelledBy { get; set; }
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
 

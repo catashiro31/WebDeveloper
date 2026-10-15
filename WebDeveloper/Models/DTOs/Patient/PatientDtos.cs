@@ -59,6 +59,8 @@ namespace WebDeveloper.Models.DTOs.Patient
         public DateOnly DateWorking { get; set; }
         public string? TimeSlot { get; set; }
         public string? BookingStatus { get; set; }
+        public string? CancellationReason { get; set; }
+        public string? CancelledBy { get; set; }
         public DateTime? CreatedAt { get; set; }
         public bool HasResult { get; set; }
     }

@@ -115,6 +115,8 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public string? Diagnosis { get; set; }
         public string? DoctorNotes { get; set; }
         public string? PrescriptionUrl { get; set; }
+        public string? CancellationReason { get; set; }
+        public string? CancelledBy { get; set; }
     }
 
     public class DoctorReviewResponse

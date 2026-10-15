@@ -127,6 +127,32 @@
     </div>
 </div>
 
+<div class="admin-card" style="margin-bottom: 24px; padding: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) auto; gap: 16px; align-items: flex-end;">
+        <div>
+            <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">👨‍⚕️ Lọc theo Bác sĩ</label>
+            <select id="filterDoctor" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background: #fff; color: #1e293b; outline: none;">
+                <option value="">Tất cả bác sĩ</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🏥 Lọc theo Cơ sở y tế</label>
+            <select id="filterFacility" style="width: 100%; padding: 10px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background: #fff; color: #1e293b; outline: none;">
+                <option value="">Tất cả cơ sở</option>
+            </select>
+        </div>
+        <div>
+            <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">📅 Lọc theo Ngày khám</label>
+            <input type="date" id="filterDate" style="width: 100%; padding: 9px 14px; border-radius: 12px; border: 1.5px solid #e2e8f0; font-size: 14px; background: #fff; color: #1e293b; outline: none; box-sizing: border-box;" />
+        </div>
+        <div>
+            <button id="resetFilterBtn" onclick="resetFilters()" style="padding: 10px 18px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='#f8fafc'">
+                🔄 Đặt lại
+            </button>
+        </div>
+    </div>
+</div>
+
 <div class="admin-card">
     <table class="premium-table">
         <thead>
@@ -207,6 +233,21 @@
             </div>
         </div>
 
+        <!-- Thông tin hủy / từ chối lịch hẹn -->
+        <div id="modalCancellationBox" style="display: none; background: #fef2f2; border-radius: 16px; padding: 18px; margin-bottom: 20px; border: 1px solid #fee2e2;">
+            <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #dc2626; letter-spacing: 0.05em; margin-bottom: 10px;">❌ Thông tin hủy / từ chối lịch hẹn</div>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 10px; font-size: 13px;">
+                <div>
+                    <span style="color: #991b1b; font-weight: 700;">Người hủy / từ chối:</span>
+                    <span id="modalCancelledBy" style="font-weight: 700; color: #b91c1c; margin-left: 6px;">—</span>
+                </div>
+                <div>
+                    <span style="color: #991b1b; font-weight: 700;">Lý do chi tiết:</span>
+                    <div id="modalCancellationReason" style="margin-top: 4px; background: white; border: 1px solid #fecaca; border-radius: 8px; padding: 8px 12px; color: #7f1d1d; line-height: 1.5; white-space: pre-wrap;">—</div>
+                </div>
+            </div>
+        </div>
+
         <div style="display: flex; justify-content: flex-end;">
             <button onclick="closeAppointmentModal()" style="padding: 10px 24px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; font-weight: 700; color: #475569; cursor: pointer; transition: background 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='white'">Đóng</button>
         </div>
@@ -217,6 +258,9 @@
     <script>
         let state = {
             status: '',
+            doctorId: '',
+            facilityId: '',
+            appointmentDate: '',
             page: 0,
             size: 10,
             totalPages: 1
@@ -250,6 +294,9 @@
             
             let query = `?page=${state.page}&size=${state.size}`;
             if (state.status) query += `&status=${state.status}`;
+            if (state.doctorId) query += `&doctorId=${state.doctorId}`;
+            if (state.facilityId) query += `&facilityId=${state.facilityId}`;
+            if (state.appointmentDate) query += `&appointmentDate=${state.appointmentDate}`;
 
             try {
                 const res = await fetch('/api/v1/admin/appointments' + query, {
@@ -269,13 +316,14 @@
                             <td colspan="5" style="text-align: center; padding: 80px 20px;">
                                 <div style="font-size: 48px; margin-bottom: 16px;">📅</div>
                                 <div style="color: #1e293b; font-size: 16px; font-weight: 700;">Không có lịch hẹn nào thỏa mãn</div>
-                                <div style="color: #64748b; font-size: 13px; margin-top: 4px;">Hãy thử chọn bộ lọc trạng thái khác.</div>
+                                <div style="color: #64748b; font-size: 13px; margin-top: 4px;">Hãy thử điều chỉnh bộ lọc tìm kiếm.</div>
                             </td>
                         </tr>
                     `;
                 } else {
                     tbody.innerHTML = list.map(apt => {
                         const st = getStatusStyle(apt.bookingStatus || apt.status);
+                        const isCancelled = (apt.bookingStatus || apt.status) === 'CANCELLED';
                         return `
                             <tr>
                                 <td>
@@ -302,6 +350,16 @@
                                     <span class="status-pill" style="background: ${st.bg}; color: ${st.color}; border-color: ${st.border};">
                                         ${st.label}
                                     </span>
+                                    ${isCancelled ? `
+                                        <div style="font-size: 11px; color: #dc2626; margin-top: 4px; font-weight: 700;">
+                                            ${apt.cancelledBy === 'DOCTOR' ? '👨‍⚕️ Bác sĩ từ chối' : (apt.cancelledBy === 'PATIENT' ? '👤 Bệnh nhân hủy' : 'Đã hủy')}
+                                        </div>
+                                        ${apt.cancellationReason ? `
+                                            <div style="font-size: 11px; color: #64748b; margin-top: 2px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(apt.cancellationReason)}">
+                                                Lý do: ${escapeHtml(apt.cancellationReason)}
+                                            </div>
+                                        ` : ''}
+                                    ` : ''}
                                 </td>
                             </tr>
                         `;
@@ -348,6 +406,70 @@
             });
         });
 
+        // Dropdown filters
+        document.getElementById('filterDoctor').addEventListener('change', (e) => {
+            state.doctorId = e.target.value;
+            state.page = 0;
+            loadAppointments();
+        });
+
+        document.getElementById('filterFacility').addEventListener('change', (e) => {
+            state.facilityId = e.target.value;
+            state.page = 0;
+            loadAppointments();
+        });
+
+        document.getElementById('filterDate').addEventListener('change', (e) => {
+            state.appointmentDate = e.target.value;
+            state.page = 0;
+            loadAppointments();
+        });
+
+        window.resetFilters = function() {
+            state.doctorId = '';
+            state.facilityId = '';
+            state.appointmentDate = '';
+            state.status = '';
+            state.page = 0;
+            document.getElementById('filterDoctor').value = '';
+            document.getElementById('filterFacility').value = '';
+            document.getElementById('filterDate').value = '';
+            document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+            document.querySelector('.filter-tab[data-status=""]').classList.add('active');
+            loadAppointments();
+        };
+
+        async function loadCatalogs() {
+            try {
+                const [docRes, facRes] = await Promise.all([
+                    fetch('/api/v1/admin/doctors/catalog'),
+                    fetch('/api/v1/admin/facilities')
+                ]);
+                if (docRes.ok) {
+                    const docs = await docRes.json();
+                    const docSel = document.getElementById('filterDoctor');
+                    docs.forEach(d => {
+                        const opt = document.createElement('option');
+                        opt.value = d.id;
+                        opt.textContent = `BS. ${d.name} (${d.specialty || 'Chưa phân khoa'})`;
+                        docSel.appendChild(opt);
+                    });
+                }
+                if (facRes.ok) {
+                    const facs = await facRes.json();
+                    const facSel = document.getElementById('filterFacility');
+                    facs.forEach(f => {
+                        const opt = document.createElement('option');
+                        opt.value = f.id;
+                        opt.textContent = f.name;
+                        facSel.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.error("Lỗi tải danh mục bộ lọc:", e);
+            }
+        }
+
         // Modal Chi tiết lịch hẹn
         window.openAppointmentModal = function(appointmentId) {
             const apt = currentAppointmentsList.find(a => a.appointmentId === appointmentId);
@@ -370,6 +492,17 @@
             document.getElementById('modalFacilityName').innerText = apt.facilityName || '—';
             document.getElementById('modalReason').innerText = apt.reason || 'Không có ghi chú thêm.';
 
+            // Cancellation info
+            const cancellationBox = document.getElementById('modalCancellationBox');
+            if ((apt.bookingStatus || apt.status) === 'CANCELLED') {
+                cancellationBox.style.display = 'block';
+                const who = apt.cancelledBy === 'DOCTOR' ? '👨‍⚕️ Bác sĩ từ chối' : (apt.cancelledBy === 'PATIENT' ? '👤 Bệnh nhân hủy' : 'Hệ thống / Quản trị viên');
+                document.getElementById('modalCancelledBy').innerText = who;
+                document.getElementById('modalCancellationReason').innerText = apt.cancellationReason || 'Không có lý do chi tiết.';
+            } else {
+                cancellationBox.style.display = 'none';
+            }
+
             document.getElementById('appointmentDetailModal').classList.add('active');
         };
 
@@ -377,6 +510,7 @@
             document.getElementById('appointmentDetailModal').classList.remove('active');
         };
 
+        loadCatalogs();
         loadAppointments();
     </script>
 }

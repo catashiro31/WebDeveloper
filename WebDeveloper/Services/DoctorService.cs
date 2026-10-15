@@ -370,7 +370,9 @@ namespace WebDeveloper.Services
                     FollowUpDate = result?.FollowUpDate,
                     Diagnosis = result?.Diagnosis,
                     DoctorNotes = result?.DoctorNotes,
-                    PrescriptionUrl = result?.PrescriptionUrl
+                    PrescriptionUrl = result?.PrescriptionUrl,
+                    CancellationReason = a.CancellationReason,
+                    CancelledBy = a.CancelledBy
                 };
             }).ToList();
 
@@ -396,7 +398,7 @@ namespace WebDeveloper.Services
             return "Xác nhận lịch hẹn thành công";
         }
 
-        public async Task<string> DeclineAppointment(User user, int id, BookingStatus status)
+        public async Task<string> DeclineAppointment(User user, int id, BookingStatus status, string? reason = null)
         {
             await using var transaction = await _db.Database.BeginTransactionAsync();
             var app = await _db.Appointments.Include(a => a.Schedule).ThenInclude(s => s.Doctor)
@@ -405,9 +407,11 @@ namespace WebDeveloper.Services
             var ownerId = await _db.PatientProfiles.Where(p => p.PatientId == app.PatientId).Select(p => p.UserId).SingleAsync();
             await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-ownerId})");
             await _db.Entry(app).ReloadAsync();
-            if (status == BookingStatus.CANCELLED && app.BookingStatus == BookingStatus.PENDING)
+            if (status == BookingStatus.CANCELLED && (app.BookingStatus == BookingStatus.PENDING || app.BookingStatus == BookingStatus.CONFIRMED))
             {
                 app.BookingStatus = status;
+                app.CancelledBy = "DOCTOR";
+                app.CancellationReason = string.IsNullOrWhiteSpace(reason) ? "Bác sĩ từ chối lịch hẹn" : reason.Trim();
                 app.Schedule.SlotStatus = SlotStatus.AVAILABLE;
             }
             else if (status == BookingStatus.NO_SHOW && app.BookingStatus == BookingStatus.CONFIRMED)

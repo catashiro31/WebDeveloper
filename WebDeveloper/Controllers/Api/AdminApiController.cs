@@ -29,17 +29,23 @@ namespace WebDeveloper.Controllers.Api
         }
 
         [HttpGet("doctor-pending")]
-        public async Task<IActionResult> GetPendingDoctors([FromQuery] string? search)
+        public async Task<IActionResult> GetPendingDoctors(
+            [FromQuery] string? search = null,
+            [FromQuery] int? specialtyId = null,
+            [FromQuery] int? facilityId = null)
         {
-            return Ok(await _adminService.GetPendingDoctors(search));
+            return Ok(await _adminService.GetPendingDoctors(search, specialtyId, facilityId));
         }
 
         [HttpGet("doctor-all")]
         public async Task<IActionResult> GetAllDoctors(
             [FromQuery] int page = 0,
-            [FromQuery] int size = 10, [FromQuery] string? search = null)
+            [FromQuery] int size = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] int? specialtyId = null,
+            [FromQuery] int? facilityId = null)
         {
-            return Ok(await _adminService.GetAllDoctors(Math.Max(0, page), Math.Clamp(size, 1, 100), search));
+            return Ok(await _adminService.GetAllDoctors(Math.Max(0, page), Math.Clamp(size, 1, 100), search, specialtyId, facilityId));
         }
 
         [HttpGet("doctor/{id}")]
@@ -138,9 +144,12 @@ namespace WebDeveloper.Controllers.Api
             [FromQuery] DateOnly? dateTo,
             [FromQuery] BookingStatus? status,
             [FromQuery] int page = 0,
-            [FromQuery] int size = 10)
+            [FromQuery] int size = 10,
+            [FromQuery] int? doctorId = null,
+            [FromQuery] int? facilityId = null,
+            [FromQuery] DateOnly? appointmentDate = null)
         {
-            return Ok(await _adminService.GetAllAppointments(dateFrom, dateTo, status, page, size));
+            return Ok(await _adminService.GetAllAppointments(dateFrom, dateTo, status, page, size, doctorId, facilityId, appointmentDate));
         }
 
         // Reviews

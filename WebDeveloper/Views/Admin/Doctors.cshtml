@@ -3,9 +3,8 @@
     Layout = "_AdminLayout";
 }
 
-<label style="display:block;margin:16px 0;">Tìm tên hoặc email bác sĩ<input id="adminSearch" type="search" placeholder="Tìm tên hoặc email bác sĩ…" style="display:block;width:min(100%,440px);padding:12px;border:1px solid #cbd5e1;border-radius:10px;" /></label>
 <style>
-.view-toggle-container { display: flex; background: #f1f5f9; padding: 4px; border-radius: 14px; width: fit-content; margin-bottom: 32px; }
+.view-toggle-container { display: flex; background: #f1f5f9; padding: 4px; border-radius: 14px; width: fit-content; margin-bottom: 24px; }
 .view-toggle-btn { padding: 10px 20px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s; color: #64748b; background: transparent; }
 .view-toggle-btn.active { background: white; color: #6366f1; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
 .doc-card { background: white; border-radius: 24px; padding: 24px; border: 1px solid #f1f5f9; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); transition: all 0.3s; display: flex; gap: 24px; margin-bottom: 20px; }
@@ -16,10 +15,19 @@
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
 .modal-content { background: white; border-radius: 24px; transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); max-height: 90vh; overflow-y: auto; }
 .modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+.pagination { display: flex; justify-content: center; gap: 8px; margin-top: 32px; }
+.pagination button {
+    padding: 8px 16px; border: 1px solid #e2e8f0; background: #fff;
+    border-radius: 8px; cursor: pointer; font-weight: 600; color: #475569; font-size: 14px;
+    transition: all 0.2s;
+}
+.pagination button:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
+.pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; font-weight: 700; }
+.pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
 </style>
 
 <div class="reveal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
             <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Danh sách bác sĩ</h2>
             <p style="margin: 4px 0 0; font-size: 15px; color: #64748b;">Phê duyệt hồ sơ chuyên môn và quản lý đội ngũ bác sĩ hệ thống.</p>
@@ -29,6 +37,33 @@
     <div class="view-toggle-container">
         <button id="btnViewAll" class="view-toggle-btn active" onclick="setViewMode('all')">Hồ sơ đã duyệt</button>
         <button id="btnViewPending" class="view-toggle-btn" onclick="setViewMode('pending')">Đang chờ duyệt</button>
+    </div>
+
+    <!-- Thanh lọc bác sĩ theo từ khóa, chuyên khoa, cơ sở -->
+    <div style="background: white; border-radius: 20px; padding: 18px 24px; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+        <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
+            <div style="flex: 1; min-width: 220px;">
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🔍 Tìm kiếm bác sĩ</label>
+                <input id="adminSearch" type="search" placeholder="Nhập tên hoặc email..." style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; box-sizing: border-box;" />
+            </div>
+            <div style="min-width: 200px;">
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🏥 Lọc theo chuyên khoa</label>
+                <select id="filterSpecialty" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; color: #1e293b; box-sizing: border-box;">
+                    <option value="">Tất cả chuyên khoa</option>
+                </select>
+            </div>
+            <div style="min-width: 200px;">
+                <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">📍 Lọc theo cơ sở y tế</label>
+                <select id="filterFacility" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; color: #1e293b; box-sizing: border-box;">
+                    <option value="">Tất cả cơ sở</option>
+                </select>
+            </div>
+            <div>
+                <button type="button" onclick="resetDoctorFilters()" style="padding: 10px 18px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='#f8fafc'">
+                    🔄 Đặt lại
+                </button>
+            </div>
+        </div>
     </div>
 
     <div id="loading" style="text-align: center; padding: 100px;">
@@ -42,11 +77,7 @@
 
     <div id="doctorsContainer" class="reveal" style="display: none;"></div>
 
-    <div id="pagination" style="display: none; justify-content: center; gap: 12px; margin-top: 32px;">
-        <button id="btnPrev" onclick="setPage(currentPage - 1)" style="background: none; border: none; color: #6366f1; font-weight: 800; cursor: pointer;">← Trước</button>
-        <span id="pageInfo" style="font-weight: 800; color: #0f172a;">Trang 1 / 1</span>
-        <button id="btnNext" onclick="setPage(currentPage + 1)" style="background: none; border: none; color: #6366f1; font-weight: 800; cursor: pointer;">Sau →</button>
-    </div>
+    <div id="pagination" class="pagination" style="display: none;"></div>
 </div>
 
 <!-- Detail Modal -->
@@ -124,11 +155,52 @@
     <script>
         let searchTimer, searchVersion = 0;
         document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { currentPage = 0; fetchData(); }, 250); });
+        document.getElementById('filterSpecialty').addEventListener('change', () => { currentPage = 0; fetchData(); });
+        document.getElementById('filterFacility').addEventListener('change', () => { currentPage = 0; fetchData(); });
+
+        window.resetDoctorFilters = function() {
+            document.getElementById('adminSearch').value = '';
+            document.getElementById('filterSpecialty').value = '';
+            document.getElementById('filterFacility').value = '';
+            currentPage = 0;
+            fetchData();
+        };
 
         let viewMode = 'all';
         let currentPage = 0;
         let totalPages = 1;
         let currentDoctorId = null;
+
+        async function loadDoctorCatalogs() {
+            try {
+                const [specRes, facRes] = await Promise.all([
+                    fetch('/api/v1/admin/specialties'),
+                    fetch('/api/v1/admin/facilities')
+                ]);
+                if (specRes.ok) {
+                    const specs = await specRes.json();
+                    const specSel = document.getElementById('filterSpecialty');
+                    specs.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.textContent = s.name;
+                        specSel.appendChild(opt);
+                    });
+                }
+                if (facRes.ok) {
+                    const facs = await facRes.json();
+                    const facSel = document.getElementById('filterFacility');
+                    facs.forEach(f => {
+                        const opt = document.createElement('option');
+                        opt.value = f.id;
+                        opt.textContent = f.name;
+                        facSel.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.error("Lỗi tải danh mục bác sĩ:", e);
+            }
+        }
 
         function setViewMode(mode) {
             viewMode = mode;
@@ -153,6 +225,24 @@
             return styles[status] || { label: 'Chưa rõ trạng thái', color: '#64748b', bg: '#f8fafc' };
         }
 
+        function renderPagination() {
+            const pagi = document.getElementById('pagination');
+            if (viewMode !== 'all' || totalPages <= 1) {
+                pagi.style.display = 'none';
+                pagi.innerHTML = '';
+                return;
+            }
+            pagi.style.display = 'flex';
+            let html = `<button ${currentPage === 0 ? 'disabled' : ''} onclick="setPage(${currentPage - 1})">Trang trước</button>`;
+            for(let i = 0; i < totalPages; i++) {
+                if (i >= currentPage - 2 && i <= currentPage + 2) {
+                    html += `<button class="${currentPage === i ? 'active' : ''}" onclick="setPage(${i})">${i + 1}</button>`;
+                }
+            }
+            html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="setPage(${currentPage + 1})">Trang sau</button>`;
+            pagi.innerHTML = html;
+        }
+
         function fetchData() {
             const version = ++searchVersion;
             document.getElementById('loading').style.display = 'block';
@@ -162,7 +252,15 @@
 
             let url = viewMode === 'pending' ? '/api/v1/admin/doctor-pending' : `/api/v1/admin/doctor-all?page=${currentPage}&size=10`;
 
-            url += (url.includes('?') ? '&' : '?') + 'search=' + encodeURIComponent(document.getElementById('adminSearch').value);
+            const search = document.getElementById('adminSearch').value.trim();
+            if (search) url += (url.includes('?') ? '&' : '?') + 'search=' + encodeURIComponent(search);
+
+            const specId = document.getElementById('filterSpecialty').value;
+            if (specId) url += (url.includes('?') ? '&' : '?') + 'specialtyId=' + encodeURIComponent(specId);
+
+            const facId = document.getElementById('filterFacility').value;
+            if (facId) url += (url.includes('?') ? '&' : '?') + 'facilityId=' + encodeURIComponent(facId);
+
             fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
@@ -190,6 +288,7 @@
                     const avatarHtml = avatar ? `<img src="${avatar}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'; this.parentElement.innerText='${name.charAt(0)}'"/>` : name.charAt(0);
                     const email = doc.user?.email || doc.email || '';
                     const spec = doc.specialty?.specialtyName || doc.specialtyName || '';
+                    const fac = doc.facility?.facilityName || doc.facilityName || '';
                     const badge = getStatusBadge(doc.verificationStatus);
 
                     html += `
@@ -202,6 +301,7 @@
                                         <div style="margin-top: 4px;">
                                             <span class="chip">📧 ${email}</span>
                                             <span class="chip">🏥 ${spec}</span>
+                                            ${fac ? `<span class="chip">📍 ${fac}</span>` : ''}
                                             <span class="chip" style="color: #f59e0b; font-weight: 700;">⭐ ${doc.reviewCount > 0 ? Number(doc.ratingAverage || 0).toFixed(1) + ' (' + doc.reviewCount + ' đánh giá)' : 'Chưa có đánh giá'}</span>
                                             <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: ${badge.bg}; color: ${badge.color}; display: inline-block; margin-top: 4px;">${badge.label}</span>
                                         </div>
@@ -222,12 +322,7 @@
                 document.getElementById('doctorsContainer').innerHTML = html;
                 document.getElementById('doctorsContainer').style.display = 'block';
 
-                if (viewMode === 'all' && totalPages > 1) {
-                    document.getElementById('pagination').style.display = 'flex';
-                    document.getElementById('pageInfo').innerText = `Trang ${currentPage + 1} / ${totalPages}`;
-                    document.getElementById('btnPrev').disabled = currentPage === 0;
-                    document.getElementById('btnNext').disabled = currentPage >= totalPages - 1;
-                }
+                renderPagination();
             })
             .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
         }
@@ -353,6 +448,7 @@
             .finally(() => { btn.disabled = false; btn.innerText = 'Gửi từ chối'; });
         };
 
+        loadDoctorCatalogs();
         fetchData();
     </script>
 }

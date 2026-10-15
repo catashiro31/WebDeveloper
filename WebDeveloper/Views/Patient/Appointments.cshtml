@@ -71,14 +71,19 @@
         }
 
         window.cancelAppointment = function(id, btn) {
-            if (!confirm("Bạn có chắc muốn hủy lịch hẹn này?")) return;
+            const reason = prompt("Vui lòng nhập lý do hủy lịch hẹn:");
+            if (reason === null) return;
+            if (!reason.trim()) {
+                Toastify({ text: "Vui lòng nhập lý do hủy lịch hẹn", style: { background: "#f59e0b" } }).showToast();
+                return;
+            }
             
             const originalText = btn.innerHTML;
             btn.innerHTML = '⌛ Đang hủy...';
             btn.disabled = true;
             btn.style.cursor = 'not-allowed';
 
-            fetch(`/api/v1/patient/appointments/${id}/cancel`, {
+            fetch(`/api/v1/patient/appointments/${id}/cancel?reason=${encodeURIComponent(reason.trim())}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
