@@ -1,0 +1,12 @@
+/* Noto Sans: self-hosted, full Vietnamese coverage, SIL Open Font License. */
+@font-face {
+    font-family: 'Noto Sans';
+    src: url('/fonts/noto-sans/NotoSans-Variable.woff2') format('woff2');
+    font-weight: 100 900;
+    font-style: normal;
+    font-display: swap;
+}
+:root { --font-app: 'Noto Sans', sans-serif; }
+html, body, button, input, select, textarea, optgroup, option {
+    font-family: var(--font-app);
+}

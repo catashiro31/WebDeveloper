@@ -97,3 +97,7 @@ từng biểu mẫu tải tệp.
 - API xử lý CANCELLED cho lịch PENDING, giải phóng slot; NO_SHOW chỉ cho CONFIRMED đã tới giờ khám. Giữ kiểm tra quyền sở hữu lịch.
 - Layout bác sĩ hiển thị thông báo kết quả chuyển công tác gần nhất (duyệt/từ chối) cùng ghi chú khi mở/tải lại trang; không gửi email hoặc thông báo đẩy.
 - Build/regression PostgreSQL đạt: ca đã đặt/còn trống không tạo trùng, từ chối giải phóng slot, giá trên 2 triệu vào khoảng giá. Chromium đạt: tìm/thu gọn/mở rộng danh mục, giá tối đa động, thông báo cả duyệt/từ chối, chú thích lịch, bảng lịch admin và phục hồi khi API 503, chọn giấy phép PNG/JPG/PDF; không có pageerror. Chưa triển khai VPS.
+
+### Phông tiếng Việt thống nhất (2026-10-14)
+
+Thay các font hệ thống và cấu hình Inter còn sót bằng Noto Sans variable tự lưu trong wwwroot/fonts/noto-sans, kèm giấy phép OFL. typography.css định nghĩa chung --font-app; tất cả layout, trang auth độc lập, nội dung, tiêu đề, form và cấu hình widget dùng cùng font. WOFF2 giữ nguyên glyph, kiểm tra đầy đủ vùng ký tự tiếng Việt U+1EA0–U+1EF9. Build thành công; Chromium kiểm tra sáu trang công khai/auth, font tải từ ứng dụng ngay cả khi chặn toàn bộ yêu cầu HTTPS bên ngoài. Chưa triển khai VPS.

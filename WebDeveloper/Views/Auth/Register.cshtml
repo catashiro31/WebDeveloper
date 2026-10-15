@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <style>body, button, input, select, textarea { font-family: Arial, Helvetica, sans-serif; }</style>
+    <link rel="stylesheet" href="~/css/typography.css" asp-append-version="true" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - DocBooking</title>
@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
 
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background: #fafbfe; }
+        body { margin: 0; padding: 0; font-family: var(--font-app); background: #fafbfe; }
         .reg-page { display: flex; min-height: 100vh; }
         .reg-left { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background: #fafbfe; position: relative; overflow: hidden; }
         .reg-left::before { content: ''; position: absolute; top: -120px; right: -120px; width: 400px; height: 400px; background: radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
@@ -34,7 +34,7 @@
         .reg-label { display: block; font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 6px; }
         .reg-input-wrap { position: relative; }
         .reg-input-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #9ca3af; display: flex; align-items: center; pointer-events: none; }
-        .reg-input { width: 100%; padding: 11px 14px 11px 42px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 14px; color: #1f2937; background: #fff; outline: none; transition: all 0.2s ease; font-family: Arial, Helvetica, sans-serif; box-sizing: border-box; }
+        .reg-input { width: 100%; padding: 11px 14px 11px 42px; border: 1.5px solid #e5e7eb; border-radius: 12px; font-size: 14px; color: #1f2937; background: #fff; outline: none; transition: all 0.2s ease; font-family: var(--font-app); box-sizing: border-box; }
         .reg-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
         .reg-input::placeholder { color: #d1d5db; }
         
@@ -57,7 +57,7 @@
         .reg-role-desc { font-size: 11px; color: #9ca3af; margin-top: -4px; }
         .reg-role-btn.active .reg-role-desc { color: #818cf8; }
         
-        .reg-submit-btn { width: 100%; padding: 13px; border: none; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.25s ease; font-family: Arial, Helvetica, sans-serif; box-shadow: 0 4px 14px rgba(99,102,241,0.3); margin-top: 4px; }
+        .reg-submit-btn { width: 100%; padding: 13px; border: none; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.25s ease; font-family: var(--font-app); box-shadow: 0 4px 14px rgba(99,102,241,0.3); margin-top: 4px; }
         .reg-submit-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(99,102,241,0.4); }
         .reg-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         

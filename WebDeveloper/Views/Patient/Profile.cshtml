@@ -30,19 +30,19 @@
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Email (Không thể thay đổi)</label>
-                    <input type="email" id="email" disabled style="width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #94a3b8; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif;" />
+                    <input type="email" id="email" disabled style="width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc; color: #94a3b8; box-sizing: border-box; font-family: var(--font-app);" />
                 </div>
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Họ và tên</label>
-                    <input type="text" id="fullName" required style="width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#cbd5e1'" />
+                    <input type="text" id="fullName" required style="width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: var(--font-app); transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#cbd5e1'" />
                 </div>
                 <div>
                     <label style="display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px;">Số điện thoại</label>
-                    <input type="tel" id="phoneNumber" style="width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#cbd5e1'" />
+                    <input type="tel" id="phoneNumber" style="width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: var(--font-app); transition: border-color 0.2s;" onfocus="this.style.borderColor='#6366f1'" onblur="this.style.borderColor='#cbd5e1'" />
                 </div>
             </div>
 
-            <button type="submit" id="submitBtn" style="margin-top: 32px; width: 100%; padding: 14px; border-radius: 8px; border: none; background: #6366f1; color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: Arial, Helvetica, sans-serif;" onmouseenter="if(!this.disabled){this.style.background='#4f46e5'}" onmouseleave="if(!this.disabled){this.style.background='#6366f1'}">
+            <button type="submit" id="submitBtn" style="margin-top: 32px; width: 100%; padding: 14px; border-radius: 8px; border: none; background: #6366f1; color: white; font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: var(--font-app);" onmouseenter="if(!this.disabled){this.style.background='#4f46e5'}" onmouseleave="if(!this.disabled){this.style.background='#6366f1'}">
                 Lưu thay đổi
             </button>
         </form>

@@ -21,7 +21,7 @@
 
 <style>
 .appt-page { 
-  min-height: 100vh; background: #fdfdfd; font-family: Arial, Helvetica, sans-serif; color: #1e293b;
+  min-height: 100vh; background: #fdfdfd; font-family: var(--font-app); color: #1e293b;
   padding-top: 96px; padding-bottom: 60px; 
 }
 
@@ -166,7 +166,7 @@
 .badge-star { color: #f59e0b; }
 .badge-exp { color: #6366f1; }
 .badge-fee { color: #10b981; }
-.book-btn { margin-top: 12px; padding: 12px 0; background: #f8fafc; color: #6366f1; border: none; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; width: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: Arial, Helvetica, sans-serif; }
+.book-btn { margin-top: 12px; padding: 12px 0; background: #f8fafc; color: #6366f1; border: none; border-radius: 14px; font-size: 14px; font-weight: 800; cursor: pointer; width: 100%; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: var(--font-app); }
 .doc-card:hover .book-btn { background: #6366f1; color: #fff; box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
 
 /* Booking Slots Styles */
@@ -176,7 +176,7 @@
 .week-tab-btn { padding: 8px 16px; border-radius: 10px; border: none; background: transparent; cursor: pointer; font-size: 13px; font-weight: 700; color: #64748b; transition: all 0.2s; }
 .week-tab-btn--active { background: #fff; color: #6366f1; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 .day-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 28px; }
-.day-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 4px; border-radius: 16px; border: 1.5px solid #e2e8f0; background: #f8fafc; cursor: pointer; gap: 4px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); outline: none; color: #475569; font-family: Arial, Helvetica, sans-serif; }
+.day-btn { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 12px 4px; border-radius: 16px; border: 1.5px solid #e2e8f0; background: #f8fafc; cursor: pointer; gap: 4px; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); outline: none; color: #475569; font-family: var(--font-app); }
 .day-btn:hover:not(.day-btn--active) { border-color: #6366f1; background: #eef2ff; }
 .day-btn--active { background: linear-gradient(135deg, #6366f1, #8b5cf6); border-color: transparent; color: #fff; box-shadow: 0 8px 16px rgba(99,102,241,0.2); transform: translateY(-2px); }
 .day-name { font-size: 11px; font-weight: 700; text-transform: uppercase; opacity: 0.8; }
@@ -184,16 +184,16 @@
 .slot-section-title { font-size: 14px; font-weight: 700; color: #1e293b; margin: 0 0 16px; display: flex; align-items: center; gap: 8px; }
 .slot-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 28px; }
 .slot-empty { font-size: 13px; color: #64748b; font-style: italic; background: #f8fafc; padding: 20px; border-radius: 16px; grid-column: 1 / -1; text-align: center; border: 1px dashed #e2e8f0; }
-.slot-btn { padding: 10px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #fff; font-size: 14px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s; outline: none; font-family: Arial, Helvetica, sans-serif; }
+.slot-btn { padding: 10px; border-radius: 10px; border: 1.5px solid #e2e8f0; background: #fff; font-size: 14px; font-weight: 700; color: #475569; cursor: pointer; transition: all 0.2s; outline: none; font-family: var(--font-app); }
 .slot-btn:hover:not(.slot-btn--booked):not(.slot-btn--active) { border-color: #6366f1; color: #6366f1; }
 .slot-btn--active { background: #6366f1; border-color: #6366f1; color: #fff; }
 .slot-btn--booked { background: #f1f5f9; color: #cbd5e1; cursor: not-allowed; border-color: #e2e8f0; }
 .booking-form { background: #f8fafc; border-radius: 20px; padding: 24px; margin-bottom: 24px; border: 1px solid #eef2ff; }
 .booking-form label { display: block; margin-bottom: 10px; font-weight: 700; color: #1e293b; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
-.booking-form select, .booking-form textarea { width: 100%; padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; margin-bottom: 20px; font-size: 15px; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; transition: all 0.2s; background: #fff; outline: none; }
+.booking-form select, .booking-form textarea { width: 100%; padding: 14px; border-radius: 14px; border: 1.5px solid #e2e8f0; margin-bottom: 20px; font-size: 15px; box-sizing: border-box; font-family: var(--font-app); transition: all 0.2s; background: #fff; outline: none; }
 .booking-form select:focus, .booking-form textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99,102,241,0.08); }
 .booking-form textarea { min-height: 110px; resize: none; margin-bottom: 0; }
-.book-appt-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; width: 100%; box-shadow: 0 10px 20px rgba(99,102,241,0.2); outline: none; font-family: Arial, Helvetica, sans-serif; }
+.book-appt-btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none; border-radius: 16px; padding: 18px; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.3s; width: 100%; box-shadow: 0 10px 20px rgba(99,102,241,0.2); outline: none; font-family: var(--font-app); }
 .book-appt-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(99,102,241,0.3); }
 .book-appt-btn:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
 

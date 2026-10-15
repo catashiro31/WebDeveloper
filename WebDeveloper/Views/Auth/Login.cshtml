@@ -6,7 +6,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <style>body, button, input, select, textarea { font-family: Arial, Helvetica, sans-serif; }</style>
+    <link rel="stylesheet" href="~/css/typography.css" asp-append-version="true" />
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@ViewData["Title"] - DocBooking</title>
@@ -17,7 +17,7 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
     <style>
-        body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; }
+        body { margin: 0; padding: 0; font-family: var(--font-app); }
         .login-page { display: flex; min-height: 100vh; }
         .login-left { flex: 1; display: flex; align-items: center; justify-content: center; padding: 40px; background: #f8fafc; position: relative; overflow: hidden; }
         .login-left::before { content: ''; position: absolute; top: -120px; left: -120px; width: 500px; height: 500px; background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%); border-radius: 50%; pointer-events: none; }
@@ -33,7 +33,7 @@
         .login-label { display: block; font-size: 14px; font-weight: 700; color: #334155; margin-bottom: 8px; }
         .login-input-wrap { position: relative; }
         .login-input-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; display: flex; align-items: center; pointer-events: none; transition: color 0.3s; }
-        .login-input { width: 100%; padding: 14px 16px 14px 48px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 15px; color: #1e293b; background: #f8fafc; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: Arial, Helvetica, sans-serif; box-sizing: border-box; }
+        .login-input { width: 100%; padding: 14px 16px 14px 48px; border: 1.5px solid #e2e8f0; border-radius: 14px; font-size: 15px; color: #1e293b; background: #f8fafc; outline: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: var(--font-app); box-sizing: border-box; }
         .login-input:focus { border-color: #6366f1; background: #fff; box-shadow: 0 10px 15px -3px rgba(99,102,241,0.1); }
         .login-input:focus + .login-input-icon { color: #6366f1; }
         .login-input::placeholder { color: #94a3b8; opacity: 0.6; }
@@ -45,7 +45,7 @@
         .login-forgot a { font-size: 14px; color: #6366f1; text-decoration: none; font-weight: 600; transition: all 0.2s; }
         .login-forgot a:hover { color: #4f46e5; text-decoration: underline; }
         
-        .login-submit-btn { width: 100%; padding: 15px; border: none; border-radius: 14px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: Arial, Helvetica, sans-serif; box-shadow: 0 10px 25px rgba(99,102,241,0.3); }
+        .login-submit-btn { width: 100%; padding: 15px; border: none; border-radius: 14px; background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; font-size: 16px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: var(--font-app); box-shadow: 0 10px 25px rgba(99,102,241,0.3); }
         .login-submit-btn:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 30px rgba(99,102,241,0.4); }
         .login-submit-btn:disabled { opacity: 0.7; cursor: not-allowed; }
         
