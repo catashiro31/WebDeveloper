@@ -16,6 +16,7 @@ namespace WebDeveloper.Services
             _emailService = emailService;
         }
 
+        // === Tác vụ trì hoãn: đọc lại trạng thái PENDING trước khi nhắc/hủy để bỏ qua ca đã xử lý. ===
         public async Task SendWarningToDoctor(int appointmentId)
         {
             var appointment = await _db.Appointments

@@ -20,6 +20,7 @@ internal static class NotificationEvents
             foreach (var id in await db.Users.Where(u => u.Role == RoleStatus.ADMIN && u.IsActive == true).Select(u => u.UserId).ToListAsync(ct))
                 Send(id, title, url);
         }
+        // Chỉ xét entity vừa thêm hoặc thuộc tính thực sự đổi; SaveChanges lặp không tạo thông báo lặp.
         var entries = db.ChangeTracker.Entries().Where(e => e.State is EntityState.Added or EntityState.Modified).ToArray();
         foreach (var entry in entries)
         {

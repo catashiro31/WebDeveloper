@@ -21,6 +21,7 @@ namespace WebDeveloper.Services
             _configuration = configuration;
         }
 
+        // === Hồ sơ người khám: một tài khoản quản lý nhiều hồ sơ; PatientId không phải UserId. ===
         public async Task<List<RelativeResponse>> GetRelatives(User user)
         {
             var profiles = await _db.PatientProfiles
@@ -120,6 +121,7 @@ namespace WebDeveloper.Services
             return "Xóa hồ sơ người thân thành công";
         }
 
+        // === Đặt lịch: khóa Redis theo ca, kiểm tra chủ hồ sơ, hạn mức và trùng giờ trước khi lưu. ===
         public async Task<string> BookAppointment(User user, AppointmentRequest req)
         {
             // Lock phân tán bằng Redis để chống Double Booking
@@ -223,6 +225,7 @@ namespace WebDeveloper.Services
             }
         }
 
+        // === Hủy lịch: kiểm tra chủ tài khoản và thời hạn; lưu người hủy/lý do, trả ca về trạng thái trống. ===
         public async Task<string> CancelAppointment(User user, int appointmentId, string? reason = null)
         {
             var app = await _db.Appointments
@@ -267,6 +270,7 @@ namespace WebDeveloper.Services
             return "Hủy lịch hẹn thành công";
         }
 
+        // === Tra cứu: phân trang và chi tiết chỉ trả lịch thuộc tài khoản hiện tại. ===
         public async Task<PagedResult<AppointmentResponse>> GetAppointments(User user, BookingStatus? status, DateOnly? startDate, DateOnly? endDate, int page, int size)
         {
             var query = _db.Appointments
@@ -351,6 +355,7 @@ namespace WebDeveloper.Services
             };
         }
 
+        // === Đánh giá: gắn với ca khám hoàn thành; nội dung bị ẩn vẫn đóng góp vào điểm trung bình. ===
         public async Task<string> SubmitReview(User user, int appointmentId, ReviewRequest req)
         {
             var app = await _db.Appointments

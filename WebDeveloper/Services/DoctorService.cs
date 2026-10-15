@@ -19,6 +19,7 @@ namespace WebDeveloper.Services
             _fileUpload = fileUpload;
         }
 
+        // === Hồ sơ chuyên môn: trạng thái duyệt tách biệt với role và trạng thái tài khoản. ===
         public async Task<DoctorProfileResponse> GetProfile(User user)
         {
             var doctor = await _db.DoctorDetails
@@ -227,6 +228,7 @@ namespace WebDeveloper.Services
             return await GetProfile(user);
         }
 
+        // === Lịch làm việc: lọc ca đóng/quá giờ theo Việt Nam; tạo, đóng và mở lại ca dùng chung quy tắc. ===
         public async Task<List<DoctorScheduleResponse>> GetSchedules(User user)
         {
             var doctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId)
@@ -330,6 +332,7 @@ namespace WebDeveloper.Services
             return "Đã đóng ca làm việc";
         }
 
+        // === Lịch hẹn của bác sĩ: quyền sở hữu được kiểm tra trước mỗi thay đổi trạng thái. ===
         public async Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, int page, int size)
         {
             var appointmentsQuery = _db.Appointments
@@ -398,6 +401,7 @@ namespace WebDeveloper.Services
             return "Xác nhận lịch hẹn thành công";
         }
 
+        // === Từ chối/vắng mặt: khóa theo tài khoản đặt lịch, đếm vắng 5 lần/30 ngày để báo admin. ===
         public async Task<string> DeclineAppointment(User user, int id, BookingStatus status, string? reason = null)
         {
             await using var transaction = await _db.Database.BeginTransactionAsync();
@@ -456,6 +460,7 @@ namespace WebDeveloper.Services
             return "Đã hoàn thành ca khám";
         }
 
+        // === Kết quả khám: kiểm tra chủ ca, chẩn đoán, ngày tái khám và tệp/link trước khi hoàn tất. ===
         public async Task<string> SaveMedicalResult(User user, int appointmentId, MedicalResultRequest req)
         {
             var app = await _db.Appointments
@@ -508,6 +513,7 @@ namespace WebDeveloper.Services
             return "Lưu kết quả khám thành công";
         }
 
+        // === Đánh giá và ca quá hạn: các truy vấn chỉ giới hạn vào bác sĩ hiện tại. ===
         public async Task<PagedResult<DoctorReviewResponse>> GetReviews(User user, int page, int size)
         {
             var query = _db.Reviews
@@ -563,6 +569,7 @@ namespace WebDeveloper.Services
             }).ToList();
         }
 
+        // === Chuyển công tác: chụp tên cơ sở cũ khi gửi, admin xử lý và lưu thời điểm quyết định. ===
         public async Task<string> CreateTransferRequest(User user, TransferRequestDto req)
         {
             var doctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId)

@@ -1,3 +1,4 @@
+using WebDeveloper.Helpers;
 using Microsoft.EntityFrameworkCore;
 using WebDeveloper.Data;
 using WebDeveloper.Models.DTOs.Auth;
@@ -24,6 +25,7 @@ namespace WebDeveloper.Services
             _emailService = emailService;
         }
 
+        // === Đăng nhập: kiểm tra mật khẩu và trạng thái tài khoản trước khi cấp cặp token. ===
         public async Task<SignInResponse> SignIn(SignInRequest request)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -35,7 +37,7 @@ namespace WebDeveloper.Services
 
             if (user.IsActive != true)
             {
-                if (user.VerificationCode != null)
+                if (AccountState.AwaitingEmailVerification(user))
                     throw new InvalidOperationException("Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực!");
                 throw new InvalidOperationException("Tài khoản đã bị khóa. Lý do: " + (user.ReasonBanned ?? "Vi phạm chính sách"));
             }
@@ -71,6 +73,7 @@ namespace WebDeveloper.Services
             };
         }
 
+        // === Gia hạn phiên: kiểm tra token đã lưu; xoay token có điều kiện để tránh dùng lại. ===
         public async Task<SignInResponse> RefreshToken(string refreshToken, bool rotateRefreshToken = true)
         {
             var user = await _db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.RefreshToken == refreshToken);
@@ -117,6 +120,7 @@ namespace WebDeveloper.Services
             };
         }
 
+        // === Đăng ký: lưu tài khoản chưa kích hoạt và gửi mã xác thực email. ===
         public async Task<string> SignUp(SignUpRequest request)
         {
             if (request.Role == WebDeveloper.Models.Enums.RoleStatus.ADMIN)
@@ -157,6 +161,7 @@ namespace WebDeveloper.Services
             return "Vui lòng kiểm tra email để xác thực tài khoản!";
         }
 
+        // === Đăng xuất: thu hồi token; controller chịu trách nhiệm xóa cookie trình duyệt. ===
         public async Task SignOut(string? token, string? refreshToken)
         {
             if (!string.IsNullOrEmpty(token) && _jwt.GetUserIdFromToken(token) != null)
@@ -184,11 +189,16 @@ namespace WebDeveloper.Services
             await _db.SaveChangesAsync();
         }
 
+        // === Xác thực email: không cho link xác thực vượt qua quyết định khóa của admin. ===
         public async Task<string> VerifyAccount(string email, string code)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email)
                 ?? throw new InvalidOperationException("Người dùng không tồn tại!");
 
+            if (!string.IsNullOrWhiteSpace(user.ReasonBanned))
+                throw new InvalidOperationException("Tài khoản đã bị khóa. Vui lòng gửi phiếu xin mở khóa.");
+            if (user.IsActive == true)
+                throw new InvalidOperationException("Tài khoản đã được xác thực.");
             if (user.VerificationCode == null || user.VerificationCode != code)
                 throw new InvalidOperationException("Đường link xác thực không hợp lệ!");
 
@@ -215,6 +225,7 @@ namespace WebDeveloper.Services
             return "Xác thực tài khoản thành công! Bây giờ bạn có thể đăng nhập.";
         }
 
+        // === Khôi phục mật khẩu: trường mã dùng chung; không suy ra trạng thái khóa chỉ từ mã. ===
         public async Task<string> ForgotPassword(string email)
         {
             var user = await _db.Users.FirstOrDefaultAsync(u => u.Email == email)
@@ -222,7 +233,7 @@ namespace WebDeveloper.Services
 
             if (user.IsActive != true)
             {
-                if (user.VerificationCode != null)
+                if (AccountState.AwaitingEmailVerification(user))
                     throw new InvalidOperationException("Tài khoản chưa được xác thực. Vui lòng xác thực email trước!");
                 throw new InvalidOperationException("Tài khoản đã bị khóa. Không thể đặt lại mật khẩu!");
             }
@@ -256,80 +267,6 @@ namespace WebDeveloper.Services
             await _db.SaveChangesAsync();
 
             return "Mật khẩu đã được đặt lại thành công. Bạn có thể đăng nhập bằng mật khẩu mới!";
-        }
-    }
-
-    /// <summary>
-    /// Quản lý profile người dùng (tương đương UserService.java)
-    /// </summary>
-    public class UserService : IUserService
-    {
-        private readonly ApplicationDbContext _db;
-        private readonly IFileUploadService _fileUpload;
-
-        public UserService(ApplicationDbContext db, IFileUploadService fileUpload)
-        {
-            _db = db;
-            _fileUpload = fileUpload;
-        }
-
-        public async Task<UserProfileResponse> GetProfile(User user)
-        {
-            var dbUser = await _db.Users.FindAsync(user.UserId)
-                ?? throw new InvalidOperationException("Không tìm thấy người dùng!");
-
-            return new UserProfileResponse
-            {
-                Email = dbUser.Email,
-                FullName = dbUser.FullName,
-                PhoneNumber = dbUser.PhoneNumber,
-                AvatarUrl = dbUser.AvatarUrl,
-                Role = dbUser.Role?.ToString()
-            };
-        }
-
-        public async Task<UserProfileResponse> UpdateProfile(User user, UpdateProfileRequest req)
-        {
-            var dbUser = await _db.Users.FindAsync(user.UserId)
-                ?? throw new InvalidOperationException("Không tìm thấy người dùng!");
-
-            if (!string.IsNullOrWhiteSpace(req.FullName))
-                dbUser.FullName = req.FullName;
-
-            if (!string.IsNullOrWhiteSpace(req.PhoneNumber))
-                dbUser.PhoneNumber = req.PhoneNumber;
-
-            if (req.File != null && req.File.Length > 0)
-            {
-                _fileUpload.ValidateFile(req.File, "Ảnh đại diện", "image/jpeg", "image/png");
-                dbUser.AvatarUrl = await _fileUpload.UploadFileAsync(req.File);
-            }
-
-            await _db.SaveChangesAsync();
-
-            return new UserProfileResponse
-            {
-                Email = dbUser.Email,
-                FullName = dbUser.FullName,
-                PhoneNumber = dbUser.PhoneNumber,
-                AvatarUrl = dbUser.AvatarUrl,
-                Role = dbUser.Role?.ToString()
-            };
-        }
-
-        public async Task ChangePassword(User user, ChangePasswordRequest req)
-        {
-            var dbUser = await _db.Users.FindAsync(user.UserId)
-                ?? throw new InvalidOperationException("Không tìm thấy người dùng!");
-
-            if (!BCrypt.Net.BCrypt.Verify(req.OldPassword, dbUser.PasswordHash))
-                throw new InvalidOperationException("Mật khẩu cũ không chính xác");
-
-            if (BCrypt.Net.BCrypt.Verify(req.NewPassword, dbUser.PasswordHash))
-                throw new InvalidOperationException("Mật khẩu mới phải khác mật khẩu cũ!");
-
-            dbUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
-            await _db.SaveChangesAsync();
         }
     }
 }

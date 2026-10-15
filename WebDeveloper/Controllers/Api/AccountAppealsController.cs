@@ -1,3 +1,4 @@
+using WebDeveloper.Helpers;
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,7 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
         [Required, StringLength(1000, MinimumLength = 10)] string Reason);
     public record Decision(bool Approve, [Required, StringLength(1000, MinimumLength = 3)] string Reason);
 
+    // API công khai xác minh bằng mật khẩu nhưng không tạo phiên đăng nhập cho tài khoản bị khóa.
     private async Task<User?> Verify(string email, string password)
     {
         var user = await db.Users.SingleOrDefaultAsync(u => u.Email == email.Trim());
@@ -40,7 +42,7 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
     {
         var user = await Verify(req.Email, req.Password);
         if (user == null) return Unauthorized(new { message = "Email hoặc mật khẩu không chính xác." });
-        if (user.IsActive == true || user.VerificationCode != null || user.Role == RoleStatus.ADMIN)
+        if (user.IsActive == true || AccountState.AwaitingEmailVerification(user) || user.Role == RoleStatus.ADMIN)
             return BadRequest(new { message = "Tài khoản này không thuộc diện yêu cầu mở khóa." });
         if (req.Reason.Trim().Length < 10) return BadRequest(new { message = "Vui lòng trình bày lý do ít nhất 10 ký tự." });
         await using var tx = await db.Database.BeginTransactionAsync();
@@ -78,7 +80,14 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
         appeal.AdminReason = req.Reason.Trim();
         appeal.ProcessedAt = DateTime.UtcNow;
         appeal.ProcessedBy = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        if (req.Approve) { appeal.User.IsActive = true; appeal.User.ReasonBanned = null; }
+        if (req.Approve)
+        {
+            if (AccountState.AwaitingEmailVerification(appeal.User))
+                return Conflict(new { message = "Tài khoản cần xác thực email trước." });
+            AccountState.ClearOneTimeCode(appeal.User);
+            appeal.User.IsActive = true;
+            appeal.User.ReasonBanned = null;
+        }
         db.Notifications.Add(new Notification { UserId = appeal.UserId, Title = req.Approve ? "Tài khoản đã được mở khóa" : "Yêu cầu mở khóa bị từ chối", Message = req.Reason.Trim(), Url = "/" });
         await db.SaveChangesAsync();
         await tx.CommitAsync();

@@ -191,6 +191,7 @@ namespace WebDeveloper.Data
             return base.SaveChanges();
         }
 
+        // Thông báo được thêm trước lần lưu async để cùng commit/rollback với thay đổi nghiệp vụ.
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             UpdateTimestamps();

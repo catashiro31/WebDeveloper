@@ -21,6 +21,7 @@ namespace WebDeveloper.Services
             _emailService = emailService;
         }
 
+        // === Thống kê: phân biệt tài khoản role DOCTOR với hồ sơ chuyên môn đã được duyệt. ===
         public async Task<StatResponse> GetStats(DateOnly? start, DateOnly? end)
         {
             var actualStart = start ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30));
@@ -75,6 +76,7 @@ namespace WebDeveloper.Services
             return query;
         }
 
+        // === Quản lý bác sĩ: tìm kiếm, lọc hồ sơ và duyệt/từ chối theo trạng thái hiện tại. ===
         public async Task<PagedResult<object>> GetAllDoctors(int page, int size, string? search = null, int? specialtyId = null, int? facilityId = null)
         {
             var query = SearchDoctors(ApprovedDoctors(), search)
@@ -212,6 +214,7 @@ namespace WebDeveloper.Services
             return new { Message = "Từ chối thành công" };
         }
 
+        // === Danh mục chuyên khoa: kiểm tra tên trùng, chỉnh sửa và vô hiệu hóa bản ghi. ===
         public async Task<string> AddSpecialty(SpecialtyRequest req)
         {
             if (await _db.Specialties.AnyAsync(s => s.SpecialtyName.ToLower() == req.SpecialtyName.ToLower()))
@@ -254,6 +257,7 @@ namespace WebDeveloper.Services
             return "Đã xóa chuyên ngành";
         }
 
+        // === Cơ sở y tế: xác thực hồ sơ/tệp giấy phép trước khi cập nhật danh mục. ===
         public async Task<string> AddFacility(FacilityRequest req)
         {
             if (await _db.Facilities.AnyAsync(f => f.FacilityName!.ToLower() == req.FacilityName.ToLower()))
@@ -339,6 +343,7 @@ namespace WebDeveloper.Services
             return "Đã xóa";
         }
 
+        // === Quản lý người dùng: lọc tài khoản và hiển thị riêng trạng thái hồ sơ bác sĩ. ===
         public async Task<PagedResult<object>> GetAllUsers(int page, int size, string? search = null, RoleStatus? role = null, bool? isActive = null)
         {
             var query = _db.Users.AsNoTracking().AsQueryable();
@@ -395,6 +400,7 @@ namespace WebDeveloper.Services
             return PagedResult<object>.Create(items, page, size, total);
         }
 
+        // === Khóa/mở khóa: lưu lý do, xử lý phiên đăng nhập và lịch hẹn liên quan. ===
         public async Task<string> BlockUser(int id, string reason)
         {
             await using var transaction = await _db.Database.BeginTransactionAsync();
@@ -405,6 +411,7 @@ namespace WebDeveloper.Services
             if (string.IsNullOrWhiteSpace(reason) || reason.Trim().Length < 3 || reason.Length > 1000)
                 throw new InvalidOperationException("Vui lòng nhập lý do khóa từ 3 đến 1000 ký tự.");
             if (user.Role == RoleStatus.ADMIN) throw new InvalidOperationException("Không thể khóa tài khoản quản trị.");
+            AccountState.ClearOneTimeCode(user);
             user.RefreshToken = null;
             user.RefreshTokenExpiryTime = null;
             _db.Notifications.Add(new Notification { UserId = id, Title = "Tài khoản bị khóa", Message = reason.Trim(), Url = "/Auth/Appeal" });
@@ -444,7 +451,8 @@ namespace WebDeveloper.Services
             await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-id})");
             var user = await _db.Users.FindAsync(id)
                 ?? throw new InvalidOperationException("Không tìm thấy người dùng");
-            if (user.VerificationCode != null) throw new InvalidOperationException("Tài khoản cần xác thực email trước.");
+            if (AccountState.AwaitingEmailVerification(user)) throw new InvalidOperationException("Tài khoản cần xác thực email trước.");
+            AccountState.ClearOneTimeCode(user);
             user.IsActive = true;
             user.ReasonBanned = null;
             foreach (var appeal in await _db.AccountAppeals.Where(a => a.UserId == id && a.Status == "PENDING").ToListAsync())
@@ -457,6 +465,7 @@ namespace WebDeveloper.Services
             return $"Đã mở khóa tài khoản {id}";
         }
 
+        // === Giám sát lịch hẹn: kết hợp trạng thái, ngày làm việc, bác sĩ, chuyên khoa và cơ sở. ===
         public async Task<PagedResult<AppointmentAdminResponse>> GetAllAppointments(DateOnly? dateFrom, DateOnly? dateTo, BookingStatus? status, int page, int size, int? doctorId = null, int? facilityId = null, DateOnly? appointmentDate = null, int? specialtyId = null, DateOnly? workDateFrom = null, DateOnly? workDateTo = null)
         {
             var query = _db.Appointments.AsNoTracking().AsQueryable();
@@ -496,6 +505,7 @@ namespace WebDeveloper.Services
             return PagedResult<AppointmentAdminResponse>.Create(dtos, page, size, total);
         }
 
+        // === Kiểm duyệt: phân loại chỉ gợi ý cho admin; ẩn nội dung không xóa số sao. ===
         public async Task<PagedResult<ReviewAdminResponse>> GetAllReviews(int page, int size, string? category = null, string? search = null)
         {
             var query = _db.Reviews.AsNoTracking()

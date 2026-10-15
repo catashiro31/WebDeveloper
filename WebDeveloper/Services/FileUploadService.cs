@@ -20,6 +20,7 @@ namespace WebDeveloper.Services
             _cloudinary = new Cloudinary(account);
         }
 
+        // === Lưu tệp: caller phải gọi ValidateFile với danh sách MIME của đúng chức năng trước khi upload. ===
         public async Task<string?> UploadFileAsync(IFormFile? file)
         {
             if (file == null || file.Length == 0)
@@ -36,6 +37,7 @@ namespace WebDeveloper.Services
             return result.SecureUrl?.ToString();
         }
 
+        // === Ký tham số upload: trả chữ ký/timestamp, không trả API secret. ===
         public WebDeveloper.Models.DTOs.Upload.CloudinarySignatureResponse GenerateUploadSignature()
         {
             var timestamp = Math.Round((DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalSeconds).ToString();
@@ -58,6 +60,7 @@ namespace WebDeveloper.Services
             };
         }
 
+        // === Kiểm tra kích thước và MIME do client cung cấp; không phải cơ chế quét nội dung tệp. ===
         public void ValidateFile(IFormFile? file, string fieldName, params string[] supportedTypes)
         {
             if (file == null) return;

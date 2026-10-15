@@ -20,6 +20,7 @@ namespace WebDeveloper.Services
             _cache = cache;
         }
 
+        // === Trang công khai: thống kê tổng quan và dữ liệu danh mục. ===
         public async Task<PortalStatsResponse> GetPortalStats()
         {
             return await _cache.GetOrCreateAsync("PORTAL_STATS", async entry =>
@@ -80,6 +81,7 @@ namespace WebDeveloper.Services
             .Where(d => d.VerificationStatus == VerificationStatus.APPROVED)
             .MaxAsync(d => (double?)d.Price) ?? 0;
 
+        // === Tìm bác sĩ: ghép bộ lọc, tìm không dấu bằng unaccent và phân trang tại database. ===
         public async Task<PagedResult<DoctorCardResponse>> GetDoctors(string? keyword, int? specId, int? facilityId, string? province, double? minPrice, double? maxPrice, string? sortBy, int page, int size)
         {
             var query = _db.DoctorDetails
@@ -171,6 +173,7 @@ namespace WebDeveloper.Services
             };
         }
 
+        // === Chi tiết công khai: bảo vệ nội dung đánh giá đã ẩn, lọc trạng thái ca và giờ trong ngày. ===
         public async Task<List<DoctorReviewResponse>> GetReviewsByDoctorId(int doctorId)
         {
             var reviews = await _db.Reviews

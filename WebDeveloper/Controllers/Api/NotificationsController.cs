@@ -12,6 +12,7 @@ public class NotificationsController(ApplicationDbContext db) : ControllerBase
 {
     private int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    // Mọi truy vấn phải lọc UserId từ claim, kể cả đánh dấu đã đọc và xóa. Cursor dùng Id để tải tiếp.
     [HttpGet]
     public async Task<IActionResult> List([FromQuery] long? before, CancellationToken ct)
     {

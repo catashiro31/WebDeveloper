@@ -49,6 +49,7 @@ public sealed class ReviewClassifier
             for (int i = 0; i < 3; i++) yield return "signal:repeat";
     }
 
+    // Điểm chuẩn hóa từ log-likelihood dùng để xếp hạng gợi ý; không phải xác suất đã hiệu chỉnh.
     public Dictionary<string, double> Classify(string? text)
     {
         var features = Features(text ?? "").Where(vocabulary.Contains).ToArray();

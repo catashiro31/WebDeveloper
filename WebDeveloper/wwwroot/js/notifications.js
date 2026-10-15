@@ -23,6 +23,7 @@
         if (!response.ok) throw new Error('Không thể tải hoặc cập nhật thông báo. Vui lòng thử lại.');
         return response;
     }
+    // Tải trang đầu/cursor và cập nhật badge; polling tránh chạy khi tab bị ẩn.
     async function load(append = false, countOnly = false) {
         if (loading || stopped) return;
         loading = true;

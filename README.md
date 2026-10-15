@@ -5,6 +5,10 @@ Hệ thống backend cung cấp các API cho ứng dụng đặt lịch khám b�
 Nếu đăng nhập thành công nhưng không giữ phiên khi triển khai, xem [cấu hình cookie cho HTTP/HTTPS](docs/login-deployment.md).
 Nếu cập nhật ảnh đại diện gặp lỗi 413, xem [cấu hình giới hạn tải lên của Nginx](docs/avatar-upload-413.md).
 
+## Tài liệu chức năng
+
+Xem [Function_detail.md](Function_detail.md) để tra cứu cấu trúc code, API/service của từng chức năng, quy tắc nghiệp vụ, kỹ thuật xử lý và kiểm thử.
+
 ## Kiến trúc hệ thống
 Hệ thống được thiết kế theo mô hình **MVC (Model-View-Controller) kết hợp Web API**, đồng thời tổ chức code theo cấu trúc **N-Tier (N-Layer)** để tách biệt các thành phần:
 

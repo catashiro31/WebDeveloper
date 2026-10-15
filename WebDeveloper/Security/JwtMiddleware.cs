@@ -17,6 +17,7 @@ namespace WebDeveloper.Security
             _next = next;
         }
 
+        // Trang HTML trở về khách/đăng nhập; API giữ mã lỗi để frontend xử lý đúng trạng thái.
         private async Task<bool> ContinueAsGuest(HttpContext context)
         {
             foreach (var name in new[] { "accessToken", "refreshToken", "user_info" })
