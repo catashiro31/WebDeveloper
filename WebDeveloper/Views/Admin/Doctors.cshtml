@@ -357,13 +357,10 @@
                 badge.style.border = `1px solid ${facVerified ? '#a7f3d0' : '#fde68a'}`;
 
                 const addr = data.facility?.address || data.facilityAddress;
-                if (addr) {
-                    const prov = data.facility?.province || data.facilityProvince;
-                    document.getElementById('modalFacilityAddr').innerText = addr + (prov ? `, ${prov}` : '');
-                    document.getElementById('modalFacilityAddrWrap').style.display = 'flex';
-                } else {
-                    document.getElementById('modalFacilityAddrWrap').style.display = 'none';
-                }
+                const prov = data.facility?.province || data.facilityProvince;
+                const fullAddr = addr ? (addr + (prov ? `, ${prov}` : '')) : (prov || 'Chưa cập nhật');
+                document.getElementById('modalFacilityAddr').innerText = fullAddr;
+                document.getElementById('modalFacilityAddrWrap').style.display = 'flex';
 
                 const licenseUrl = data.facility?.licenseUrl || data.facilityLicenseUrl;
                 if (licenseUrl) {

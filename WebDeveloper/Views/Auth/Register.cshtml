@@ -162,7 +162,7 @@
                             </div>
                         </div>
                     </div>
-                    <small style="display: block; color: #64748b; font-size: 12px; margin-bottom: 16px; line-height: 1.4;">Bắt buộc: ít nhất 6 ký tự. Khuyến nghị thêm số, chữ hoa hoặc ký tự đặc biệt để tăng độ mạnh.</small>
+                    <small style="display: block; color: #64748b; font-size: 12px; margin-bottom: 16px; line-height: 1.4;">Bắt buộc: tối thiểu 6 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số.</small>
 
                     <div class="reg-field">
                         <label class="reg-label">Số điện thoại</label>
@@ -172,7 +172,7 @@
                                     <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
                                 </svg>
                             </span>
-                            <input id="phone" type="tel" class="reg-input" placeholder="0901234567" required pattern="[0-9]{10}" />
+                            <input id="phone" type="tel" class="reg-input" placeholder="0901234567" required />
                         </div>
                     </div>
 
@@ -258,20 +258,50 @@
 
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            const fullName = document.getElementById('fullName').value;
+            const phoneNumber = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
 
+            // 1. Kiểm tra họ và tên
+            if (window.Validation) {
+                const nameCheck = window.Validation.validateFullName(fullName);
+                if (!nameCheck.valid) {
+                    Toastify({
+                        text: nameCheck.message,
+                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
+                    }).showToast();
+                    return;
+                }
+
+                // 2. Kiểm tra mật khẩu
+                const passCheck = window.Validation.validatePassword(password);
+                if (!passCheck.valid) {
+                    Toastify({
+                        text: passCheck.message,
+                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
+                    }).showToast();
+                    return;
+                }
+
+                // 3. Kiểm tra số điện thoại
+                const phoneCheck = window.Validation.validatePhoneNumber(phoneNumber);
+                if (!phoneCheck.valid) {
+                    Toastify({
+                        text: phoneCheck.message,
+                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
+                    }).showToast();
+                    return;
+                }
+            }
+
             if (password !== confirmPassword) {
                 Toastify({
-                    text: "Mật khẩu xác nhận không khớp",
+                    text: "Mật khẩu xác nhận không khớp.",
                     style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
                 }).showToast();
                 return;
             }
-
-            const email = document.getElementById('email').value;
-            const fullName = document.getElementById('fullName').value;
-            const phoneNumber = document.getElementById('phone').value;
             const btn = document.getElementById('submitBtn');
 
             btn.disabled = true;

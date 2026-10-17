@@ -246,7 +246,7 @@
                     const id = fac.facilityId || fac.id;
                     const name = fac.facilityName || fac.name || '';
                     const verified = fac.verified ?? fac.isVerified;
-                    const address = fac.address ? (fac.province ? `${fac.address}, ${fac.province}` : fac.address) : (fac.province || 'Đang cập nhật địa chỉ');
+                    const address = fac.address ? (fac.province ? `${fac.address}, ${fac.province}` : fac.address) : (fac.province || 'Chưa cập nhật');
                     
                     html += `
                         <div class="facility-card">

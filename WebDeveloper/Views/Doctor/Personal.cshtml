@@ -116,15 +116,24 @@
             const fullName = document.getElementById('fullName').value.trim();
             const phone = document.getElementById('phoneNumber').value.trim();
             
-            if (!fullName) {
-                showMessage("Họ và tên không được để trống.", "error");
-                return;
-            }
-
-            const phoneRegex = /^[0-9]{10}$/;
-            if (phone && !phoneRegex.test(phone)) {
-                showMessage("Số điện thoại phải gồm 10 chữ số, ví dụ: 0912345678", "error");
-                return;
+            if (window.Validation) {
+                const nameCheck = window.Validation.validateFullName(fullName);
+                if (!nameCheck.valid) {
+                    showMessage(nameCheck.message, "error");
+                    return;
+                }
+                if (phone) {
+                    const phoneCheck = window.Validation.validatePhoneNumber(phone);
+                    if (!phoneCheck.valid) {
+                        showMessage(phoneCheck.message, "error");
+                        return;
+                    }
+                }
+            } else {
+                if (!fullName) {
+                    showMessage("Họ và tên không được để trống.", "error");
+                    return;
+                }
             }
 
             const btn = document.getElementById('submitBtn');

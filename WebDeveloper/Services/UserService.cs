@@ -80,6 +80,9 @@ namespace WebDeveloper.Services
             if (BCrypt.Net.BCrypt.Verify(req.NewPassword, dbUser.PasswordHash))
                 throw new InvalidOperationException("Mật khẩu mới phải khác mật khẩu cũ!");
 
+            if (!System.Text.RegularExpressions.Regex.IsMatch(req.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$"))
+                throw new InvalidOperationException("Mật khẩu mới phải có tối thiểu 6 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số!");
+
             dbUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
             await _db.SaveChangesAsync();
         }

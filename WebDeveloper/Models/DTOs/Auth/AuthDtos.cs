@@ -20,13 +20,16 @@ namespace WebDeveloper.Models.DTOs.Auth
 
         [Required(ErrorMessage = "Mật khẩu không được để trống")]
         [MinLength(6, ErrorMessage = "Mật khẩu phải có ít nhất 6 ký tự")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$", ErrorMessage = "Mật khẩu phải có tối thiểu 6 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số")]
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Họ tên không được để trống")]
+        [StringLength(60, MinimumLength = 2, ErrorMessage = "Họ và tên phải từ 2 đến 60 ký tự")]
+        [RegularExpression(@"^[\p{L}\s]{2,60}$", ErrorMessage = "Họ và tên chỉ được chứa chữ cái tiếng Việt và khoảng trắng, không bao gồm số hay ký tự đặc biệt")]
         public string FullName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [RegularExpression(@"^[0-9]{10}$", ErrorMessage = "Số điện thoại phải gồm 10 chữ số")]
+        [RegularExpression(@"^(03|05|07|08|09)\d{8}$", ErrorMessage = "Số điện thoại phải đúng đầu số di động Việt Nam (03, 05, 07, 08, 09) và gồm 10 chữ số")]
         public string PhoneNumber { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng chọn vai trò người dùng")]
@@ -58,6 +61,7 @@ namespace WebDeveloper.Models.DTOs.Auth
 
         [Required(ErrorMessage = "Mật khẩu mới không được để trống")]
         [MinLength(6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$", ErrorMessage = "Mật khẩu mới phải có tối thiểu 6 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số")]
         public string NewPassword { get; set; } = string.Empty;
     }
 
@@ -71,6 +75,7 @@ namespace WebDeveloper.Models.DTOs.Auth
 
         [Required(ErrorMessage = "Mật khẩu mới không được để trống")]
         [MinLength(6, ErrorMessage = "Mật khẩu mới phải có ít nhất 6 ký tự")]
+        [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$", ErrorMessage = "Mật khẩu mới phải có tối thiểu 6 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số")]
         public string NewPassword { get; set; } = string.Empty;
     }
 }

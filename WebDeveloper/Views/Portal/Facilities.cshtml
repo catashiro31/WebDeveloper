@@ -204,7 +204,7 @@
                     facilities.forEach(fac => {
                         const hasImage = fac.imageUrl && fac.imageUrl.trim() !== '';
                         const name = fac.facilityName || fac.name;
-                        const address = `${fac.address || ''}${fac.province ? `, ${fac.province}` : ''}`;
+                        const address = `${fac.address || ''}${fac.province ? `, ${fac.province}` : ''}`.trim() || 'Chưa cập nhật';
                         const verifiedHtml = fac.verified ? `
                             <span class="verified-badge">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">

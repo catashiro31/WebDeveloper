@@ -73,3 +73,118 @@ async function readApiMessage(response, fallback = 'Yêu cầu không thành cô
     if (contentType.includes('html') || /<[^>]+>/.test(body)) return fallback;
     return body.trim().slice(0, 300) || fallback;
 }
+
+// ==========================================
+// Chuẩn hóa bộ quy tắc Validate toàn hệ thống
+// ==========================================
+window.Validation = {
+    // 1. Họ và tên: 2-60 ký tự, chỉ chữ cái tiếng Việt và khoảng trắng, không số
+    validateFullName(name) {
+        if (!name || !name.trim()) {
+            return { valid: false, message: 'Họ và tên không được để trống.' };
+        }
+        const trimmed = name.trim();
+        if (trimmed.length < 2 || trimmed.length > 60) {
+            return { valid: false, message: 'Họ và tên phải có độ dài từ 2 đến 60 ký tự.' };
+        }
+        if (/\d/.test(trimmed)) {
+            return { valid: false, message: 'Họ và tên không được chứa chữ số.' };
+        }
+        // Bao gồm toàn bộ chữ cái tiếng Việt có dấu hoa/thường và khoảng trắng
+        const regex = /^[a-zA-ZàáảãạâầấẩẫậăằắẳẵặèéẻẽẹêềếểễệđìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵÀÁẢÃẠÂẦẤẨẪẬĂẰẮẲẴẶÈÉẺẼẸÊỀẾỂỄỆĐÌÍỈĨỊÒÓỎÕỌÔỒỐỔỖỘƠỜỚỞỠỢÙÚỦŨỤƯỪỨỬỮỰỲÝỶỸỴ\s]+$/;
+        if (!regex.test(trimmed)) {
+            return { valid: false, message: 'Họ và tên chỉ được chứa chữ cái tiếng Việt và khoảng trắng, không chứa ký tự đặc biệt.' };
+        }
+        return { valid: true, message: '' };
+    },
+
+    // 2. Ngày sinh: bắt buộc, không ở tương lai, tuổi <= 100
+    validateDateOfBirth(dobStr) {
+        if (!dobStr || !dobStr.trim()) {
+            return { valid: false, message: 'Ngày sinh không được để trống.' };
+        }
+        const dob = new Date(dobStr);
+        if (isNaN(dob.getTime())) {
+            return { valid: false, message: 'Ngày sinh không đúng định dạng.' };
+        }
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (dob > today) {
+            return { valid: false, message: 'Ngày sinh không được ở tương lai.' };
+        }
+        const age = today.getFullYear() - dob.getFullYear();
+        if (age > 100) {
+            return { valid: false, message: 'Độ tuổi không được vượt quá 100 tuổi.' };
+        }
+        return { valid: true, message: '' };
+    },
+
+    // 3. Giới tính: bắt buộc chọn (Nam/Nữ/Khác), không để rỗng/mặc định
+    validateGender(gender) {
+        if (!gender || !gender.toString().trim() || gender === 'NONE' || gender === '') {
+            return { valid: false, message: 'Vui lòng chọn giới tính (Nam, Nữ hoặc Khác).' };
+        }
+        return { valid: true, message: '' };
+    },
+
+    // 4. Số điện thoại: đúng đầu số di động VN (03, 05, 07, 08, 09), 10 số, không lặp
+    validatePhoneNumber(phone) {
+        if (!phone || !phone.trim()) {
+            return { valid: false, message: 'Số điện thoại không được để trống.' };
+        }
+        const trimmed = phone.trim().replace(/[\s\.\-]+/g, '');
+        const regex = /^(03|05|07|08|09)\d{8}$/;
+        if (!regex.test(trimmed)) {
+            return { valid: false, message: 'Số điện thoại phải gồm 10 chữ số và thuộc đầu số di động Việt Nam (03, 05, 07, 08, 09).' };
+        }
+        // Kiểm tra chuỗi lặp như 0000000000 hoặc 0999999999
+        if (/^(\d)\1{9}$/.test(trimmed) || /^0[35789](\d)\1{7}$/.test(trimmed)) {
+            return { valid: false, message: 'Số điện thoại không hợp lệ (không được là chuỗi số lặp).' };
+        }
+        return { valid: true, message: '' };
+    },
+
+    // 5. Địa chỉ: chưa nhập hiển thị "Chưa cập nhật", không bao giờ hiển thị "null"
+    formatAddress(addr) {
+        if (!addr || typeof addr !== 'string' || !addr.trim() || addr.trim().toLowerCase() === 'null') {
+            return 'Chưa cập nhật';
+        }
+        return addr.trim();
+    },
+
+    // 6. Lý do khám: 10-500 ký tự
+    validateReason(reason) {
+        if (!reason || !reason.trim()) {
+            return { valid: false, message: 'Lý do khám không được để trống.' };
+        }
+        const len = reason.trim().length;
+        if (len < 10) {
+            return { valid: false, message: `Lý do khám phải từ 10 đến 500 ký tự (hiện có ${len} ký tự).` };
+        }
+        if (len > 500) {
+            return { valid: false, message: `Lý do khám không được vượt quá 500 ký tự (hiện có ${len} ký tự).` };
+        }
+        return { valid: true, message: '' };
+    },
+
+    // 7. Mật khẩu: tối thiểu 6 ký tự, có chữ hoa, chữ thường, số
+    validatePassword(password) {
+        if (!password) {
+            return { valid: false, message: 'Mật khẩu không được để trống.' };
+        }
+        if (password.length < 6) {
+            return { valid: false, message: 'Mật khẩu phải có tối thiểu 6 ký tự.' };
+        }
+        if (!/[A-Z]/.test(password)) {
+            return { valid: false, message: 'Mật khẩu phải chứa ít nhất 1 chữ cái in hoa (A-Z).' };
+        }
+        if (!/[a-z]/.test(password)) {
+            return { valid: false, message: 'Mật khẩu phải chứa ít nhất 1 chữ cái viết thường (a-z).' };
+        }
+        if (!/\d/.test(password)) {
+            return { valid: false, message: 'Mật khẩu phải chứa ít nhất 1 chữ số (0-9).' };
+        }
+        return { valid: true, message: '' };
+    }
+};
+

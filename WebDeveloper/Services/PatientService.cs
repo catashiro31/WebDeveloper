@@ -56,6 +56,15 @@ namespace WebDeveloper.Services
 
         public async Task<string> AddRelative(User user, RelativeRequest req)
         {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            if (req.DateOfBirth > today)
+                throw new InvalidOperationException("Ngày sinh không được ở tương lai!");
+            if (today.Year - req.DateOfBirth.Year > 100)
+                throw new InvalidOperationException("Độ tuổi không được vượt quá 100 tuổi!");
+
+            if (req.PhoneNumber.Distinct().Count() <= 2 || System.Text.RegularExpressions.Regex.IsMatch(req.PhoneNumber, @"^0[35789](\d)\1{7}$"))
+                throw new InvalidOperationException("Số điện thoại không hợp lệ (không được là chuỗi số lặp)!");
+
             if (await _db.PatientProfiles.AnyAsync(p => p.FullName == req.FullName && p.PhoneNumber == req.PhoneNumber && p.UserId == user.UserId && p.IsActive))
                 throw new InvalidOperationException("Hồ sơ bệnh nhân này đã tồn tại!");
 
@@ -83,6 +92,15 @@ namespace WebDeveloper.Services
 
             if (profile.UserId != user.UserId)
                 throw new InvalidOperationException("Bạn không có quyền sửa hồ sơ này!");
+
+            var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
+            if (req.DateOfBirth > today)
+                throw new InvalidOperationException("Ngày sinh không được ở tương lai!");
+            if (today.Year - req.DateOfBirth.Year > 100)
+                throw new InvalidOperationException("Độ tuổi không được vượt quá 100 tuổi!");
+
+            if (req.PhoneNumber.Distinct().Count() <= 2 || System.Text.RegularExpressions.Regex.IsMatch(req.PhoneNumber, @"^0[35789](\d)\1{7}$"))
+                throw new InvalidOperationException("Số điện thoại không hợp lệ (không được là chuỗi số lặp)!");
 
             if (await _db.PatientProfiles.AnyAsync(p => p.FullName == req.FullName && p.PhoneNumber == req.PhoneNumber && p.UserId == user.UserId && p.IsActive && p.PatientId != id))
                 throw new InvalidOperationException("Hồ sơ bệnh nhân này đã tồn tại!");
@@ -124,6 +142,9 @@ namespace WebDeveloper.Services
         // === Đặt lịch: khóa Redis theo ca, kiểm tra chủ hồ sơ, hạn mức và trùng giờ trước khi lưu. ===
         public async Task<string> BookAppointment(User user, AppointmentRequest req)
         {
+            if (string.IsNullOrWhiteSpace(req.Reason) || req.Reason.Trim().Length < 10 || req.Reason.Trim().Length > 500)
+                throw new InvalidOperationException("Lý do khám phải từ 10 đến 500 ký tự!");
+
             // Lock phân tán bằng Redis để chống Double Booking
             var redisDb = _redis.GetDatabase();
             var lockKey = $"lock:schedule:{req.ScheduleId}";

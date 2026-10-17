@@ -90,8 +90,10 @@
                 <div class="floating-label-input">
                     <label>Giới tính *</label>
                     <select id="gender" required>
+                        <option value="">-- Chọn giới tính --</option>
                         <option value="MALE">Nam</option>
                         <option value="FEMALE">Nữ</option>
+                        <option value="OTHER">Khác</option>
                     </select>
                 </div>
             </div>
@@ -102,8 +104,8 @@
             </div>
 
             <div class="floating-label-input">
-                <label>Địa chỉ liên lạc *</label>
-                <input type="text" id="address" placeholder="Nhập địa chỉ chi tiết" required />
+                <label>Địa chỉ liên lạc</label>
+                <input type="text" id="address" placeholder="Nhập địa chỉ chi tiết (nếu có)" />
             </div>
 
             <div style="display: flex; gap: 16px; margin-top: 16px;">
@@ -124,10 +126,12 @@
         const form = document.getElementById('relativeForm');
         let relativesList = [];
 
-        // Set max date for DoB
+        // Set min/max date for DoB (tuổi <= 100, không ở tương lai)
         const today = new Date();
         const maxDate = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+        const minDate = (today.getFullYear() - 100) + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
         document.getElementById('dateOfBirth').max = maxDate;
+        document.getElementById('dateOfBirth').min = minDate;
 
         function fetchRelatives() {
             container.innerHTML = `
@@ -163,12 +167,13 @@
             let html = '';
             relativesList.forEach(r => {
                 const dobStr = r.dateOfBirth ? new Date(r.dateOfBirth).toLocaleDateString('vi-VN') : '';
+                const displayAddr = window.Validation ? window.Validation.formatAddress(r.address) : (r.address || 'Chưa cập nhật');
                 html += `
                     <div class="relative-card">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width: 48px; height: 48px; border-radius: 16px; background: ${r.gender === 'MALE' ? '#e0f2fe' : '#fce7f3'}; display: flex; align-items: center; justify-content: center; font-size: 20px;">
-                                    ${r.gender === 'MALE' ? '👨' : '👩'}
+                                <div style="width: 48px; height: 48px; border-radius: 16px; background: ${r.gender === 'MALE' ? '#e0f2fe' : (r.gender === 'FEMALE' ? '#fce7f3' : '#f3e8ff')}; display: flex; align-items: center; justify-content: center; font-size: 20px;">
+                                    ${r.gender === 'MALE' ? '👨' : (r.gender === 'FEMALE' ? '👩' : '🧑')}
                                 </div>
                                 <div>
                                     <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">${r.fullName}</h3>
@@ -186,7 +191,7 @@
                         </div>
                         <div class="info-item"><div class="info-icon">🎂</div><span>${dobStr} (${getGenderLabel(r.gender)})</span></div>
                         <div class="info-item"><div class="info-icon">📞</div><span>${r.phoneNumber}</span></div>
-                        <div class="info-item"><div class="info-icon">📍</div><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${r.address}</span></div>
+                        <div class="info-item"><div class="info-icon">📍</div><span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${displayAddr}</span></div>
                     </div>
                 `;
             });
@@ -205,12 +210,13 @@
                     document.getElementById('fullName').value = r.fullName || '';
                     document.getElementById('phoneNumber').value = r.phoneNumber || '';
                     document.getElementById('dateOfBirth').value = r.dateOfBirth ? r.dateOfBirth.substring(0, 10) : '';
-                    document.getElementById('gender').value = r.gender || 'MALE';
+                    document.getElementById('gender').value = r.gender || '';
                     document.getElementById('relationship').value = r.relationship || '';
                     document.getElementById('address').value = r.address || '';
                 }
             } else {
                 document.getElementById('modalTitle').innerText = 'Thêm người thân mới';
+                document.getElementById('gender').value = '';
             }
             modal.classList.add('active');
         };
@@ -220,25 +226,48 @@
         window.handleSubmit = function(e) {
             e.preventDefault();
             
-            const phone = document.getElementById('phoneNumber').value;
-            if (!phone.match(/^(0|\+84)(\s|\.)?((3[2-9])|(5[689])|(7[06-9])|(8[1-689])|(9[0-46-9]))(\d)(\s|\.)?(\d{3})(\s|\.)?(\d{3})$/)) {
-                Toastify({ text: "Số điện thoại không đúng định dạng", style: { background: "#f59e0b" } }).showToast();
-                return;
-            }
-            
+            const fullName = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phoneNumber').value.trim();
             const dob = document.getElementById('dateOfBirth').value;
-            if (new Date(dob) > new Date()) {
-                Toastify({ text: "Ngày sinh không thể ở tương lai", style: { background: "#f59e0b" } }).showToast();
+            const gender = document.getElementById('gender').value;
+            const relationship = document.getElementById('relationship').value.trim();
+            const address = document.getElementById('address').value.trim();
+
+            if (window.Validation) {
+                const nameCheck = window.Validation.validateFullName(fullName);
+                if (!nameCheck.valid) {
+                    Toastify({ text: nameCheck.message, style: { background: "#ef4444" } }).showToast();
+                    return;
+                }
+                const phoneCheck = window.Validation.validatePhoneNumber(phone);
+                if (!phoneCheck.valid) {
+                    Toastify({ text: phoneCheck.message, style: { background: "#ef4444" } }).showToast();
+                    return;
+                }
+                const dobCheck = window.Validation.validateDateOfBirth(dob);
+                if (!dobCheck.valid) {
+                    Toastify({ text: dobCheck.message, style: { background: "#ef4444" } }).showToast();
+                    return;
+                }
+                const genderCheck = window.Validation.validateGender(gender);
+                if (!genderCheck.valid) {
+                    Toastify({ text: genderCheck.message, style: { background: "#ef4444" } }).showToast();
+                    return;
+                }
+            }
+
+            if (!relationship) {
+                Toastify({ text: "Vui lòng nhập mối quan hệ.", style: { background: "#ef4444" } }).showToast();
                 return;
             }
 
             const payload = {
-                fullName: document.getElementById('fullName').value.trim(),
+                fullName: fullName,
                 phoneNumber: phone,
                 dateOfBirth: dob,
-                gender: document.getElementById('gender').value,
-                relationship: document.getElementById('relationship').value.trim(),
-                address: document.getElementById('address').value.trim()
+                gender: gender,
+                relationship: relationship,
+                address: address
             };
 
             const id = document.getElementById('relativeId').value;

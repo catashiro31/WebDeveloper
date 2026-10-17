@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Hồ sơ bác sĩ";
     Layout = "_DoctorLayout";
 }
@@ -241,7 +241,7 @@
             document.getElementById('viewDegree').innerText = data.degree || '';
             document.getElementById('viewSpecialty').innerText = data.specialty?.specialtyName || data.specialtyName || '';
             document.getElementById('viewFacility').innerText = data.facility?.facilityName || data.facilityName || '';
-            document.getElementById('viewAddress').innerText = data.facilityAddress || data.facility?.address || '';
+            document.getElementById('viewAddress').innerText = data.facilityAddress || data.facility?.address || 'Chưa cập nhật';
             document.getElementById('viewExp').innerText = `${data.experienceYears} năm thực hành`;
             
             document.getElementById('viewPrice').innerText = Number(data.price || 0).toLocaleString('vi-VN');

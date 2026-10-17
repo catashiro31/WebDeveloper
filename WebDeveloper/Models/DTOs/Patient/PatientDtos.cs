@@ -12,12 +12,15 @@ namespace WebDeveloper.Models.DTOs.Patient
         public int ScheduleId { get; set; }
 
         [Required(ErrorMessage = "Không được để trống lý do đặt")]
+        [StringLength(500, MinimumLength = 10, ErrorMessage = "Lý do khám phải từ 10 đến 500 ký tự")]
         public string Reason { get; set; } = string.Empty;
     }
 
     public class RelativeRequest
     {
         [Required(ErrorMessage = "Họ tên người thân không được để trống")]
+        [StringLength(60, MinimumLength = 2, ErrorMessage = "Họ và tên người thân phải từ 2 đến 60 ký tự")]
+        [RegularExpression(@"^[\p{L}\s]{2,60}$", ErrorMessage = "Họ và tên chỉ được chứa chữ cái tiếng Việt và khoảng trắng, không bao gồm số hay ký tự đặc biệt")]
         public string FullName { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Ngày sinh không được để trống")]
@@ -27,12 +30,10 @@ namespace WebDeveloper.Models.DTOs.Patient
         public GenderStatus Gender { get; set; }
 
         [Required(ErrorMessage = "Số điện thoại không được để trống")]
-        [RegularExpression(@"^(0|\+84)(\s|\.)?((3[2-9])|(5[689])|(7[06-9])|(8[1-689])|(9[0-46-9]))(\d)(\s|\.)?(\d{3})(\s|\.)?(\d{3})$",
-            ErrorMessage = "Số điện thoại không đúng định dạng Việt Nam")]
+        [RegularExpression(@"^(03|05|07|08|09)\d{8}$", ErrorMessage = "Số điện thoại phải đúng đầu số di động Việt Nam (03, 05, 07, 08, 09) và gồm 10 chữ số")]
         public string PhoneNumber { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Địa chỉ không được để trống")]
-        public string Address { get; set; } = string.Empty;
+        public string? Address { get; set; }
 
         [Required(ErrorMessage = "Mối quan hệ không được để trống")]
         public string Relationship { get; set; } = string.Empty;

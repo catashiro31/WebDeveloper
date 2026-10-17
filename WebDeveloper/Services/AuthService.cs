@@ -126,6 +126,12 @@ namespace WebDeveloper.Services
             if (request.Role == WebDeveloper.Models.Enums.RoleStatus.ADMIN)
                 throw new InvalidOperationException("Không thể đăng ký tài khoản với quyền quản trị!");
 
+            if (request.PhoneNumber.Distinct().Count() <= 2 || System.Text.RegularExpressions.Regex.IsMatch(request.PhoneNumber, @"^0[35789](\d)\1{7}$"))
+                throw new InvalidOperationException("Số điện thoại không hợp lệ (không được là chuỗi số lặp)!");
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(request.Password, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$"))
+                throw new InvalidOperationException("Mật khẩu phải có tối thiểu 6 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số!");
+
             if (await _db.Users.AnyAsync(u => u.Email == request.Email))
                 throw new InvalidOperationException("Email đã được sử dụng!");
 
@@ -260,6 +266,9 @@ namespace WebDeveloper.Services
 
             if (user.CodeExpiry == null || DateTime.UtcNow > user.CodeExpiry)
                 throw new InvalidOperationException("Đường link khôi phục đã hết hạn! Vui lòng yêu cầu lại.");
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(req.NewPassword, @"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$"))
+                throw new InvalidOperationException("Mật khẩu mới phải có tối thiểu 6 ký tự, gồm ít nhất 1 chữ hoa, 1 chữ thường và 1 chữ số!");
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
             user.VerificationCode = null; // Clear the code after successful reset

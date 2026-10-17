@@ -156,7 +156,8 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
             
             const addr = req.targetFacility?.address || req.targetFacilityAddress || '';
             const prov = req.targetFacility?.province || req.targetFacilityProvince || '';
-            document.getElementById('modalAddress').innerText = addr + (prov ? `, ${prov}` : '');
+            const fullAddr = (addr + (prov ? `, ${prov}` : '')).trim() || 'Chưa cập nhật';
+            document.getElementById('modalAddress').innerText = fullAddr;
             
             document.getElementById('adminNote').value = '';
             document.getElementById('processModal').classList.add('active');
