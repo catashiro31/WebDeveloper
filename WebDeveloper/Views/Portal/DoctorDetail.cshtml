@@ -207,6 +207,195 @@
   .day-grid { grid-template-columns: repeat(4, 1fr); }
   .slot-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* ===== CAROUSEL & DOCTOR CARD STYLES ===== */
+.section-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.carousel-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+.carousel-item {
+  display: flex;
+  height: 100%;
+}
+.doc-card { 
+  background: #fff; 
+  border: 1.5px solid #e2e8f0; 
+  border-radius: 24px; 
+  overflow: hidden; 
+  cursor: pointer; 
+  display: flex; 
+  flex-direction: column; 
+  width: 100%;
+  height: 100%;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04); 
+  text-decoration: none; 
+  color: inherit;
+  font-family: var(--font-app);
+}
+.doc-card:hover { 
+  transform: translateY(-6px); 
+  box-shadow: 0 20px 35px -10px rgba(99, 102, 241, 0.15); 
+  border-color: #818cf8; 
+}
+.avatar-wrap { 
+  background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%); 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  height: 200px; 
+  overflow: hidden; 
+  position: relative;
+  border-bottom: 1px solid #f1f5f9;
+}
+.avatar { 
+  height: 100%; 
+  width: 100%; 
+  object-fit: cover; 
+  object-position: top; 
+  transition: transform 0.5s ease; 
+}
+.doc-card:hover .avatar { transform: scale(1.06); }
+.initials-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  font-family: var(--font-app);
+}
+
+.card-body { 
+  padding: 22px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  flex: 1; 
+  font-family: var(--font-app);
+}
+.avail-badge { display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.card-doc-name { 
+  margin: 2px 0 0; 
+  font-size: 18px; 
+  font-weight: 800; 
+  color: #0f172a; 
+  line-height: 1.3; 
+  letter-spacing: -0.01em; 
+  font-family: var(--font-app);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.doc-spec { 
+  margin: 0; 
+  font-size: 13.5px; 
+  color: #6366f1; 
+  font-weight: 600; 
+  font-family: var(--font-app);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.doc-facility {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 500;
+  min-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.doc-facility svg { flex-shrink: 0; color: #94a3b8; }
+
+.card-meta-container {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meta-row-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.meta-pill { 
+  font-size: 13px; 
+  padding: 7px 12px; 
+  background: #f8fafc; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 12px; 
+  color: #334155; 
+  font-weight: 700; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  transition: all 0.2s;
+  font-family: var(--font-app);
+  box-sizing: border-box;
+}
+.meta-pill.rating {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+.meta-pill.exp {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+.meta-pill.fee {
+  width: 100%;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+  justify-content: flex-start;
+}
+.meta-pill svg { width: 14px; height: 14px; flex-shrink: 0; }
+.badge-star { color: #f59e0b; }
+.badge-exp { color: #6366f1; }
+.badge-fee { color: #16a34a; }
+.fee-val { font-size: 13.5px; font-weight: 800; color: #15803d; }
+.fee-unit { font-size: 11.5px; font-weight: 600; color: #16a34a; opacity: 0.85; margin-left: auto; }
+
+.book-btn { 
+  margin-top: auto; 
+  padding: 12px 0; 
+  background: #eef2ff; 
+  color: #4f46e5; 
+  border: none; 
+  border-radius: 14px; 
+  font-size: 14px; 
+  font-weight: 800; 
+  cursor: pointer; 
+  width: 100%; 
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+  font-family: var(--font-app);
+  text-align: center;
+}
+.doc-card:hover .book-btn { 
+  background: #6366f1; 
+  color: #fff; 
+  box-shadow: 0 8px 20px rgba(99,102,241,0.28); 
+}
 </style>
 
 <div class="appt-page">
@@ -553,21 +742,24 @@
                                         <span>Cơ sở y tế</span>
                                     </div>
 
-                                    <div class="meta-row">
-                                        <span class="meta-badge">
-                                            <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                                            @(d.RatingAverage?.ToString("0.0") ?? "5.0")
-                                        </span>
-                                        <span class="meta-badge">
-                                            <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                                            @(d.Experience ?? 0) năm
-                                        </span>
-                                        <span class="meta-badge">
+                                    <div class="card-meta-container">
+                                        <div class="meta-row-stats">
+                                            <span class="meta-pill rating" title="Đánh giá">
+                                                <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                                                <span>@(d.RatingAverage.HasValue && d.RatingAverage > 0 ? d.RatingAverage.Value.ToString("0.0") : "5.0")</span>
+                                            </span>
+                                            <span class="meta-pill exp" title="Kinh nghiệm">
+                                                <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                                <span>@(d.Experience ?? 0) năm</span>
+                                            </span>
+                                        </div>
+                                        <div class="meta-pill fee" title="Giá khám">
                                             <svg class="badge-fee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                                            @d.Price?.ToString("N0")đ
-                                        </span>
+                                            <span class="fee-val">@((d.Price ?? 0).ToString("N0"))đ</span>
+                                            <span class="fee-unit">/ lượt khám</span>
+                                        </div>
                                     </div>
-                                    <button class="book-btn">Đặt lịch hẹn</button>
+                                    <button type="button" class="book-btn">Đặt lịch hẹn</button>
                                 </div>
                             </a>
                         </div>

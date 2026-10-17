@@ -144,14 +144,17 @@
   cursor: pointer; 
   display: flex; 
   flex-direction: column; 
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); 
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); 
-  text-decoration: none; color: inherit;
+  height: 100%;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1); 
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04); 
+  text-decoration: none; 
+  color: inherit;
+  font-family: var(--font-app);
 }
 .doc-card:hover { 
-  transform: translateY(-8px); 
-  box-shadow: 0 25px 50px -12px rgba(99, 102, 241, 0.15); 
-  border-color: #6366f1; 
+  transform: translateY(-6px); 
+  box-shadow: 0 20px 35px -10px rgba(99, 102, 241, 0.15); 
+  border-color: #818cf8; 
 }
 .avatar-wrap { 
   background: linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%); 
@@ -161,6 +164,7 @@
   height: 200px; 
   overflow: hidden; 
   position: relative;
+  border-bottom: 1px solid #f1f5f9;
 }
 .avatar { 
   height: 100%; 
@@ -169,7 +173,7 @@
   object-position: top; 
   transition: transform 0.5s ease; 
 }
-.doc-card:hover .avatar { transform: scale(1.08); }
+.doc-card:hover .avatar { transform: scale(1.06); }
 
 .initials-avatar {
   width: 100%;
@@ -182,34 +186,116 @@
   font-size: 48px;
   font-weight: 900;
   letter-spacing: -0.05em;
-}
-
-.card-body { padding: 24px; display: flex; flex-direction: column; gap: 10px; flex: 1; border-top: 1px solid #f1f5f9; }
-.avail-badge { display: flex; align-items: center; gap: 6px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-.doc-name { margin: 0; font-size: 18px; font-weight: 800; color: #0f172a; line-height: 1.2; letter-spacing: -0.01em; }
-.doc-spec { margin: 0; font-size: 14px; color: #64748b; display: flex; align-items: center; gap: 8px; font-weight: 500; }
-.meta-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
-.meta-badge { 
-  font-size: 13px; padding: 6px 12px; background: #f8fafc; border: 1px solid #f1f5f9; 
-  border-radius: 12px; color: #334155; font-weight: 700; display: flex; align-items: center; gap: 6px; 
-  transition: all 0.2s;
-}
-.doc-card:hover .meta-badge { background: #fff; border-color: #e2e8f0; }
-.meta-badge svg { width: 14px; height: 14px; }
-.badge-star { color: #f59e0b; }
-.badge-exp { color: #6366f1; }
-.badge-fee { color: #10b981; }
-.book-btn { 
-  margin-top: 12px; padding: 12px 0; 
-  background: #f8fafc; color: #6366f1; 
-  border: none; border-radius: 14px; 
-  font-size: 14px; font-weight: 800; 
-  cursor: pointer; width: 100%; 
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
   font-family: var(--font-app);
 }
-.doc-card:hover .book-btn { background: #6366f1; color: #fff; box-shadow: 0 8px 20px rgba(99,102,241,0.3); }
+
+.card-body { 
+  padding: 22px; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 8px; 
+  flex: 1; 
+  border-top: 1px solid #f1f5f9; 
+  font-family: var(--font-app);
+}
+.avail-badge { display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+.doc-name { 
+  margin: 2px 0 0; 
+  font-size: 18px; 
+  font-weight: 800; 
+  color: #0f172a; 
+  line-height: 1.3; 
+  letter-spacing: -0.01em; 
+  font-family: var(--font-app);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.doc-spec { 
+  margin: 0; 
+  font-size: 13.5px; 
+  color: #6366f1; 
+  font-weight: 600; 
+  font-family: var(--font-app);
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-meta-container {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meta-row-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.meta-pill { 
+  font-size: 13px; 
+  padding: 7px 12px; 
+  background: #f8fafc; 
+  border: 1px solid #e2e8f0; 
+  border-radius: 12px; 
+  color: #334155; 
+  font-weight: 700; 
+  display: flex; 
+  align-items: center; 
+  gap: 6px; 
+  transition: all 0.2s;
+  font-family: var(--font-app);
+  box-sizing: border-box;
+}
+.meta-pill.rating {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+.meta-pill.exp {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+}
+.meta-pill.fee {
+  width: 100%;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+  justify-content: flex-start;
+}
+.meta-pill svg { width: 14px; height: 14px; flex-shrink: 0; }
+.badge-star { color: #f59e0b; }
+.badge-exp { color: #6366f1; }
+.badge-fee { color: #16a34a; }
+.fee-val { font-size: 13.5px; font-weight: 800; color: #15803d; }
+.fee-unit { font-size: 11.5px; font-weight: 600; color: #16a34a; opacity: 0.85; margin-left: auto; }
+
+.book-btn { 
+  margin-top: auto; 
+  padding: 12px 0; 
+  background: #eef2ff; 
+  color: #4f46e5; 
+  border: none; 
+  border-radius: 14px; 
+  font-size: 14px; 
+  font-weight: 800; 
+  cursor: pointer; 
+  width: 100%; 
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
+  font-family: var(--font-app);
+  text-align: center;
+}
+.doc-card:hover .book-btn { 
+  background: #6366f1; 
+  color: #fff; 
+  box-shadow: 0 8px 20px rgba(99,102,241,0.28); 
+}
 </style>
 
 <div class="page">
@@ -579,7 +665,7 @@
                     elGrid.innerHTML = docs.map(doc => {
                         const name = doc.doctorName || doc.name || doc.fullName || "Bác sĩ";
                         const photo = doc.photo || doc.avatarUrl || doc.imageUrl;
-                        const rating = (doc.totalReviews || 0) > 0 ? Number(doc.ratingAverage || 0).toFixed(1) : "Chưa có đánh giá";
+                        const rating = (doc.totalReviews || 0) > 0 ? Number(doc.ratingAverage || 0).toFixed(1) : "Chưa có ĐG";
                         const exp = doc.experience || doc.experienceYears || 0;
                         const fee = doc.fee || doc.price || doc.consultationFee || 0;
                         const isPlaceholder = !photo || photo.includes("placeholder") || photo.includes("dicebear");
@@ -603,27 +689,29 @@
                                 <h3 class="doc-name">${name}</h3>
                                 <p class="doc-spec">${doc.specialtyName || doc.specialty || doc.specialization}</p>
                                 
-                                <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #64748b; margin-top: 4px; font-weight: 500;">
+                                <div class="doc-facility">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M4 21V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v17"/></svg>
-                                    <span>${doc.facilityName || doc.facility || 'Phòng khám riêng'}</span>
-                                    ${doc.province ? `<span style="color: #94a3b8;">• ${doc.province}</span>` : ''}
+                                    <span>${doc.facilityName || doc.facility || 'Phòng khám riêng'}${doc.province ? ` • ${doc.province}` : ''}</span>
                                 </div>
 
-                                <div class="meta-row">
-                                    <span class="meta-badge">
-                                        <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                                        ${rating}
-                                    </span>
-                                    <span class="meta-badge">
-                                        <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                                        ${exp} năm
-                                    </span>
-                                    <span class="meta-badge">
+                                <div class="card-meta-container">
+                                    <div class="meta-row-stats">
+                                        <span class="meta-pill rating" title="Đánh giá">
+                                            <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                                            <span>${rating}</span>
+                                        </span>
+                                        <span class="meta-pill exp" title="Kinh nghiệm">
+                                            <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                            <span>${exp} năm</span>
+                                        </span>
+                                    </div>
+                                    <div class="meta-pill fee" title="Giá khám">
                                         <svg class="badge-fee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                                        ${fee.toLocaleString()}đ
-                                    </span>
+                                        <span class="fee-val">${fee.toLocaleString('vi-VN')}đ</span>
+                                        <span class="fee-unit">/ lượt khám</span>
+                                    </div>
                                 </div>
-                                <button class="book-btn">Đặt lịch hẹn</button>
+                                <button type="button" class="book-btn">Đặt lịch hẹn</button>
                             </div>
                         </a>
                         `;
