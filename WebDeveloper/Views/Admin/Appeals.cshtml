@@ -30,7 +30,7 @@
             <h1>Yêu cầu mở khóa tài khoản</h1>
             <p>Xem xét yêu cầu và phản hồi lý do xử lý cho người dùng.</p>
         </div>
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div>
             <label class="appeals-filter">Trạng thái 
                 <select id="appealFilter">
                     <option value="PENDING">Chờ duyệt</option>
@@ -38,9 +38,6 @@
                     <option value="REJECTED">Từ chối</option>
                 </select>
             </label>
-            <button id="appealRefreshBtn" type="button" onclick="loadAppeals(true)" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; transition: all 0.2s;" onmouseenter="this.style.background='#e2e8f0'" onmouseleave="this.style.background='#f1f5f9'">
-                🔄 <span>Làm mới</span>
-            </button>
         </div>
     </div>
     <p id="appealError" role="status"></p>
@@ -94,11 +91,48 @@
     </div>
 </div>
 
+<!-- Modal duyệt mở khóa tài khoản -->
+<div id="approveModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(8px); display: none; align-items: flex-start; justify-content: center; z-index: 1000; padding: 40px 20px; overflow-y: auto;" onclick="closeApproveModal()">
+    <div style="background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 500px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); box-sizing: border-box; margin-top: 30px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="width: 48px; height: 48px; border-radius: 16px; background: #ede9fe; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                    🔓
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 19px; font-weight: 800; color: #0f172a;">Duyệt mở khóa tài khoản</h3>
+                    <p style="margin: 3px 0 0; font-size: 13.5px; color: #64748b;" id="approveUserSub">Xác nhận kích hoạt lại tài khoản</p>
+                </div>
+            </div>
+            <button onclick="closeApproveModal()" style="background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseenter="this.style.background='#e2e8f0'" onmouseleave="this.style.background='#f1f5f9'">✕</button>
+        </div>
+
+        <input type="hidden" id="approveAppealId" />
+
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+                <span style="font-size: 18px; line-height: 1.2;">ℹ️</span>
+                <p style="margin: 0; font-size: 13.5px; color: #475569; line-height: 1.5;">
+                    Tài khoản người dùng sẽ được mở khóa ngay lập tức và hệ thống sẽ tự động gửi email thông báo kèm hướng dẫn đăng nhập đến người dùng.
+                </p>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="button" onclick="closeApproveModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1.5px solid #cbd5e1; background: white; color: #475569; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Hủy bỏ</button>
+            <button type="button" id="confirmApproveBtn" onclick="submitApproveAppeal()" style="flex: 1.5; padding: 12px; border-radius: 12px; border: none; background: #7c3aed; color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 14px rgba(124, 58, 237, 0.3); transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;" onmouseenter="this.style.background='#6d28d9'" onmouseleave="this.style.background='#7c3aed'">
+                <span>Xác nhận duyệt mở khóa</span>
+            </button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
 let appealPage = 0;
 const appealError = document.getElementById('appealError');
 const rejectModal = document.getElementById('rejectModal');
+const approveModal = document.getElementById('approveModal');
 const rejectReasonInput = document.getElementById('rejectReasonInput');
 const rejectCharCounter = document.getElementById('rejectCharCounter');
 const rejectValidationMsg = document.getElementById('rejectValidationMsg');
@@ -110,6 +144,33 @@ rejectReasonInput.addEventListener('input', () => {
         rejectValidationMsg.textContent = '';
     }
 });
+
+function openApproveModal(id, userDesc) {
+    document.getElementById('approveAppealId').value = id;
+    document.getElementById('approveUserSub').textContent = userDesc || 'Xác nhận kích hoạt lại tài khoản';
+    approveModal.style.display = 'flex';
+}
+
+function closeApproveModal() {
+    approveModal.style.display = 'none';
+}
+
+async function submitApproveAppeal() {
+    const id = document.getElementById('approveAppealId').value;
+    const btn = document.getElementById('confirmApproveBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span>Đang xử lý...</span>';
+
+    try {
+        await handleAppealApi(id, true, '');
+        closeApproveModal();
+    } catch (err) {
+        showApiToast(err.message || 'Lỗi khi duyệt mở khóa', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>Xác nhận duyệt mở khóa</span>';
+    }
+}
 
 function openRejectModal(id, userDesc) {
     document.getElementById('rejectAppealId').value = id;
@@ -180,13 +241,8 @@ async function updateCounts() {
     } catch {}
 }
 
-async function loadAppeals(isManual = false, isBackground = false) {
+async function loadAppeals(isBackground = false) {
     const list = document.getElementById('appeals');
-    const refreshBtn = document.getElementById('appealRefreshBtn');
-    if (isManual && refreshBtn) {
-        refreshBtn.disabled = true;
-        refreshBtn.innerHTML = '⏳ <span>Đang tải...</span>';
-    }
     if (!isBackground) {
         list.replaceChildren();
         appealError.textContent = 'Đang tải…';
@@ -210,29 +266,18 @@ async function loadAppeals(isManual = false, isBackground = false) {
             }
             if (item.status === 'PENDING') [true,false].forEach(approve => {
                 const button = document.createElement('button'); button.textContent = approve ? 'Duyệt mở khóa' : 'Từ chối'; button.className = approve ? 'approve' : 'reject';
-                button.onclick = async () => {
+                button.onclick = () => {
+                    const userDesc = `${item.fullName || ''} (${item.email})`;
                     if (approve) {
-                        if (!confirm('Duyệt mở khóa tài khoản này và gửi email thông báo?')) return;
-                        card.querySelectorAll('button').forEach(b => b.disabled = true);
-                        try {
-                            await handleAppealApi(item.id, true, '');
-                        } catch(error) {
-                            appealError.textContent = error.message;
-                            card.querySelectorAll('button').forEach(b => b.disabled = false);
-                        }
+                        openApproveModal(item.id, userDesc);
                     } else {
-                        openRejectModal(item.id, `${item.fullName || ''} (${item.email})`);
+                        openRejectModal(item.id, userDesc);
                     }
                 }; card.append(button);
             }); list.append(card);
         });
     } catch(error) { 
         if (!isBackground) appealError.textContent = error.message; 
-    } finally {
-        if (isManual && refreshBtn) {
-            refreshBtn.disabled = false;
-            refreshBtn.innerHTML = '🔄 <span>Làm mới</span>';
-        }
     }
 }
 document.getElementById('appealFilter').onchange = () => { appealPage = 0; loadAppeals(); };

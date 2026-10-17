@@ -281,55 +281,76 @@
   padding: 22px; 
   display: flex; 
   flex-direction: column; 
-  gap: 8px; 
   flex: 1; 
   font-family: var(--font-app);
 }
-.avail-badge { display: flex; align-items: center; gap: 6px; }
+.avail-badge { display: flex; align-items: center; gap: 6px; margin-bottom: 2px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
 .card-doc-name { 
-  margin: 2px 0 0; 
+  margin: 0; 
   font-size: 18px; 
   font-weight: 800; 
   color: #0f172a; 
   line-height: 1.3; 
   letter-spacing: -0.01em; 
   font-family: var(--font-app);
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  height: 24px;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .doc-spec { 
-  margin: 0; 
+  margin: 2px 0 0; 
   font-size: 13.5px; 
   color: #6366f1; 
   font-weight: 600; 
   font-family: var(--font-app);
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
+  height: 20px;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .doc-facility {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
   font-size: 12.5px;
   color: #64748b;
   font-weight: 500;
-  min-height: 18px;
-  white-space: nowrap;
+  margin-top: 6px;
+  height: 38px;
+  line-height: 19px;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
-.doc-facility svg { flex-shrink: 0; color: #94a3b8; }
+.doc-facility svg { 
+  width: 14px; 
+  height: 14px; 
+  flex-shrink: 0; 
+  margin-top: 2.5px; 
+  color: #94a3b8; 
+}
+.doc-facility-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 19px;
+  word-break: break-word;
+}
 
+.card-bottom-wrap {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  padding-top: 14px;
+}
 .card-meta-container {
-  margin-top: 10px;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
 }
 .meta-row-stats {
   display: flex;
@@ -377,7 +398,6 @@
 .fee-unit { font-size: 11.5px; font-weight: 600; color: #16a34a; opacity: 0.85; margin-left: auto; }
 
 .book-btn { 
-  margin-top: auto; 
   padding: 12px 0; 
   background: #eef2ff; 
   color: #4f46e5; 
@@ -737,29 +757,31 @@
                                     <h3 class="card-doc-name">@d.DoctorName</h3>
                                     <p class="doc-spec">@d.SpecialtyName</p>
                                     
-                                    <div style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #64748b; margin-top: 4px; font-weight: 500;">
+                                    <div class="doc-facility">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M4 21V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v17"/></svg>
-                                        <span>Cơ sở y tế</span>
+                                        <span class="doc-facility-text">@(d.FacilityName ?? "Phòng khám riêng")@(string.IsNullOrEmpty(d.Province) ? "" : $" • {d.Province}")</span>
                                     </div>
 
-                                    <div class="card-meta-container">
-                                        <div class="meta-row-stats">
-                                            <span class="meta-pill rating" title="Đánh giá">
-                                                <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
-                                                <span>@(d.RatingAverage.HasValue && d.RatingAverage > 0 ? d.RatingAverage.Value.ToString("0.0") : "5.0")</span>
-                                            </span>
-                                            <span class="meta-pill exp" title="Kinh nghiệm">
-                                                <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                                                <span>@(d.Experience ?? 0) năm</span>
-                                            </span>
+                                    <div class="card-bottom-wrap">
+                                        <div class="card-meta-container">
+                                            <div class="meta-row-stats">
+                                                <span class="meta-pill rating" title="Đánh giá">
+                                                    <svg class="badge-star" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+                                                    <span>@(d.RatingAverage.HasValue && d.RatingAverage > 0 ? d.RatingAverage.Value.ToString("0.0") : "5.0")</span>
+                                                </span>
+                                                <span class="meta-pill exp" title="Kinh nghiệm">
+                                                    <svg class="badge-exp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                                                    <span>@(d.Experience ?? 0) năm</span>
+                                                </span>
+                                            </div>
+                                            <div class="meta-pill fee" title="Giá khám">
+                                                <svg class="badge-fee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+                                                <span class="fee-val">@((d.Price ?? 0).ToString("N0"))đ</span>
+                                                <span class="fee-unit">/ lượt khám</span>
+                                            </div>
                                         </div>
-                                        <div class="meta-pill fee" title="Giá khám">
-                                            <svg class="badge-fee" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
-                                            <span class="fee-val">@((d.Price ?? 0).ToString("N0"))đ</span>
-                                            <span class="fee-unit">/ lượt khám</span>
-                                        </div>
+                                        <button type="button" class="book-btn">Đặt lịch hẹn</button>
                                     </div>
-                                    <button type="button" class="book-btn">Đặt lịch hẹn</button>
                                 </div>
                             </a>
                         </div>
