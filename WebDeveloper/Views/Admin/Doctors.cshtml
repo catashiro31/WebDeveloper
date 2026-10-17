@@ -166,7 +166,8 @@
             fetchData();
         };
 
-        let viewMode = 'all';
+        const notificationParams = new URLSearchParams(location.search);
+        let viewMode = notificationParams.get('status') === 'PENDING' ? 'pending' : 'all';
         let currentPage = 0;
         let totalPages = 1;
         let currentDoctorId = null;
@@ -449,6 +450,8 @@
         };
 
         loadDoctorCatalogs();
-        fetchData();
+        setViewMode(viewMode);
+        const linkedDoctor = Number(notificationParams.get("doctorId"));
+        if (Number.isInteger(linkedDoctor) && linkedDoctor > 0) viewDetail(linkedDoctor);
     </script>
 }

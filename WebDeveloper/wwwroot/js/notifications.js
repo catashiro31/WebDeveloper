@@ -15,7 +15,8 @@
         (actions || header).appendChild(center);
     }
     document.body.appendChild(panel); // Avoid clipping by animated/sticky headers.
-    let lastId = null, loading = false, stopped = false;
+    let lastId = null, loading = false, stopped = false, actionPending = false;
+    let pendingLoad = Promise.resolve();
     function close() { panel.hidden = true; bell.setAttribute('aria-expanded', 'false'); }
     async function request(url, options) {
         const response = await fetch(url, { credentials:'same-origin', cache:'no-store', signal:AbortSignal.timeout(15000), ...options });
@@ -24,7 +25,11 @@
         return response;
     }
     // Tải trang đầu/cursor và cập nhật badge; polling tránh chạy khi tab bị ẩn.
-    async function load(append = false, countOnly = false) {
+    function load(append = false, countOnly = false) {
+        pendingLoad = pendingLoad.catch(() => {}).then(() => performLoad(append, countOnly));
+        return pendingLoad;
+    }
+    async function performLoad(append = false, countOnly = false) {
         if (loading || stopped) return;
         loading = true;
         try {
@@ -34,7 +39,7 @@
             badge.hidden = !data.unreadCount;
             bell.setAttribute('aria-label', `Thông báo, ${data.unreadCount} chưa đọc`);
             if (countOnly && (panel.hidden || list.children.length > 0)) return;
-            if (!append) list.replaceChildren();
+            if (!append) { list.replaceChildren(); lastId = null; }
             for (const item of data.items) {
                 const button = document.createElement('button');
                 button.type = 'button'; button.className = 'notification-item' + (item.readAt ? '' : ' unread');
@@ -65,18 +70,22 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
     document.addEventListener('click', e => { if (!center.contains(e.target) && !panel.contains(e.target)) close(); });
     more.onclick = () => load(true); retry.onclick = () => load();
-    all.onclick = async () => {
-        all.disabled = true;
-        try { await request('/api/v1/notifications/read-all', { method:'PATCH' }); await load(); }
-        catch (error) { status.textContent = error.message; }
-        finally { all.disabled = false; }
-    };
-    document.getElementById('notificationDeleteRead').onclick = async function () {
-        this.disabled = true;
-        try { await request('/api/v1/notifications/read', { method:'DELETE' }); await load(); }
-        catch (error) { status.textContent = error.message; }
-        finally { this.disabled = false; }
-    };
+    const removeRead = document.getElementById('notificationDeleteRead');
+    async function updateNotifications(deleteRead) {
+        if (actionPending) return;
+        if (!confirm(deleteRead ? 'Chỉ xóa thông báo đã đọc? Thông báo chưa đọc sẽ được giữ lại.' : 'Đánh dấu tất cả thông báo là đã đọc?')) return;
+        actionPending = true; all.disabled = removeRead.disabled = true;
+        try {
+            await pendingLoad;
+            const response = await request('/api/v1/notifications/' + (deleteRead ? 'read' : 'read-all'), { method:deleteRead ? 'DELETE' : 'PATCH' });
+            const deleted = deleteRead ? (await response.json()).deleted : 0;
+            await load();
+            if (deleteRead) status.textContent = `Đã xóa ${deleted} thông báo đã đọc.` + (list.children.length ? '' : ' Không còn thông báo.');
+        } catch (error) { status.textContent = error.message; }
+        finally { actionPending = false; all.disabled = removeRead.disabled = false; }
+    }
+    all.onclick = () => updateNotifications(false);
+    removeRead.onclick = () => updateNotifications(true);
     load(false, true);
-    setInterval(() => { if (!document.hidden) load(false, true); }, 30000);
+    setInterval(() => { if (!document.hidden && !actionPending) load(false, true); }, 30000);
 })();

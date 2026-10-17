@@ -120,7 +120,12 @@
             <textarea id="f_bio" class="floating-input" style="min-height: 100px;" required></textarea>
             
             <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Bằng cấp *</label>
-            <input type="text" id="f_degree" class="floating-input" required />
+            <select id="f_degree" class="floating-input" required onchange="document.getElementById('f_degreeOther').hidden = this.value !== 'Khác';">
+                <option value="">Chọn học vị/bằng cấp</option>
+                @foreach (var degree in WebDeveloper.Helpers.DoctorDegree.Options) { <option value="@degree">@degree</option> }
+                <option value="Khác">Khác</option>
+            </select>
+            <input id="f_degreeOther" hidden maxlength="94" class="floating-input" placeholder="Mô tả bằng cấp khác (ít nhất 3 chữ cái)" />
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
                 <div>
@@ -355,7 +360,7 @@
             e.preventDefault();
             const formData = new FormData();
             formData.append('bio', document.getElementById('f_bio').value);
-            formData.append('degree', document.getElementById('f_degree').value);
+            formData.append('degree', (document.getElementById('f_degree').value === 'Khác' ? 'Khác: ' + document.getElementById('f_degreeOther').value.trim() : document.getElementById('f_degree').value));
             formData.append('experienceYears', document.getElementById('f_exp').value);
             formData.append('price', document.getElementById('f_price').value);
             formData.append('specialtyId', document.getElementById('f_specialty').value);

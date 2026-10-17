@@ -182,6 +182,8 @@ namespace WebDeveloper.Services
             if (doctor.VerificationStatus != VerificationStatus.PENDING)
                 throw new InvalidOperationException("Chỉ có thể duyệt bác sĩ đang chờ");
 
+            if (!DoctorDegree.IsValid(doctor.Degree))
+                throw new InvalidOperationException("Hồ sơ có học vị/bằng cấp chưa hợp lệ. Vui lòng yêu cầu bác sĩ cập nhật trước khi duyệt.");
             doctor.VerificationStatus = VerificationStatus.APPROVED;
 
             if (doctor.Facility != null && !doctor.Facility.IsVerified)

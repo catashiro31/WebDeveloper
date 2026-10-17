@@ -8,6 +8,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public string Bio { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập bằng cấp")]
+        [WebDeveloper.Helpers.DoctorDegree]
         public string Degree { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Vui lòng nhập số năm kinh nghiệm")]
@@ -53,6 +54,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
     public class ScheduleRequest
     {
         public DateOnly Date { get; set; }
+        public DateOnly? EndDate { get; set; }
         public List<string> SlotIds { get; set; } = new();
     }
 

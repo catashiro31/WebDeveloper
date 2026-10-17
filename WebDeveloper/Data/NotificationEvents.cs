@@ -61,7 +61,7 @@ internal static class NotificationEvents
             if (entry.Entity is DoctorDetail doctor && (entry.State == EntityState.Added || changed(nameof(DoctorDetail.VerificationStatus))))
             {
                 if (doctor.VerificationStatus == VerificationStatus.PENDING)
-                    await Admins("Có hồ sơ bác sĩ cần duyệt", "/Admin/Doctors");
+                    await Admins("Có hồ sơ bác sĩ cần duyệt", "/Admin/Doctors?status=PENDING" + (doctor.DoctorId > 0 ? $"&doctorId={doctor.DoctorId}" : ""));
                 else Send(doctor.UserId, doctor.VerificationStatus == VerificationStatus.APPROVED ? "Hồ sơ bác sĩ đã được duyệt" : "Hồ sơ bác sĩ bị từ chối", "/Doctor/Profile");
             }
             if (entry.Entity is Review review && (entry.State == EntityState.Added || changed(nameof(Review.Comment))))

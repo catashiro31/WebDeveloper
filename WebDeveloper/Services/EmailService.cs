@@ -75,7 +75,31 @@ namespace WebDeveloper.Services
             await SendEmailAsync(email, subject, body);
         }
 
-        private async Task SendEmailAsync(string toEmail, string subject, string htmlBody)
+        public virtual async Task DeliverOutbox(WebDeveloper.Models.Entities.EmailOutbox item, CancellationToken ct)
+        {
+            var name = System.Net.WebUtility.HtmlEncode(item.User.FullName ?? "");
+            string subject, body;
+            if (item.Kind == "Verification")
+            {
+                subject = "DocBooking - Xác nhận đăng ký tài khoản";
+                var link = $"{_config["App:ClientUrl"]}/Auth/VerifyAccount?email={Uri.EscapeDataString(item.User.Email)}&code={Uri.EscapeDataString(item.Code ?? "")}";
+                body = $"<h3>Xin chào {name},</h3><p>Vui lòng xác thực tài khoản:</p><a href=\"{System.Net.WebUtility.HtmlEncode(link)}\">Xác thực email</a>";
+            }
+            else if (item.Kind == "AccountDecision")
+            {
+                subject = item.Approved == true ? "DocBooking - Tài khoản đã được mở khóa" : "DocBooking - Yêu cầu mở khóa bị từ chối";
+                body = $"<h3>Xin chào {name},</h3><p>{subject}</p>" + (item.Approved == true
+                    ? "<p>Bạn có thể đăng nhập lại vào hệ thống.</p>"
+                    : $"<p>Lý do: {System.Net.WebUtility.HtmlEncode(item.Reason)}</p>");
+            }
+            else throw new InvalidOperationException("Loại email không hợp lệ");
+            // Deadline cho toàn bộ thao tác, không chỉ timeout của từng lần đọc socket.
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeout.CancelAfter(TimeSpan.FromSeconds(20));
+            await SendEmailAsync(item.User.Email, subject, body, true, timeout.Token);
+        }
+
+        private async Task SendEmailAsync(string toEmail, string subject, string htmlBody, bool throwOnFailure = false, CancellationToken ct = default)
         {
             try
             {
@@ -87,19 +111,20 @@ namespace WebDeveloper.Services
                 message.Subject = subject;
                 message.Body = new TextPart("html") { Text = htmlBody };
 
-                using var smtp = new SmtpClient();
+                using var smtp = new SmtpClient { Timeout = 15000 };
                 await smtp.ConnectAsync(
                     _config["EmailSettings:SmtpHost"],
                     int.Parse(_config["EmailSettings:SmtpPort"] ?? "587"),
-                    MailKit.Security.SecureSocketOptions.StartTls);
+                    MailKit.Security.SecureSocketOptions.StartTls, ct);
                 await smtp.AuthenticateAsync(
                     _config["EmailSettings:SenderEmail"],
-                    _config["EmailSettings:SenderPassword"]);
-                await smtp.SendAsync(message);
-                await smtp.DisconnectAsync(true);
+                    _config["EmailSettings:SenderPassword"], ct);
+                await smtp.SendAsync(message, ct);
+                await smtp.DisconnectAsync(true, ct);
             }
             catch (Exception ex)
             {
+                if (throwOnFailure) throw;
                 _logger.LogError(ex, "Không thể gửi email đến {Email}", toEmail);
             }
         }

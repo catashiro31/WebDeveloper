@@ -18,7 +18,7 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
     public record Credentials([Required, EmailAddress] string Email, [Required] string Password);
     public record SubmitRequest([Required, EmailAddress] string Email, [Required] string Password,
         [Required, StringLength(1000, MinimumLength = 10)] string Reason);
-    public record Decision(bool Approve, [Required, StringLength(1000, MinimumLength = 3)] string Reason);
+    public record Decision(bool Approve, [StringLength(1000)] string? Reason = null);
 
     // API công khai xác minh bằng mật khẩu nhưng không tạo phiên đăng nhập cho tài khoản bị khóa.
     private async Task<User?> Verify(string email, string password)
@@ -69,7 +69,8 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
     [Authorize(Roles = "ADMIN"), HttpPut("admin/appeals/{id:int}")]
     public async Task<IActionResult> Process(int id, Decision req)
     {
-        if (req.Reason.Trim().Length < 3) return BadRequest(new { message = "Vui lòng nhập lý do xử lý." });
+        if (!req.Approve && (req.Reason?.Trim().Length ?? 0) < 3) return BadRequest(new { message = "Vui lòng nhập lý do từ chối (3–1000 ký tự)." });
+        var decisionReason = req.Approve ? "Yêu cầu mở khóa đã được duyệt." : req.Reason!.Trim();
         await using var tx = await db.Database.BeginTransactionAsync();
         var userId = await db.AccountAppeals.Where(a => a.Id == id).Select(a => (int?)a.UserId).SingleOrDefaultAsync();
         if (userId == null) return NotFound();
@@ -77,7 +78,7 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
         var appeal = await db.AccountAppeals.Include(a => a.User).SingleAsync(a => a.Id == id);
         if (appeal.Status != "PENDING") return Conflict(new { message = "Phiếu đã được xử lý." });
         appeal.Status = req.Approve ? "APPROVED" : "REJECTED";
-        appeal.AdminReason = req.Reason.Trim();
+        appeal.AdminReason = decisionReason;
         appeal.ProcessedAt = DateTime.UtcNow;
         appeal.ProcessedBy = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         if (req.Approve)
@@ -88,9 +89,10 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
             appeal.User.IsActive = true;
             appeal.User.ReasonBanned = null;
         }
-        db.Notifications.Add(new Notification { UserId = appeal.UserId, Title = req.Approve ? "Tài khoản đã được mở khóa" : "Yêu cầu mở khóa bị từ chối", Message = req.Reason.Trim(), Url = "/" });
+        db.Notifications.Add(new Notification { UserId = appeal.UserId, Title = req.Approve ? "Tài khoản đã được mở khóa" : "Yêu cầu mở khóa bị từ chối", Message = decisionReason, Url = "/" });
+        db.EmailOutbox.Add(new EmailOutbox { UserId = appeal.UserId, Kind = "AccountDecision", DeliveryKey = $"appeal:{appeal.Id}", Approved = req.Approve, Reason = decisionReason });
         await db.SaveChangesAsync();
         await tx.CommitAsync();
-        return Ok(new { message = "Đã xử lý phiếu và thông báo kết quả." });
+        return Ok(new { message = "Đã xử lý phiếu; email kết quả đang được gửi." });
     }
 }

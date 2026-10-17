@@ -120,6 +120,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<EmailOutboxProcessor>();
+if (builder.Configuration.GetValue<bool>("EmailOutbox:Enabled", true))
+    builder.Services.AddHostedService<EmailOutboxWorker>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
@@ -186,16 +190,13 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
-        try { context.Database.Migrate(); } catch { }
-        context.Database.ExecuteSqlRaw(@"
-            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancellation_reason text;
-            ALTER TABLE appointments ADD COLUMN IF NOT EXISTS cancelled_by text;
-        ");
+        context.Database.Migrate();
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
         logger.LogError(ex, "An error occurred while migrating the database.");
+        throw; // Không khởi động worker/API khi schema chưa sẵn sàng.
     }
 }
 

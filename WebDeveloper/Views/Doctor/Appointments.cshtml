@@ -234,6 +234,7 @@
             filtered.forEach(apt => {
                 const sStyle = getStatusStyle(apt.bookingStatus);
                 let actionsHtml = '';
+                const started = visitHasStarted(apt);
                 if (apt.bookingStatus === 'PENDING') {
                     actionsHtml = `
                         <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'CONFIRMED')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #10b981, #059669); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Xác nhận</button>
@@ -250,6 +251,8 @@
                     `;
                 }
 
+                if (!started && (apt.bookingStatus === 'CONFIRMED' || apt.bookingStatus === 'COMPLETED'))
+                    actionsHtml = '<button disabled title="Chưa đến giờ khám" style="padding:10px;border-radius:10px;opacity:.6;">Chưa đến giờ khám — chưa thể trả kết quả</button>';
                 html += `
                     <div class="appointment-card">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
@@ -374,9 +377,16 @@
             .catch(() => showApiToast("Lỗi mạng", "error"));
         };
 
+        function visitHasStarted(apt) {
+            const time = String(apt.timeSlot || apt.startTime || "").replace("SLOT_", "").replace("_", ":");
+            const start = new Date(`${apt.dateWorking}T${time.length === 5 ? time + ":00" : time}+07:00`).getTime();
+            return Number.isFinite(start) && start <= Date.now();
+        }
+
         window.openResultModal = function(id, mode) {
             const apt = allAppointments.find(a => (a.appointmentId || a.id) == id);
             if (!apt) return;
+            if (!visitHasStarted(apt)) { showApiToast('Chưa đến giờ khám, chưa thể trả kết quả.', 'warning'); return; }
 
             document.getElementById('appointmentId').value = id;
             document.getElementById('resultMode').value = mode;

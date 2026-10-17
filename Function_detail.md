@@ -80,13 +80,15 @@ Các comment `// === ... ===` trong service đánh dấu cụm chức năng. Com
 
 **Mã nguồn:** `AuthService`, `AuthApiController`, `AccessTokenProvider`, `AuthCookieSettings`, `JwtMiddleware`, `AccountState`, `wwwroot/js/auth-logout.js`.
 
-1. Đăng ký băm mật khẩu bằng BCrypt, tạo tài khoản chưa kích hoạt và gửi mã xác thực email qua SMTP.
+1. Đăng ký băm mật khẩu bằng BCrypt, tạo tài khoản chưa kích hoạt và ghi email xác thực vào EmailOutbox cùng transaction. Worker gửi SMTP sau, request đăng ký không chờ SMTP.
 2. Xác thực kiểm tra mã và hạn sử dụng; kích hoạt tài khoản, xóa mã, tạo hồ sơ bản thân cho bệnh nhân. Tài khoản có lý do bị khóa không được tự mở khóa bằng link xác thực.
 3. Đăng nhập kiểm tra mật khẩu trước trạng thái tài khoản, cấp JWT access token và refresh token. JWT chứa ID, role và thông tin định danh.
 4. Controller ghi cookie HttpOnly, SameSite Strict. Access cookie sống 15 phút, refresh cookie 7 ngày. `AuthCookieSettings` bật Secure theo môi trường/cấu hình; HTTP triển khai cần cấu hình rõ ràng, xem `docs/login-deployment.md`.
 5. Khi access cookie hết hạn, `Program.cs` có luồng phục hồi phiên từ refresh cookie. Endpoint refresh tường minh xoay refresh token; cập nhật có điều kiện để hạn chế dùng lại token cũ.
 6. Đăng xuất thu hồi token phía server và xóa cookie. Blacklist lưu khóa băm của token; vẫn nhận diện định dạng token cũ để tương thích.
 7. `JwtMiddleware` chặn phiên bị thu hồi/tài khoản bị khóa. Với HTML, xóa cookie và cho về khách hoặc trang đăng nhập; với API, trả lỗi xác thực/phân quyền.
+
+Mật khẩu đăng ký/đổi/đặt lại yêu cầu tối thiểu 6 ký tự. Chữ hoa, số và ký tự đặc biệt chỉ là khuyến nghị độ mạnh.
 
 **Điểm dễ nhầm:** `VerificationCode` hiện dùng chung cho xác thực email và reset mật khẩu. Có mã chưa đồng nghĩa chưa xác thực. `AccountState.AwaitingEmailVerification` xét cả `IsActive` và `ReasonBanned`; khi khóa/mở khóa, mã một lần cũ được xóa. Đây là cách xử lý tương thích dữ liệu hiện tại, chưa phải hai kho token tách biệt.
 
@@ -114,10 +116,10 @@ Các comment `// === ... ===` trong service đánh dấu cụm chức năng. Com
 
 - Dùng `DateOnly` cho ngày và enum `TimeSlot` cho các giờ cố định. So thời điểm bằng giờ `Asia/Ho_Chi_Minh`.
 - API lịch làm việc không trả ca `CLOSED` hoặc ca đã đến giờ/quá giờ, kể cả trong hôm nay. Lịch sử khám không bị xóa.
-- Tạo lịch kiểm tra bác sĩ đã duyệt, ngày/ca hợp lệ, danh sách khác rỗng và ca còn trong tương lai. Ca trong request được loại trùng bằng `Distinct`.
+- Tạo lịch yêu cầu bác sĩ đã duyệt, ngày bắt đầu từ hôm nay + 7 ngày theo giờ Việt Nam, khoảng liên tiếp tối đa 14 ngày và đầy đủ 7 TimeSlot. Cuối tuần/ngày nghỉ vẫn được tạo. Giao diện hỗ trợ 1/7/14 ngày; không sửa lịch đã có.
 - Transaction và PostgreSQL `pg_advisory_xact_lock(doctorId)` tuần tự hóa thao tác trên lịch bác sĩ. Kiểm tra thời gian lần nữa sau khi lấy khóa.
-- Đã có ca AVAILABLE/BOOKED cùng ngày/giờ: từ chối tạo trùng.
-- Ca CLOSED còn trong tương lai và không có lịch khám chưa hủy: mở lại bản ghi cũ, cập nhật cơ sở/Version. Không tạo một ca trùng mới.
+- Đã có ca AVAILABLE/BOOKED cùng ngày/giờ: giữ nguyên và tạo các ca còn thiếu; gửi lại cùng request không sinh bản ghi trùng.
+- Ca CLOSED nằm trong khoảng hợp lệ từ hôm nay + 7 ngày và không có lịch khám chưa hủy: mở lại bản ghi cũ, cập nhật cơ sở/Version. Không tạo một ca trùng mới.
 - Hủy ca: kiểm tra quyền, thời gian và lịch khám; chuyển CLOSED, không xóa dữ liệu.
 - `Version` là concurrency token của EF. Các thao tác đặt/đóng/mở lại tăng Version để phát hiện bản ghi đã bị sửa bởi request khác.
 - Frontend vô hiệu hóa giờ đã qua và cập nhật danh sách mỗi phút khi tab hiện, modal đóng. Backend vẫn là nơi quyết định cuối cùng.
@@ -143,7 +145,7 @@ Khóa Redis có TTL hữu hạn, không thay thế transaction/concurrency token
 
 ## 8. Kết quả khám, tái khám và lịch sử
 
-`DoctorService.SaveMedicalResult` kiểm tra quyền sở hữu và trạng thái CONFIRMED/COMPLETED. Chẩn đoán bắt buộc. Ngày tái khám phải sau ngày khám và sau hôm nay tại Việt Nam.
+`DoctorService.SaveMedicalResult` kiểm tra quyền sở hữu và trạng thái CONFIRMED/COMPLETED. Chẩn đoán bắt buộc. Cả SaveMedicalResult và CompleteAppointment đều chặn trước thời điểm bắt đầu ca bằng VietnamTime.HasStarted; kiểm tra trước upload. Giao diện vô hiệu hóa thao tác tương ứng. Đây là kiểm tra giờ khám, chưa phải xác nhận bệnh nhân đã có mặt. Ngày tái khám phải sau ngày khám và sau hôm nay tại Việt Nam.
 
 Tệp và link là hai lựa chọn loại trừ nhau. Link chỉ nhận HTTP/HTTPS tuyệt đối; tệp phải qua whitelist. Khi sửa mà không gửi tệp/link mới, giữ đính kèm hiện tại. Upsert MedicalResult theo AppointmentId, chuyển lịch sang COMPLETED và lưu cùng lần SaveChanges.
 
@@ -173,7 +175,7 @@ Chuyên khoa/cơ sở có thêm, sửa, vô hiệu hóa và xác thực giấy p
 - Policy rate limit `appeals`: 10 request/phút theo IP, dùng cho gửi và tra cứu có mật khẩu.
 - POST `/api/v1/auth/appeals/status`: trả trạng thái hoạt động, lý do khóa và phiếu mới nhất để người bị khóa đọc kết quả.
 - GET `/api/v1/admin/appeals`: lọc trạng thái, mỗi trang 20 phiếu.
-- PUT `/api/v1/admin/appeals/{id}`: admin duyệt/từ chối, bắt buộc lý do; lưu người và thời điểm xử lý, khóa để tránh xử lý hai lần.
+- PUT `/api/v1/admin/appeals/{id}`: admin duyệt không cần lý do, từ chối bắt buộc lý do; lưu người và thời điểm xử lý, khóa để tránh xử lý hai lần.
 
 ## 11. Tìm kiếm, phân trang và thống kê
 
@@ -221,7 +223,7 @@ NotificationsController luôn lọc UserId từ claim. GET trả tối đa 20 m�
 
 Layout theo role dùng chung trạng thái xác thực, font và hộp thông báo. JavaScript gọi API, cập nhật lại dữ liệu sau thao tác; thông tin trên cookie/giao diện không thay quyền kiểm tra phía server. Render dữ liệu người dùng nên dùng textContent hoặc escape trước khi đưa vào HTML.
 
-`Program.cs` thiết lập PostgreSQL, Redis, JWT, DI, middleware và Hangfire. Khi chạy, code hiện thử Migrate trong try/catch và thêm riêng hai cột cancellation_reason/cancelled_by bằng SQL. **Lỗi migration đang bị nuốt ở try/catch bên trong**; không xem việc server khởi động thành bằng chứng migration đã chạy đủ. Cần kiểm tra schema/log khi triển khai; đây là hiện trạng code, không được thay đổi trong đợt tổ chức lại này.
+`Program.cs` thiết lập PostgreSQL, Redis, JWT, DI, middleware và Hangfire. Khởi động chạy Migrate; lỗi schema được ghi log và dừng ứng dụng. Migration AddDurableEmailDelivery tạo email_outbox và bổ sung hai cột cancellation_reason/cancelled_by bằng ADD COLUMN IF NOT EXISTS để tương thích database từng bổ sung thủ công.
 
 ## 15. Kiểm thử và cách mở rộng
 
@@ -238,3 +240,12 @@ Không chạy các runner ghi fixture vào production. Đọc README của từn
 Khi thêm chức năng: xác định role/quyền sở hữu → DTO và validation → service/API → trạng thái/transaction → sự kiện thông báo → giao diện/lỗi → kiểm thử hành vi → cập nhật mục liên quan trong file này. Khi thêm trường entity, bổ sung migration/snapshot đồng bộ; không chỉ thêm thuộc tính C# hoặc SQL thủ công.
 
 Tài liệu liên quan: [README](README.md), [thông báo](docs/notifications.md), [cookie triển khai](docs/login-deployment.md), [upload 413](docs/avatar-upload-413.md), [các sửa backend](docs/backend-fixes-2026-10-15.md).
+
+## 16. Cập nhật luồng nghiệp vụ tháng 10/2026
+
+- **Email nền:** EmailOutbox được lưu cùng tài khoản hoặc quyết định phiếu mở khóa. EmailOutboxProcessor dùng transaction và FOR UPDATE SKIP LOCKED để các instance không xử lý cùng hàng đồng thời. Worker kiểm tra mỗi 5 giây khi rỗng, SMTP có deadline 20 giây; thử tối đa 5 lần với thời gian chờ tăng dần. SentAt đánh dấu thành công, LastError chỉ giữ loại lỗi. Email gửi thành công nhưng tiến trình chết trước commit có thể gửi lặp (at-least-once).
+- **Gửi lại xác thực:** POST /api/v1/auth/resend-verification, giao diện /Auth/ResendVerification. Giới hạn một lần/phút/tài khoản và rate limit endpoint; phản hồi chung tránh tiết lộ email. Đổi mã, hết hạn sau 24 giờ. Worker bỏ thư xác thực cũ/hết hạn/tài khoản đã kích hoạt hoặc bị khóa. EmailOutbox:Enabled=false chỉ dùng khi muốn tắt worker trong môi trường kiểm thử. Các luồng email cũ khác chưa chuyển hết sang outbox.
+- **Duyệt phiếu mở khóa:** chấp nhận chỉ cần xác nhận, không nhập lý do. Từ chối bắt buộc lý do 3–1000 ký tự. Quyết định và email được lưu cùng transaction; DeliveryKey theo phiếu ngăn tạo lặp email quyết định. Khác với thao tác mở khóa trực tiếp ở quản lý người dùng.
+- **Học vị:** Helpers/DoctorDegree cung cấp danh sách dùng chung frontend/backend. Mục Khác cần ít nhất 3 chữ cái, tối đa 100 ký tự cả tiền tố, chỉ nhận bộ ký tự cho phép. Admin không duyệt hồ sơ có học vị không hợp lệ; yêu cầu sửa lại. Đây là kiểm tra định dạng, không xác minh bằng cấp thực tế.
+- **Thông báo:** hồ sơ chờ duyệt dùng /Admin/Doctors?status=PENDING và doctorId khi có. GET sửa liên kết thông báo cũ tương ứng; trang quản trị đọc query để chọn tab. DELETE /read vẫn lọc chủ sở hữu và ReadAt khác null. Frontend chờ tải đang chạy trước thao tác, khóa nút khi xử lý, xác nhận rõ đánh dấu đọc/xóa đã đọc và hiển thị số xóa.
+- **Kiểm thử mới:** tests/WorkflowRegression kiểm tra outbox/retry/resend, 7 ngày và đầy đủ ca, kết quả sớm, học vị, phiếu mở khóa, liên kết thông báo và bảo toàn tin chưa đọc. Chỉ chạy trên database thử nghiệm riêng; hướng dẫn tại tests/WorkflowRegression/README.md.

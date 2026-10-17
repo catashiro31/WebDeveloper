@@ -5,6 +5,9 @@ namespace WebDeveloper.Controllers
     [Route("Auth")]
     public class AuthController : Controller
     {
+        [HttpGet("ResendVerification")]
+        public IActionResult ResendVerification() => View();
+
         [HttpGet("Appeal")]
         public IActionResult Appeal() => View();
 

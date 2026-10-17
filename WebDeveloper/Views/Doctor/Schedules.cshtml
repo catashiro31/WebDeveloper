@@ -53,21 +53,11 @@
             <input type="date" id="selectedDate" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; box-sizing: border-box; font-family: var(--font-app); font-size: 14px; outline: none;" onfocus="this.style.borderColor='#5f6dfc'" onblur="this.style.borderColor='#cbd5e1'" />
         </div>
 
-        <div style="margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <label style="font-weight: 600; font-size: 14px; color: #374151;">Chọn khung giờ</label>
-                <div style="display: flex; gap: 8px;">
-                    <button type="button" onclick="selectAllSlots()" style="padding: 4px 12px; border-radius: 6px; border: 1px solid #5f6dfc; background: white; color: #5f6dfc; cursor: pointer; font-size: 12px;">Chọn tất cả</button>
-                    <button type="button" onclick="clearAllSlots()" style="padding: 4px 12px; border-radius: 6px; border: 1px solid #6b7280; background: white; color: #6b7280; cursor: pointer; font-size: 12px;">Bỏ chọn</button>
-                </div>
-            </div>
-            <div id="slotsContainer" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
-                <!-- Slots will be rendered here -->
-            </div>
-        </div>
-
-        <p style="color: #64748b; font-size: 14px; margin-bottom: 24px;">Đã chọn: <span id="selectedCount" style="font-weight: 700; color: #0f172a;">0</span> khung giờ</p>
-
+        <label style="display:block;margin-bottom:16px;">Số ngày liên tiếp
+            <select id="scheduleDays" style="width:100%;padding:12px;" onchange="renderSlots()"><option value="1">1 ngày</option><option value="7">1 tuần (7 ngày)</option><option value="14">2 tuần (14 ngày)</option></select>
+        </label>
+        <p>Lịch mới phải cách hôm nay ít nhất 7 ngày. Mỗi ngày đủ 7 ca: 09:00, 10:00, 11:00, 14:00, 15:00, 16:00, 17:00; gồm cả cuối tuần/ngày nghỉ.</p>
+        <p id="schedulePreview" role="status" style="color:#6366f1;margin:16px 0;"></p>
         <div style="display: flex; gap: 12px;">
             <button type="button" onclick="closeModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: white; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Hủy</button>
             <button type="button" id="submitBtn" onclick="createSchedules()" style="flex: 1; padding: 12px; border-radius: 12px; border: none; background: #5f6dfc; color: white; cursor: pointer; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 12px rgba(95,109,252,0.2);" onmouseenter="this.style.background='#4f46e5'" onmouseleave="this.style.background='#5f6dfc'">Tạo lịch</button>
@@ -89,44 +79,22 @@
             return slot.replace('SLOT_', '').replace('_', ':');
         }
 
-        function slotHasStarted(slot) {
+        function addDays(date, days) {
+            const value = new Date(date + 'T00:00:00Z'); value.setUTCDate(value.getUTCDate() + days);
+            return value.toISOString().slice(0,10);
+        }
+        function renderSlots() {
+            selectedSlots = [...TIME_SLOTS];
             const date = document.getElementById('selectedDate').value;
-            return !date || new Date(`${date}T${formatTimeSlot(slot)}:00+07:00`).getTime() <= Date.now();
+            const days = Number(document.getElementById('scheduleDays').value);
+            document.getElementById('schedulePreview').textContent = date ? `Từ ${date} đến ${addDays(date, days-1)}: ${days*7} ca. Ca đã có sẽ được giữ nguyên.` : '';
         }
         document.getElementById('selectedDate').addEventListener('change', renderSlots);
-        function renderSlots() {
-            selectedSlots = selectedSlots.filter(slot => !slotHasStarted(slot));
-            const container = document.getElementById('slotsContainer');
-            container.innerHTML = TIME_SLOTS.map(slot => `
-                <button type="button" class="slot-btn ${selectedSlots.includes(slot) ? 'selected' : ''}" onclick="toggleSlot('${slot}')" ${slotHasStarted(slot) ? 'disabled style="opacity:.4;cursor:not-allowed"' : ''}>
-                    ${formatTimeSlot(slot)}
-                </button>
-            `).join('');
-            document.getElementById('selectedCount').innerText = selectedSlots.length;
-        }
-
-        window.toggleSlot = function(slot) {
-            if (slotHasStarted(slot)) return;
-            if (selectedSlots.includes(slot)) {
-                selectedSlots = selectedSlots.filter(s => s !== slot);
-            } else {
-                selectedSlots.push(slot);
-            }
-            renderSlots();
-        };
-
-        window.selectAllSlots = function() { selectedSlots = TIME_SLOTS.filter(slot => !slotHasStarted(slot)); renderSlots(); };
-        window.clearAllSlots = function() { selectedSlots = []; renderSlots(); };
-
         window.openModal = function() {
             const today = new Intl.DateTimeFormat('en-CA', { timeZone:'Asia/Ho_Chi_Minh', year:'numeric', month:'2-digit', day:'2-digit' }).format(new Date());
             const dateInput = document.getElementById('selectedDate');
-            dateInput.min = today;
-            dateInput.value = today;
-
-            selectedSlots = [];
-            renderSlots();
-            document.getElementById('scheduleModal').classList.add('active');
+            dateInput.min = addDays(today,7); dateInput.value = dateInput.min;
+            renderSlots(); document.getElementById('scheduleModal').classList.add('active');
         };
 
         window.closeModal = () => document.getElementById('scheduleModal').classList.remove('active');
@@ -198,13 +166,13 @@
             fetch('/api/v1/doctor/schedules', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify({ date: date, slotIds: selectedSlots })
+                body: JSON.stringify({ date, endDate: addDays(date, Number(document.getElementById("scheduleDays").value)-1), slotIds: TIME_SLOTS })
             })
             .then(async res => {
                 if (res.ok) {
                     closeModal();
                     fetchSchedules();
-                    showApiToast("Tạo lịch thành công", "success");
+                    showApiToast(await readApiMessage(res) || "Tạo lịch thành công", "success");
                 } else {
                     const msg = await readApiMessage(res);
                     showApiToast(msg || "Không thể tạo lịch làm việc", "error");

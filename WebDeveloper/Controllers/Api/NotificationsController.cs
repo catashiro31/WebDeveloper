@@ -19,7 +19,7 @@ public class NotificationsController(ApplicationDbContext db) : ControllerBase
         var own = db.Notifications.AsNoTracking().Where(n => n.UserId == UserId);
         var unreadCount = await own.CountAsync(n => n.ReadAt == null, ct);
         var items = await own.Where(n => !before.HasValue || n.Id < before.Value).OrderByDescending(n => n.Id)
-            .Select(n => new { n.Id, n.Title, n.Message, n.Url, n.CreatedAt, n.ReadAt }).Take(21).ToListAsync(ct);
+            .Select(n => new { n.Id, n.Title, n.Message, Url = n.Url == "/Admin/Doctors" && n.Title == "Có hồ sơ bác sĩ cần duyệt" ? "/Admin/Doctors?status=PENDING" : n.Url, n.CreatedAt, n.ReadAt }).Take(21).ToListAsync(ct);
         return Ok(new { unreadCount, items = items.Take(20), hasMore = items.Count > 20 });
     }
 

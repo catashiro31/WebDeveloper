@@ -9,6 +9,7 @@ namespace WebDeveloper.Data
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
         public DbSet<AccountAppeal> AccountAppeals => Set<AccountAppeal>();
+        public DbSet<EmailOutbox> EmailOutbox => Set<EmailOutbox>();
         public DbSet<User> Users => Set<User>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<Appointment> Appointments => Set<Appointment>();

@@ -145,6 +145,7 @@ namespace WebDeveloper.Services
             };
 
             _db.Users.Add(user);
+            _db.EmailOutbox.Add(new EmailOutbox { User = user, Code = randomCode });
             
             try
             {
@@ -156,9 +157,9 @@ namespace WebDeveloper.Services
                 throw new InvalidOperationException("Email đã được sử dụng!");
             }
 
-            await _emailService.SendSignUpConfirmationAsync(user.Email, user.FullName ?? "", user.VerificationCode);
+            // Email được ghi cùng tài khoản và gửi bởi worker; request không chờ SMTP.
 
-            return "Vui lòng kiểm tra email để xác thực tài khoản!";
+            return "Đã tạo tài khoản. Email xác thực đang được gửi; vui lòng kiểm tra hộp thư hoặc chọn gửi lại nếu chưa nhận được.";
         }
 
         // === Đăng xuất: thu hồi token; controller chịu trách nhiệm xóa cookie trình duyệt. ===

@@ -1,0 +1,22 @@
+@{ ViewData["Title"] = "Gửi lại email xác thực"; Layout = "_Layout"; }
+<section style="max-width:480px;margin:60px auto;padding:32px;background:white;border-radius:20px;">
+<h1 style="font-size:24px;font-weight:700;">Gửi lại email xác thực</h1>
+<p>Email có thể cần một lúc để tới hộp thư. Hãy kiểm tra cả thư rác.</p>
+<form id="resendForm" style="display:grid;gap:16px;">
+<label>Email đăng ký<input id="resendEmail" type="email" required autocomplete="email" style="width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;" /></label>
+<button id="resendButton" style="padding:12px;background:#7c3aed;color:white;border:0;border-radius:10px;">Gửi lại email</button>
+<p id="resendStatus" role="status"></p><a href="/Auth/Login">Quay lại đăng nhập</a>
+</form></section>
+@section Scripts {
+<script>
+document.getElementById('resendForm').onsubmit = async e => {
+    e.preventDefault(); const button = document.getElementById('resendButton'), status = document.getElementById('resendStatus');
+    button.disabled = true;
+    try {
+        const res = await fetch('/api/v1/auth/resend-verification', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:document.getElementById('resendEmail').value.trim()})});
+        status.textContent = res.status === 429 ? 'Vui lòng chờ một phút rồi thử lại.' : await readApiMessage(res);
+    } catch { status.textContent = 'Không thể kết nối. Vui lòng thử lại.'; }
+    finally { button.disabled = false; }
+};
+</script>
+}

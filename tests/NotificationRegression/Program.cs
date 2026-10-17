@@ -24,7 +24,7 @@ var doctor = new DoctorDetail { User = doctorUser,
     Facility = new Facility { FacilityName = key, Address = "Test", IsActive = true }, VerificationStatus = VerificationStatus.PENDING };
 db.DoctorDetails.Add(doctor);
 await db.SaveChangesAsync();
-Check(await db.Notifications.AnyAsync(n => n.UserId == admin.UserId && n.Url == "/Admin/Doctors"), "Admin missing doctor application");
+Check(await db.Notifications.AnyAsync(n => n.UserId == admin.UserId && n.Url != null && n.Url.StartsWith("/Admin/Doctors?status=PENDING")), "Admin missing doctor application");
 doctor.VerificationStatus = VerificationStatus.APPROVED;
 await db.SaveChangesAsync();
 Check(await db.Notifications.AnyAsync(n => n.UserId == doctorUser.UserId && n.Title.Contains("Hồ sơ")), "Doctor missing approval");

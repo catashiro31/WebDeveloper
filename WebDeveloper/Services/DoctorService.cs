@@ -82,6 +82,8 @@ namespace WebDeveloper.Services
 
         public async Task<string> RegisterDoctor(User user, DoctorProfileRequest req)
         {
+            if (!DoctorDegree.IsValid(req.Degree)) throw new InvalidOperationException("Học vị/bằng cấp không hợp lệ. Vui lòng chọn lại hoặc mô tả mục Khác.");
+            req.Degree = req.Degree.Trim();
             if (!double.IsFinite(req.Price) || req.Price <= 0) throw new InvalidOperationException("Giá khám phải lớn hơn 0 đồng");
             var existingDoctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId);
 
@@ -258,47 +260,43 @@ namespace WebDeveloper.Services
             if (doctor.VerificationStatus != VerificationStatus.APPROVED)
                 throw new InvalidOperationException("Tài khoản chưa được duyệt, không thể tạo lịch!");
             
-            var now = VietnamTime.Now;
-            if (req.Date < DateOnly.FromDateTime(now))
-                throw new InvalidOperationException("Không thể đăng ký lịch trong quá khứ.");
-
-            var slots = req.SlotIds.Distinct().Select(value =>
-                Enum.TryParse<TimeSlot>(value, out var parsed) && Enum.IsDefined(parsed)
-                    ? parsed : throw new InvalidOperationException("Ca làm việc không hợp lệ")).ToList();
-            if (slots.Count == 0) throw new InvalidOperationException("Vui lòng chọn ca làm việc");
-            if (slots.Any(slot => VietnamTime.HasStarted(req.Date, slot, now)))
-                throw new InvalidOperationException("Ca làm việc đã đến giờ hoặc đã qua. Vui lòng chọn giờ trong tương lai.");
+            var earliest = DateOnly.FromDateTime(VietnamTime.Now).AddDays(7);
+            var end = req.EndDate ?? req.Date;
+            if (req.Date < earliest)
+                throw new InvalidOperationException($"Lịch mới phải được tạo trước ít nhất 7 ngày. Ngày sớm nhất: {earliest:dd/MM/yyyy}.");
+            if (end < req.Date || end.DayNumber - req.Date.DayNumber >= 14)
+                throw new InvalidOperationException("Chọn từ 1 đến 14 ngày liên tiếp, bao gồm cuối tuần/ngày nghỉ.");
+            var slots = Enum.GetValues<TimeSlot>();
+            if (req.SlotIds == null || !req.SlotIds.ToHashSet().SetEquals(slots.Select(s => s.ToString())))
+                throw new InvalidOperationException("Mỗi ngày phải đăng ký đầy đủ 7 khung giờ từ 09:00 đến 17:00.");
             await using var transaction = await _db.Database.BeginTransactionAsync();
-            // Serialize schedule creation per doctor, including concurrent submissions.
             await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({doctor.DoctorId})");
-            if (slots.Any(slot => VietnamTime.HasStarted(req.Date, slot, VietnamTime.Now)))
-                throw new InvalidOperationException("Ca làm việc đã đến giờ. Vui lòng chọn giờ trong tương lai.");
-            var existingSchedules = await _db.DoctorSchedules
-                .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking == req.Date)
-                .ToListAsync();
-
-            var selectedExisting = existingSchedules.Where(s => slots.Contains(s.TimeSlot)).ToList();
-            if (selectedExisting.Any(s => s.SlotStatus != SlotStatus.CLOSED))
-                throw new InvalidOperationException("Ngày và giờ này đã có lịch làm việc. Vui lòng chọn ca khác.");
-            var existingIds = selectedExisting.Select(s => s.ScheduleId).ToList();
-            if (await _db.Appointments.AnyAsync(a => existingIds.Contains(a.ScheduleId) && a.BookingStatus != BookingStatus.CANCELLED))
-                throw new InvalidOperationException("Ca làm việc đã có lịch khám, không thể mở lại.");
+            if (req.Date < DateOnly.FromDateTime(VietnamTime.Now).AddDays(7))
+                throw new InvalidOperationException("Ngày tạo lịch đã thay đổi. Vui lòng chọn lại ngày trước ít nhất 7 ngày.");
+            var existing = await _db.DoctorSchedules
+                .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking >= req.Date && s.DateWorking <= end).ToListAsync();
+            var closedIds = existing.Where(s => s.SlotStatus == SlotStatus.CLOSED).Select(s => s.ScheduleId).ToList();
+            if (await _db.Appointments.AnyAsync(a => closedIds.Contains(a.ScheduleId) && a.BookingStatus != BookingStatus.CANCELLED))
+                throw new InvalidOperationException("Có ca đã đóng còn lịch khám. Không thể tự mở lại; vui lòng kiểm tra lịch.");
+            int addedCount = 0;
+            // Đi qua mọi ngày, kể cả cuối tuần/ngày nghỉ; ca đã đặt/đang mở được giữ nguyên.
+            for (var date = req.Date; date <= end; date = date.AddDays(1))
             foreach (var slot in slots)
             {
-                var existing = selectedExisting.SingleOrDefault(s => s.TimeSlot == slot);
-                if (existing != null)
+                var current = existing.SingleOrDefault(s => s.DateWorking == date && s.TimeSlot == slot);
+                if (current?.SlotStatus is SlotStatus.AVAILABLE or SlotStatus.BOOKED) continue;
+                if (current != null)
                 {
-                    existing.SlotStatus = SlotStatus.AVAILABLE;
-                    existing.FacilityId = doctor.FacilityId;
-                    existing.Version = (existing.Version ?? 0) + 1;
+                    current.SlotStatus = SlotStatus.AVAILABLE;
+                    current.FacilityId = doctor.FacilityId;
+                    current.Version = (current.Version ?? 0) + 1;
                 }
-                else _db.DoctorSchedules.Add(new DoctorSchedule
-                {
-                    DoctorId = doctor.DoctorId, FacilityId = doctor.FacilityId,
-                    DateWorking = req.Date, TimeSlot = slot, SlotStatus = SlotStatus.AVAILABLE, Version = 0
+                else _db.DoctorSchedules.Add(new DoctorSchedule {
+                    DoctorId = doctor.DoctorId, FacilityId = doctor.FacilityId, DateWorking = date,
+                    TimeSlot = slot, SlotStatus = SlotStatus.AVAILABLE, Version = 0
                 });
+                addedCount++;
             }
-            var addedCount = slots.Count;
 
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -455,6 +453,8 @@ namespace WebDeveloper.Services
             if (app.BookingStatus != BookingStatus.CONFIRMED)
                 throw new InvalidOperationException("Chỉ có thể hoàn thành lịch hẹn đã được xác nhận");
 
+            if (!VietnamTime.HasStarted(app.Schedule.DateWorking, app.Schedule.TimeSlot, VietnamTime.Now))
+                throw new InvalidOperationException("Chưa đến giờ khám, chưa thể hoàn thành hoặc trả kết quả.");
             app.BookingStatus = BookingStatus.COMPLETED;
             await _db.SaveChangesAsync();
             return "Đã hoàn thành ca khám";
@@ -472,6 +472,8 @@ namespace WebDeveloper.Services
             if (app.Schedule.Doctor.UserId != user.UserId)
                 throw new InvalidOperationException("Bạn không có quyền");
 
+            if (!VietnamTime.HasStarted(app.Schedule.DateWorking, app.Schedule.TimeSlot, VietnamTime.Now))
+                throw new InvalidOperationException("Chưa đến giờ khám, chưa thể hoàn thành hoặc trả kết quả.");
             if (app.BookingStatus != BookingStatus.CONFIRMED && app.BookingStatus != BookingStatus.COMPLETED)
                 throw new InvalidOperationException("Chỉ có thể lưu kết quả cho lịch khám đã xác nhận hoặc hoàn thành");
             if (string.IsNullOrWhiteSpace(req.Diagnosis))

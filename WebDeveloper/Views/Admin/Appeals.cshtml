@@ -50,16 +50,14 @@ async function loadAppeals() {
             if (item.status === 'PENDING') [true,false].forEach(approve => {
                 const button = document.createElement('button'); button.textContent = approve ? 'Duyệt mở khóa' : 'Từ chối'; button.className = approve ? 'approve' : 'reject';
                 button.onclick = async () => {
-                    const reason = prompt('Nhập lý do ' + (approve ? 'mở khóa' : 'từ chối') + ' (3–1000 ký tự):');
-                    if (reason === null) return;
-                    const trimmedReason = reason.trim();
-                    if (!trimmedReason) {
-                        showApiToast('Vui lòng nhập lý do ' + (approve ? 'mở khóa' : 'từ chối'), 'warning');
-                        return;
-                    }
-                    if (trimmedReason.length < 3) {
-                        showApiToast('Lý do phải từ 3 ký tự trở lên', 'warning');
-                        return;
+                    let trimmedReason = '';
+                    if (approve) {
+                        if (!confirm('Duyệt mở khóa tài khoản này và gửi email thông báo?')) return;
+                    } else {
+                        const reason = prompt('Nhập lý do từ chối (3–1000 ký tự):');
+                        if (reason === null) return;
+                        trimmedReason = reason.trim();
+                        if (trimmedReason.length < 3 || trimmedReason.length > 1000) { showApiToast('Lý do từ chối phải từ 3 đến 1000 ký tự.', 'warning'); return; }
                     }
                     card.querySelectorAll('button').forEach(b => b.disabled = true);
                     try {

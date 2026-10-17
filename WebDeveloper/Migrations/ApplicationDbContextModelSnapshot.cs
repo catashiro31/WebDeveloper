@@ -78,6 +78,14 @@ namespace WebDeveloper.Migrations
                         .HasColumnType("text")
                         .HasColumnName("booking_status");
 
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("text")
+                        .HasColumnName("cancellation_reason");
+
+                    b.Property<string>("CancelledBy")
+                        .HasColumnType("text")
+                        .HasColumnName("cancelled_by");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
@@ -278,6 +286,68 @@ namespace WebDeveloper.Migrations
                     b.HasIndex("TargetFacilityId");
 
                     b.ToTable("doctor_transfer_requests");
+                });
+
+            modelBuilder.Entity("WebDeveloper.Models.Entities.EmailOutbox", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<bool?>("Approved")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("Attempts")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Code")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DeliveryKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime?>("DiscardedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.Property<string>("LastError")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("NextAttemptAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("SentAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeliveryKey")
+                        .IsUnique();
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("SentAt", "NextAttemptAt");
+
+                    b.ToTable("email_outbox");
                 });
 
             modelBuilder.Entity("WebDeveloper.Models.Entities.Facility", b =>
@@ -730,6 +800,17 @@ namespace WebDeveloper.Migrations
                     b.Navigation("Doctor");
 
                     b.Navigation("TargetFacility");
+                });
+
+            modelBuilder.Entity("WebDeveloper.Models.Entities.EmailOutbox", b =>
+                {
+                    b.HasOne("WebDeveloper.Models.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("WebDeveloper.Models.Entities.MedicalResult", b =>
