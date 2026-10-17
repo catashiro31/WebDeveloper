@@ -51,11 +51,18 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public bool? FacilityVerified { get; set; }
     }
 
-    public class ScheduleRequest
+    public class DayScheduleItem
     {
         public DateOnly Date { get; set; }
-        public DateOnly? EndDate { get; set; }
         public List<string> SlotIds { get; set; } = new();
+    }
+
+    public class ScheduleRequest
+    {
+        public DateOnly? Date { get; set; }
+        public DateOnly? EndDate { get; set; }
+        public List<string>? SlotIds { get; set; }
+        public List<DayScheduleItem>? Items { get; set; }
     }
 
     public class MedicalResultRequest

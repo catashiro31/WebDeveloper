@@ -28,6 +28,7 @@ namespace WebDeveloper.BackgroundServices
                     await CleanupSystem();
                     await CleanupBlacklist();
                     await CalculateDoctorRatings();
+                    await NotifyDoctorsMissingSchedule();
                 }
                 catch (Exception ex)
                 {
@@ -116,6 +117,60 @@ namespace WebDeveloper.BackgroundServices
 
             await db.SaveChangesAsync();
             _logger.LogInformation("--- Cập nhật Rating hoàn tất ---");
+        }
+
+        private async Task NotifyDoctorsMissingSchedule()
+        {
+            try
+            {
+                using var scope = _services.CreateScope();
+                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
+                var vnNow = DateTime.UtcNow.AddHours(7);
+                var today = DateOnly.FromDateTime(vnNow);
+                var next14Days = today.AddDays(14);
+                var threeDaysAgo = DateTime.UtcNow.AddDays(-3);
+
+                var approvedDoctors = await db.DoctorDetails
+                    .Where(d => d.VerificationStatus == VerificationStatus.APPROVED && d.User.IsActive == true)
+                    .Select(d => new { d.DoctorId, d.UserId })
+                    .ToListAsync();
+
+                foreach (var doc in approvedDoctors)
+                {
+                    var hasSlots = await db.DoctorSchedules.AnyAsync(s =>
+                        s.DoctorId == doc.DoctorId &&
+                        s.DateWorking >= today &&
+                        s.DateWorking <= next14Days &&
+                        s.SlotStatus != SlotStatus.CLOSED);
+
+                    if (!hasSlots)
+                    {
+                        var existingReminder = await db.Notifications.AnyAsync(n =>
+                            n.UserId == doc.UserId &&
+                            n.Title.Contains("Nhắc nhở: Lên lịch làm việc") &&
+                            (n.ReadAt == null || n.CreatedAt >= threeDaysAgo));
+
+                        if (!existingReminder)
+                        {
+                            db.Notifications.Add(new WebDeveloper.Models.Entities.Notification
+                            {
+                                UserId = doc.UserId,
+                                Title = "Nhắc nhở: Lên lịch làm việc 2 tuần tới",
+                                Message = "Bạn chưa có lịch khám nào trong 2 tuần tới. Vui lòng thiết lập lịch làm việc để bệnh nhân có thể đặt hẹn trước.",
+                                Url = "/Doctor/Schedules",
+                                CreatedAt = DateTime.UtcNow
+                            });
+                        }
+                    }
+                }
+
+                await db.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Lỗi khi kiểm tra và gửi thông báo nhắc lịch làm việc");
+            }
         }
     }
 }

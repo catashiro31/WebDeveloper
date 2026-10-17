@@ -238,6 +238,10 @@ namespace WebDeveloper.Services
 
             var now = VietnamTime.Now;
             var today = DateOnly.FromDateTime(now);
+
+            // Kiểm tra và gửi thông báo chuông nếu 14 ngày tới chưa có lịch làm việc
+            await CheckAndNotifyMissingSchedule(user, doctor.DoctorId, today);
+
             var schedules = await _db.DoctorSchedules
                 .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking >= today)
                 .OrderBy(s => s.DateWorking).ThenBy(s => s.TimeSlot)
@@ -252,6 +256,45 @@ namespace WebDeveloper.Services
             }).ToList();
         }
 
+        private async Task CheckAndNotifyMissingSchedule(User user, int doctorId, DateOnly today)
+        {
+            try
+            {
+                var next14Days = today.AddDays(14);
+                var hasSlots = await _db.DoctorSchedules.AnyAsync(s =>
+                    s.DoctorId == doctorId &&
+                    s.DateWorking >= today &&
+                    s.DateWorking <= next14Days &&
+                    s.SlotStatus != SlotStatus.CLOSED);
+
+                if (!hasSlots)
+                {
+                    var threeDaysAgo = DateTime.UtcNow.AddDays(-3);
+                    var existingReminder = await _db.Notifications.AnyAsync(n =>
+                        n.UserId == user.UserId &&
+                        n.Title.Contains("Nhắc nhở: Lên lịch làm việc") &&
+                        (n.ReadAt == null || n.CreatedAt >= threeDaysAgo));
+
+                    if (!existingReminder)
+                    {
+                        _db.Notifications.Add(new Notification
+                        {
+                            UserId = user.UserId,
+                            Title = "Nhắc nhở: Lên lịch làm việc 2 tuần tới",
+                            Message = "Bạn chưa có lịch khám nào trong 2 tuần tới. Vui lòng thiết lập lịch làm việc để bệnh nhân có thể đặt hẹn trước.",
+                            Url = "/Doctor/Schedules",
+                            CreatedAt = DateTime.UtcNow
+                        });
+                        await _db.SaveChangesAsync();
+                    }
+                }
+            }
+            catch
+            {
+                // Tránh lỗi thông báo làm gián đoạn luồng lấy lịch
+            }
+        }
+
         public async Task<string> CreateSchedule(User user, ScheduleRequest req)
         {
             var doctor = await _db.DoctorDetails.FirstOrDefaultAsync(d => d.UserId == user.UserId)
@@ -259,48 +302,104 @@ namespace WebDeveloper.Services
 
             if (doctor.VerificationStatus != VerificationStatus.APPROVED)
                 throw new InvalidOperationException("Tài khoản chưa được duyệt, không thể tạo lịch!");
-            
-            var earliest = DateOnly.FromDateTime(VietnamTime.Now).AddDays(7);
-            var end = req.EndDate ?? req.Date;
-            if (req.Date < earliest)
-                throw new InvalidOperationException($"Lịch mới phải được tạo trước ít nhất 7 ngày. Ngày sớm nhất: {earliest:dd/MM/yyyy}.");
-            if (end < req.Date || end.DayNumber - req.Date.DayNumber >= 14)
-                throw new InvalidOperationException("Chọn từ 1 đến 14 ngày liên tiếp, bao gồm cuối tuần/ngày nghỉ.");
-            var slots = Enum.GetValues<TimeSlot>();
-            if (req.SlotIds == null || !req.SlotIds.ToHashSet().SetEquals(slots.Select(s => s.ToString())))
-                throw new InvalidOperationException("Mỗi ngày phải đăng ký đầy đủ 7 khung giờ từ 09:00 đến 17:00.");
+
+            var now = VietnamTime.Now;
+            var today = DateOnly.FromDateTime(now);
+            var maxFutureDate = today.AddDays(30);
+
+            var items = new List<DayScheduleItem>();
+            if (req.Items != null && req.Items.Count > 0)
+            {
+                items = req.Items;
+            }
+            else if (req.Date.HasValue)
+            {
+                var end = req.EndDate ?? req.Date.Value;
+                var defaultSlots = req.SlotIds ?? Enum.GetValues<TimeSlot>().Select(s => s.ToString()).ToList();
+                for (var d = req.Date.Value; d <= end; d = d.AddDays(1))
+                {
+                    items.Add(new DayScheduleItem { Date = d, SlotIds = defaultSlots });
+                }
+            }
+
+            if (items.Count == 0)
+                throw new InvalidOperationException("Vui lòng chọn ít nhất 1 ngày làm việc.");
+
+            var normalized = new List<(DateOnly Date, List<TimeSlot> Slots)>();
+            foreach (var item in items)
+            {
+                if (item.Date < today)
+                    throw new InvalidOperationException($"Không thể tạo lịch cho ngày đã qua ({item.Date:dd/MM/yyyy}).");
+                if (item.Date > maxFutureDate)
+                    throw new InvalidOperationException($"Chỉ được tạo lịch trong vòng 30 ngày tới (tối đa {maxFutureDate:dd/MM/yyyy}).");
+
+                if (item.SlotIds == null || item.SlotIds.Count == 0)
+                    throw new InvalidOperationException($"Ngày {item.Date:dd/MM/yyyy} chưa chọn khung giờ nào.");
+
+                var validSlots = new List<TimeSlot>();
+                foreach (var slotStr in item.SlotIds)
+                {
+                    if (Enum.TryParse<TimeSlot>(slotStr, out var parsedSlot))
+                    {
+                        if (item.Date == today && VietnamTime.HasStarted(item.Date, parsedSlot, now))
+                        {
+                            continue; // Bỏ qua khung giờ đã bắt đầu hôm nay
+                        }
+                        if (!validSlots.Contains(parsedSlot))
+                            validSlots.Add(parsedSlot);
+                    }
+                }
+
+                if (validSlots.Count == 0)
+                    throw new InvalidOperationException($"Ngày {item.Date:dd/MM/yyyy} không có khung giờ hợp lệ hoặc các giờ chọn đã trôi qua.");
+
+                normalized.Add((item.Date, validSlots));
+            }
+
             await using var transaction = await _db.Database.BeginTransactionAsync();
             await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({doctor.DoctorId})");
-            if (req.Date < DateOnly.FromDateTime(VietnamTime.Now).AddDays(7))
-                throw new InvalidOperationException("Ngày tạo lịch đã thay đổi. Vui lòng chọn lại ngày trước ít nhất 7 ngày.");
+
+            var targetDates = normalized.Select(n => n.Date).Distinct().ToList();
             var existing = await _db.DoctorSchedules
-                .Where(s => s.DoctorId == doctor.DoctorId && s.DateWorking >= req.Date && s.DateWorking <= end).ToListAsync();
+                .Where(s => s.DoctorId == doctor.DoctorId && targetDates.Contains(s.DateWorking))
+                .ToListAsync();
+
             var closedIds = existing.Where(s => s.SlotStatus == SlotStatus.CLOSED).Select(s => s.ScheduleId).ToList();
             if (await _db.Appointments.AnyAsync(a => closedIds.Contains(a.ScheduleId) && a.BookingStatus != BookingStatus.CANCELLED))
-                throw new InvalidOperationException("Có ca đã đóng còn lịch khám. Không thể tự mở lại; vui lòng kiểm tra lịch.");
+                throw new InvalidOperationException("Có ca đã đóng còn lịch khám chưa hủy. Không thể tự mở lại; vui lòng kiểm tra lịch.");
+
             int addedCount = 0;
-            // Đi qua mọi ngày, kể cả cuối tuần/ngày nghỉ; ca đã đặt/đang mở được giữ nguyên.
-            for (var date = req.Date; date <= end; date = date.AddDays(1))
-            foreach (var slot in slots)
+            foreach (var (date, slots) in normalized)
             {
-                var current = existing.SingleOrDefault(s => s.DateWorking == date && s.TimeSlot == slot);
-                if (current?.SlotStatus is SlotStatus.AVAILABLE or SlotStatus.BOOKED) continue;
-                if (current != null)
+                foreach (var slot in slots)
                 {
-                    current.SlotStatus = SlotStatus.AVAILABLE;
-                    current.FacilityId = doctor.FacilityId;
-                    current.Version = (current.Version ?? 0) + 1;
+                    var current = existing.SingleOrDefault(s => s.DateWorking == date && s.TimeSlot == slot);
+                    if (current?.SlotStatus is SlotStatus.AVAILABLE or SlotStatus.BOOKED) continue;
+                    if (current != null)
+                    {
+                        current.SlotStatus = SlotStatus.AVAILABLE;
+                        current.FacilityId = doctor.FacilityId;
+                        current.Version = (current.Version ?? 0) + 1;
+                    }
+                    else
+                    {
+                        _db.DoctorSchedules.Add(new DoctorSchedule
+                        {
+                            DoctorId = doctor.DoctorId,
+                            FacilityId = doctor.FacilityId,
+                            DateWorking = date,
+                            TimeSlot = slot,
+                            SlotStatus = SlotStatus.AVAILABLE,
+                            Version = 0
+                        });
+                    }
+                    addedCount++;
                 }
-                else _db.DoctorSchedules.Add(new DoctorSchedule {
-                    DoctorId = doctor.DoctorId, FacilityId = doctor.FacilityId, DateWorking = date,
-                    TimeSlot = slot, SlotStatus = SlotStatus.AVAILABLE, Version = 0
-                });
-                addedCount++;
             }
 
             await _db.SaveChangesAsync();
             await transaction.CommitAsync();
-            return $"Đã thêm thành công {addedCount} ca làm việc.";
+            return $"Đã thêm thành công {addedCount} ca làm việc cho {targetDates.Count} ngày.";
         }
 
         public async Task<string> DeleteSchedule(User user, int scheduleId)
