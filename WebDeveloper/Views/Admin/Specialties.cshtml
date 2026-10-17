@@ -3,7 +3,6 @@
     Layout = "_AdminLayout";
 }
 
-<label style="display:block;margin:16px 0;">Tìm chuyên khoa<input id="adminSearch" type="search" placeholder="Tìm chuyên khoa…" style="display:block;width:min(100%,440px);padding:12px;border:1px solid #cbd5e1;border-radius:10px;" /></label>
 <style>
 .admin-card {
     background: #fff; border-radius: 24px; padding: 24px;
@@ -62,6 +61,14 @@
         <p class="page-desc">Danh sách và thông tin các chuyên khoa y tế trên hệ thống</p>
     </div>
     <button class="btn-primary" onclick="openModal()">+ Thêm chuyên khoa</button>
+</div>
+
+<!-- Thanh tìm kiếm chuyên khoa chuẩn phong cách Admin -->
+<div style="background: white; border-radius: 20px; padding: 18px 24px; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+    <div style="max-width: 480px;">
+        <label for="adminSearch" style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🔍 Tìm kiếm chuyên khoa</label>
+        <input id="adminSearch" type="search" placeholder="Nhập tên hoặc mô tả chuyên khoa..." style="width: 100%; padding: 11px 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; box-sizing: border-box; transition: all 0.2s; font-family: var(--font-app);" onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';" />
+    </div>
 </div>
 
 <div class="admin-card">

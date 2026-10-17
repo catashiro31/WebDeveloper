@@ -40,7 +40,10 @@
         <div style="font-size: 24px; font-weight: 900; color: #0ea47a; cursor: pointer;" onclick="window.location.href='/'">
             Doc<span style="color: #0f172a">Booking</span>
         </div>
-        <div style="display: flex; align-items: center; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="/" style="display: flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 12px; background: #f8fafc; border: 1.5px solid #e2e8f0; color: #334155; font-weight: 700; font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseenter="this.style.background='#f1f5f9'; this.style.borderColor='#0ea47a'; this.style.color='#0ea47a';" onmouseleave="this.style.background='#f8fafc'; this.style.borderColor='#e2e8f0'; this.style.color='#334155';">
+                🏠 Về trang chủ
+            </a>
             <div style="text-align: right;">
                 <div style="font-weight: 800; font-size: 14px; color: #0f172a;">Hệ thống quản trị</div>
                 <div style="font-size: 12px; color: #64748b;">Phiên bản 2.0 Premium</div>
@@ -94,6 +97,10 @@
                     <a href="/Admin/Appeals" class="admin-sidebar-btn @(currentAction == "Appeals" ? "active" : "")">📩 Yêu cầu mở khóa</a>
                     <a href="/Admin/Transfers" class="admin-sidebar-btn @(currentAction == "Transfers" ? "active" : "")">
                         <span style="font-size: 18px;">🔄</span> <span>Chuyển công tác</span>
+                    </a>
+                    <div style="margin: 14px 0 8px; height: 1px; background: #f1f5f9;"></div>
+                    <a href="/" class="admin-sidebar-btn" style="color: #64748b;">
+                        <span style="font-size: 18px;">🏠</span> <span>Về trang chủ</span>
                     </a>
                 </nav>
             </div>

@@ -17,6 +17,11 @@
 .appeals-panel button:disabled { opacity:.45; cursor:not-allowed; }
 .appeal-pagination { display:flex; justify-content:center; align-items:center; gap:12px; margin-top:24px; font-size:13px; }
 .appeal-pagination[hidden] { display:none; }
+.quick-reason-chip {
+    padding: 6px 12px; border-radius: 8px; border: 1px solid #e2e8f0; background: #f8fafc;
+    color: #475569; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: inherit;
+}
+.quick-reason-chip:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
 @@media(max-width:600px) { .appeals-panel { padding:18px; } .appeals-heading h1 { font-size:20px; } .appeals-filter { width:100%; } }
 </style>
 <section class="appeals-panel">
@@ -28,10 +33,125 @@
     <div id="appeals"></div>
     <nav class="appeal-pagination" id="appealPagination" aria-label="Phân trang yêu cầu" hidden><button id="appealPrev">Trang trước</button><span id="appealPage"></span><button id="appealNext">Trang sau</button></nav>
 </section>
+
+<!-- Modal từ chối mở khóa tài khoản -->
+<div id="rejectModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(8px); display: none; align-items: flex-start; justify-content: center; z-index: 1000; padding: 40px 20px; overflow-y: auto;" onclick="closeRejectModal()">
+    <div style="background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 520px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); box-sizing: border-box; margin-top: 20px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="width: 44px; height: 44px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                    🚫
+                </div>
+                <div>
+                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;">Từ chối mở khóa tài khoản</h3>
+                    <p style="margin: 2px 0 0; font-size: 13px; color: #64748b;" id="rejectUserSub">Phản hồi lý do xử lý cho người dùng</p>
+                </div>
+            </div>
+            <button onclick="closeRejectModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <input type="hidden" id="rejectAppealId" />
+
+        <div style="margin-bottom: 18px;">
+            <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
+                Lý do từ chối <span style="color: #ef4444;">*</span> (3 – 1000 ký tự)
+            </label>
+            <textarea id="rejectReasonInput" rows="4" placeholder="Nhập lý do cụ thể vì sao từ chối mở khóa (từ 3 đến 1000 ký tự)..." style="width: 100%; padding: 12px 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-family: var(--font-app); font-size: 14px; outline: none; box-sizing: border-box; resize: vertical; transition: border-color 0.2s;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
+            <div style="display: flex; justify-content: space-between; margin-top: 6px;">
+                <span id="rejectValidationMsg" style="color: #ef4444; font-size: 12px; font-weight: 500;"></span>
+                <span id="rejectCharCounter" style="color: #94a3b8; font-size: 12px;">0 / 1000 ký tự</span>
+            </div>
+        </div>
+
+        <!-- Gợi ý lý do nhanh -->
+        <div style="margin-bottom: 24px;">
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #64748b; margin-bottom: 8px;">Gợi ý lý do nhanh:</label>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button type="button" class="quick-reason-chip" onclick="setQuickReason('Lý do giải trình không hợp lệ hoặc thông tin cung cấp chưa chính xác.')">Lý do chưa hợp lệ</button>
+                <button type="button" class="quick-reason-chip" onclick="setQuickReason('Tài khoản vi phạm nghiêm trọng chính sách cộng đồng, không thể mở khóa.')">Vi phạm chính sách</button>
+                <button type="button" class="quick-reason-chip" onclick="setQuickReason('Thông tin xác minh danh tính không trùng khớp với hồ sơ đăng ký.')">Không khớp thông tin</button>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 12px;">
+            <button type="button" onclick="closeRejectModal()" style="flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #cbd5e1; background: white; color: #475569; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Hủy bỏ</button>
+            <button type="button" id="confirmRejectBtn" onclick="submitRejectAppeal()" style="flex: 1.5; padding: 12px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); transition: all 0.2s;" onmouseenter="this.style.background='#dc2626'" onmouseleave="this.style.background='#ef4444'">Xác nhận từ chối</button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
 <script>
 let appealPage = 0;
 const appealError = document.getElementById('appealError');
+const rejectModal = document.getElementById('rejectModal');
+const rejectReasonInput = document.getElementById('rejectReasonInput');
+const rejectCharCounter = document.getElementById('rejectCharCounter');
+const rejectValidationMsg = document.getElementById('rejectValidationMsg');
+
+rejectReasonInput.addEventListener('input', () => {
+    const len = rejectReasonInput.value.length;
+    rejectCharCounter.textContent = `${len} / 1000 ký tự`;
+    if (len >= 3 && len <= 1000) {
+        rejectValidationMsg.textContent = '';
+    }
+});
+
+function openRejectModal(id, userDesc) {
+    document.getElementById('rejectAppealId').value = id;
+    document.getElementById('rejectUserSub').textContent = userDesc || 'Phản hồi lý do xử lý cho người dùng';
+    rejectReasonInput.value = '';
+    rejectValidationMsg.textContent = '';
+    rejectCharCounter.textContent = '0 / 1000 ký tự';
+    rejectModal.style.display = 'flex';
+    rejectReasonInput.focus();
+}
+
+function closeRejectModal() {
+    rejectModal.style.display = 'none';
+}
+
+function setQuickReason(text) {
+    rejectReasonInput.value = text;
+    rejectReasonInput.dispatchEvent(new Event('input'));
+    rejectReasonInput.focus();
+}
+
+async function handleAppealApi(appealId, approve, reason) {
+    const response = await fetch(`/api/v1/admin/appeals/${appealId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ approve, reason })
+    });
+    if (!response.ok) throw new Error(await readApiMessage(response));
+    showApiToast(approve ? 'Đã duyệt mở khóa tài khoản' : 'Đã từ chối yêu cầu mở khóa', 'success');
+    await loadAppeals();
+}
+
+async function submitRejectAppeal() {
+    const id = document.getElementById('rejectAppealId').value;
+    const reason = rejectReasonInput.value.trim();
+    if (reason.length < 3 || reason.length > 1000) {
+        rejectValidationMsg.textContent = 'Lý do từ chối phải từ 3 đến 1000 ký tự.';
+        rejectReasonInput.focus();
+        return;
+    }
+
+    const btn = document.getElementById('confirmRejectBtn');
+    btn.disabled = true;
+    btn.textContent = 'Đang xử lý...';
+
+    try {
+        await handleAppealApi(id, false, reason);
+        closeRejectModal();
+    } catch (err) {
+        rejectValidationMsg.textContent = err.message || 'Lỗi khi từ chối yêu cầu';
+    } finally {
+        btn.disabled = false;
+        btn.textContent = 'Xác nhận từ chối';
+    }
+}
+
 async function loadAppeals() {
     const list = document.getElementById('appeals'); list.replaceChildren(); appealError.textContent = 'Đang tải…';
     try {
@@ -50,21 +170,18 @@ async function loadAppeals() {
             if (item.status === 'PENDING') [true,false].forEach(approve => {
                 const button = document.createElement('button'); button.textContent = approve ? 'Duyệt mở khóa' : 'Từ chối'; button.className = approve ? 'approve' : 'reject';
                 button.onclick = async () => {
-                    let trimmedReason = '';
                     if (approve) {
                         if (!confirm('Duyệt mở khóa tài khoản này và gửi email thông báo?')) return;
+                        card.querySelectorAll('button').forEach(b => b.disabled = true);
+                        try {
+                            await handleAppealApi(item.id, true, '');
+                        } catch(error) {
+                            appealError.textContent = error.message;
+                            card.querySelectorAll('button').forEach(b => b.disabled = false);
+                        }
                     } else {
-                        const reason = prompt('Nhập lý do từ chối (3–1000 ký tự):');
-                        if (reason === null) return;
-                        trimmedReason = reason.trim();
-                        if (trimmedReason.length < 3 || trimmedReason.length > 1000) { showApiToast('Lý do từ chối phải từ 3 đến 1000 ký tự.', 'warning'); return; }
+                        openRejectModal(item.id, `${item.fullName || ''} (${item.email})`);
                     }
-                    card.querySelectorAll('button').forEach(b => b.disabled = true);
-                    try {
-                        const response = await fetch(`/api/v1/admin/appeals/${item.id}`, {method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify({approve,reason:trimmedReason})});
-                        if (!response.ok) throw new Error(await readApiMessage(response));
-                        await loadAppeals();
-                    } catch(error) { appealError.textContent = error.message; card.querySelectorAll('button').forEach(b => b.disabled = false); }
                 }; card.append(button);
             }); list.append(card);
         });

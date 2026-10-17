@@ -48,6 +48,9 @@
             <span style="padding: 4px 12px; background: #dbeafe; color: #2563eb; border-radius: 20px; font-size: 13px; font-weight: 500;">Bác sĩ</span>
         </div>
         <div style="display: flex; align-items: center; gap: 16px;">
+            <a href="/" style="display: flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 10px; background: rgba(95, 109, 252, 0.08); border: 1px solid rgba(95, 109, 252, 0.2); color: #4f46e5; font-weight: 700; font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseenter="this.style.background='rgba(95, 109, 252, 0.15)'" onmouseleave="this.style.background='rgba(95, 109, 252, 0.08)'">
+                🏠 Trang chủ
+            </a>
             <div style="display: flex; align-items: center; gap: 12px; padding: 8px 16px; background: #f3f4f6; border-radius: 8px;">
                 <span id="headerDoctorName" style="font-weight: 500;">BS. @userName</span>
                 <button onclick="logout()" style="padding: 6px 12px; border-radius: 6px; border: none; background: #ef4444; color: white; cursor: pointer; font-size: 13px;">Đăng xuất</button>
@@ -97,6 +100,8 @@
                 <a href="/Doctor/Profile" class="sub-nav-link @(currentAction == "profile" ? "active" : "")"><span>👩‍⚕️</span><span>Hồ sơ chuyên môn</span></a>
                 <a href="/Doctor/Personal" class="sub-nav-link @(currentAction == "personal" ? "active" : "")"><span>👤</span><span>Thông tin cá nhân</span></a>
                 <a href="/Doctor/ChangePassword" class="sub-nav-link @(currentAction == "changepassword" ? "active" : "")"><span>🔐</span><span>Đổi mật khẩu</span></a>
+                <div style="margin: 10px 0 6px; height: 1px; background: #f1f5f9;"></div>
+                <a href="/" class="sub-nav-link" style="color: #64748b;"><span>🏠</span><span>Về trang chủ</span></a>
             </nav>
         </aside>
 
