@@ -49,15 +49,33 @@ public class AccountAppealsController(ApplicationDbContext db) : ControllerBase
         await db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-user.UserId})");
         await db.Entry(user).ReloadAsync();
         if (user.IsActive == true) return Conflict(new { message = "Tài khoản đã được mở khóa." });
-        var cutoff = DateTime.UtcNow.AddHours(-24);
-        if (await db.AccountAppeals.AnyAsync(a => a.UserId == user.UserId && (a.Status == "PENDING" || a.CreatedAt > cutoff)))
-            return Conflict(new { message = "Bạn đã có phiếu đang chờ hoặc đã gửi trong 24 giờ qua. Hãy kiểm tra kết quả." });
-        db.AccountAppeals.Add(new AccountAppeal { UserId = user.UserId, Reason = req.Reason.Trim() });
+        var existingPending = await db.AccountAppeals.FirstOrDefaultAsync(a => a.UserId == user.UserId && a.Status == "PENDING");
+        if (existingPending != null)
+        {
+            existingPending.Reason = req.Reason.Trim();
+            existingPending.CreatedAt = DateTime.UtcNow;
+        }
+        else
+        {
+            db.AccountAppeals.Add(new AccountAppeal { UserId = user.UserId, Reason = req.Reason.Trim(), CreatedAt = DateTime.UtcNow });
+        }
+        var senderName = string.IsNullOrWhiteSpace(user.FullName) ? user.Email : user.FullName;
         foreach (var adminId in await db.Users.Where(u => u.Role == RoleStatus.ADMIN && u.IsActive == true).Select(u => u.UserId).ToListAsync())
-            db.Notifications.Add(new Notification { UserId = adminId, Title = "Yêu cầu mở khóa tài khoản", Message = $"{user.FullName} đã gửi phiếu xin mở khóa.", Url = "/Admin/Appeals" });
+            db.Notifications.Add(new Notification { UserId = adminId, Title = "Yêu cầu mở khóa tài khoản", Message = $"{senderName} đã gửi phiếu xin mở khóa.", Url = "/Admin/Appeals" });
         await db.SaveChangesAsync();
         await tx.CommitAsync();
-        return Ok(new { message = "Đã gửi phiếu xin mở khóa. Bạn có thể kiểm tra kết quả tại đây." });
+        return Ok(new { message = existingPending != null 
+            ? "Đã cập nhật lại nội dung phiếu xin mở khóa của bạn thành công." 
+            : "Đã gửi phiếu xin mở khóa thành công. Bạn có thể kiểm tra kết quả tại đây." });
+    }
+
+    [Authorize(Roles = "ADMIN"), HttpGet("admin/appeals/count")]
+    public async Task<IActionResult> Counts()
+    {
+        var pending = await db.AccountAppeals.CountAsync(a => a.Status == "PENDING");
+        var approved = await db.AccountAppeals.CountAsync(a => a.Status == "APPROVED");
+        var rejected = await db.AccountAppeals.CountAsync(a => a.Status == "REJECTED");
+        return Ok(new { pending, approved, rejected });
     }
 
     [Authorize(Roles = "ADMIN"), HttpGet("admin/appeals")]

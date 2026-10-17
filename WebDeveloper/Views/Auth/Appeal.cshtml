@@ -410,6 +410,7 @@
             const data = await res.json();
             if (!check) {
                 showAppealMessage('success', data.message || 'Đã gửi phiếu xin mở khóa. Bạn có thể bấm "Kiểm tra kết quả" để theo dõi.');
+                setTimeout(() => sendAppeal(true), 1200);
             } else {
                 if (data.isActive) {
                     showAppealMessage('success', '✓ Tài khoản của bạn hiện đang HOẠT ĐỘNG bình thường. Bạn có thể đăng nhập ngay.');
@@ -452,5 +453,14 @@
     };
 
     document.getElementById('appealStatus').onclick = () => sendAppeal(true);
+
+    const emailQuery = new URLSearchParams(window.location.search).get('email');
+    if (emailQuery) {
+        const emailEl = document.getElementById('appealEmail');
+        if (emailEl) {
+            emailEl.value = emailQuery;
+            document.getElementById('appealPassword')?.focus();
+        }
+    }
 </script>
 }

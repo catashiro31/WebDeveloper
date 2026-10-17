@@ -94,13 +94,12 @@
                     <a href="/Admin/Facilities" class="admin-sidebar-btn @(currentAction == "Facilities" ? "active" : "")">
                         <span style="font-size: 18px;">🏢</span> <span>Cơ sở y tế</span>
                     </a>
-                    <a href="/Admin/Appeals" class="admin-sidebar-btn @(currentAction == "Appeals" ? "active" : "")">📩 Yêu cầu mở khóa</a>
+                    <a href="/Admin/Appeals" class="admin-sidebar-btn @(currentAction == "Appeals" ? "active" : "")">
+                        <span style="font-size: 18px;">📩</span> <span>Yêu cầu mở khóa</span>
+                        <span id="sidebarAppealBadge" style="display:none; margin-left:auto; background:#ef4444; color:white; border-radius:20px; font-size:11px; font-weight:700; padding:2px 7px;"></span>
+                    </a>
                     <a href="/Admin/Transfers" class="admin-sidebar-btn @(currentAction == "Transfers" ? "active" : "")">
                         <span style="font-size: 18px;">🔄</span> <span>Chuyển công tác</span>
-                    </a>
-                    <div style="margin: 14px 0 8px; height: 1px; background: #f1f5f9;"></div>
-                    <a href="/" class="admin-sidebar-btn" style="color: #64748b;">
-                        <span style="font-size: 18px;">🏠</span> <span>Về trang chủ</span>
                     </a>
                 </nav>
             </div>
@@ -135,6 +134,24 @@
             } catch(e) {}
         }
 
+        async function checkSidebarAppealBadge() {
+            try {
+                const res = await fetch('/api/v1/admin/appeals/count');
+                if (!res.ok) return;
+                const data = await res.json();
+                const badge = document.getElementById('sidebarAppealBadge');
+                if (badge) {
+                    if (data.pending > 0) {
+                        badge.textContent = data.pending > 99 ? '99+' : data.pending;
+                        badge.style.display = 'inline-block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            } catch {}
+        }
+        checkSidebarAppealBadge();
+        setInterval(checkSidebarAppealBadge, 20000);
     </script>
     <script src="/js/auth-logout.js" asp-append-version="true"></script>
     <script src="/js/api-messages.js" asp-append-version="true"></script>

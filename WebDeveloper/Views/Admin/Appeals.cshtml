@@ -26,8 +26,22 @@
 </style>
 <section class="appeals-panel">
     <div class="appeals-heading">
-        <div><h1>Yêu cầu mở khóa tài khoản</h1><p>Xem xét yêu cầu và phản hồi lý do xử lý cho người dùng.</p></div>
-        <label class="appeals-filter">Trạng thái <select id="appealFilter"><option value="PENDING">Chờ duyệt</option><option value="APPROVED">Đã duyệt</option><option value="REJECTED">Từ chối</option></select></label>
+        <div>
+            <h1>Yêu cầu mở khóa tài khoản</h1>
+            <p>Xem xét yêu cầu và phản hồi lý do xử lý cho người dùng.</p>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <label class="appeals-filter">Trạng thái 
+                <select id="appealFilter">
+                    <option value="PENDING">Chờ duyệt</option>
+                    <option value="APPROVED">Đã duyệt</option>
+                    <option value="REJECTED">Từ chối</option>
+                </select>
+            </label>
+            <button id="appealRefreshBtn" type="button" onclick="loadAppeals(true)" style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 700; color: #334155; cursor: pointer; display: flex; align-items: center; gap: 6px; margin: 0; transition: all 0.2s;" onmouseenter="this.style.background='#e2e8f0'" onmouseleave="this.style.background='#f1f5f9'">
+                🔄 <span>Làm mới</span>
+            </button>
+        </div>
     </div>
     <p id="appealError" role="status"></p>
     <div id="appeals"></div>
@@ -152,16 +166,43 @@ async function submitRejectAppeal() {
     }
 }
 
-async function loadAppeals() {
-    const list = document.getElementById('appeals'); list.replaceChildren(); appealError.textContent = 'Đang tải…';
+async function updateCounts() {
     try {
+        const res = await fetch('/api/v1/admin/appeals/count');
+        if (!res.ok) return;
+        const counts = await res.json();
+        const sel = document.getElementById('appealFilter');
+        if (sel) {
+            sel.options[0].textContent = `Chờ duyệt (${counts.pending || 0})`;
+            sel.options[1].textContent = `Đã duyệt (${counts.approved || 0})`;
+            sel.options[2].textContent = `Từ chối (${counts.rejected || 0})`;
+        }
+    } catch {}
+}
+
+async function loadAppeals(isManual = false, isBackground = false) {
+    const list = document.getElementById('appeals');
+    const refreshBtn = document.getElementById('appealRefreshBtn');
+    if (isManual && refreshBtn) {
+        refreshBtn.disabled = true;
+        refreshBtn.innerHTML = '⏳ <span>Đang tải...</span>';
+    }
+    if (!isBackground) {
+        list.replaceChildren();
+        appealError.textContent = 'Đang tải…';
+    }
+    try {
+        updateCounts();
         const res = await fetch(`/api/v1/admin/appeals?status=${document.getElementById('appealFilter').value}&page=${appealPage}`);
         if (!res.ok) throw new Error(await readApiMessage(res));
-        const items = await res.json(); appealError.textContent = items.length ? '' : 'Không có phiếu.';
+        const items = await res.json();
+        appealError.textContent = items.length ? '' : 'Không có phiếu.';
         document.getElementById('appealPrev').disabled = appealPage === 0;
         document.getElementById('appealNext').disabled = items.length < 20;
         document.getElementById('appealPage').textContent = 'Trang ' + (appealPage + 1);
         document.getElementById('appealPagination').hidden = appealPage === 0 && items.length < 20;
+        
+        list.replaceChildren();
         items.forEach(item => {
             const card = document.createElement('section'); card.className = 'appeal-card';
             for (const text of [`${item.fullName || ''} (${item.email})`, 'Lý do khóa: ' + (item.reasonBanned || '—'), 'Lý do xin mở khóa: ' + item.reason, 'Ngày gửi: ' + new Date(item.createdAt).toLocaleString('vi-VN'), item.adminReason ? 'Kết quả: ' + item.adminReason : '']) {
@@ -185,11 +226,23 @@ async function loadAppeals() {
                 }; card.append(button);
             }); list.append(card);
         });
-    } catch(error) { appealError.textContent = error.message; }
+    } catch(error) { 
+        if (!isBackground) appealError.textContent = error.message; 
+    } finally {
+        if (isManual && refreshBtn) {
+            refreshBtn.disabled = false;
+            refreshBtn.innerHTML = '🔄 <span>Làm mới</span>';
+        }
+    }
 }
 document.getElementById('appealFilter').onchange = () => { appealPage = 0; loadAppeals(); };
 document.getElementById('appealPrev').onclick = () => { if (appealPage > 0) { appealPage--; loadAppeals(); } };
 document.getElementById('appealNext').onclick = () => { appealPage++; loadAppeals(); };
 loadAppeals();
+setInterval(() => {
+    if (!document.hidden && document.getElementById('appealFilter').value === 'PENDING' && appealPage === 0) {
+        loadAppeals(false, true);
+    }
+}, 15000);
 </script>
 }
