@@ -650,9 +650,8 @@ namespace WebDeveloper.Services
 
         public async Task<List<DoctorAppointmentResponse>> GetOverdueConfirmedAppointments(User user)
         {
-            // Vietnam time logic: UTC + 7
-            var now = DateTime.UtcNow;
-            var today = DateOnly.FromDateTime(now);
+            // Roll over at midnight in Vietnam, not at midnight UTC (07:00 in Vietnam).
+            var today = DateOnly.FromDateTime(VietnamTime.Now);
             
             // Get appointments that are CONFIRMED and the date has passed
             var query = _db.Appointments
