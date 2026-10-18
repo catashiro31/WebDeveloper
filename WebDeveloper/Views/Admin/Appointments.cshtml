@@ -134,6 +134,46 @@
     transform: scale(0.95); transition: transform 0.3s; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
 }
 .modal-overlay.active .modal-content { transform: scale(1); }
+
+@@media (max-width: 768px) {
+    .header-area {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+    }
+    .filter-tabs {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .admin-card {
+        padding: 16px !important;
+        border-radius: 18px !important;
+    }
+    .filter-item-wrap {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+    .filter-item-wrap select, .filter-item-wrap input {
+        width: 100% !important;
+    }
+    .filter-btn-reset-wrap {
+        width: 100% !important;
+        margin-left: 0 !important;
+    }
+    .filter-btn-reset-wrap button {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+    #appointmentDetailModal .modal-content {
+        padding: 20px 16px !important;
+        border-radius: 20px !important;
+    }
+    #appointmentDetailModal .modal-content > div:nth-child(2) > div,
+    #appointmentDetailModal .modal-content > div:nth-child(3) > div {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+}
 </style>
 
 <div class="header-area">
@@ -155,28 +195,28 @@
 <!-- Thanh lọc nằm ngang gọn gàng -->
 <div class="filter-card">
     <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; width: 100%;">
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="filter-item-wrap" style="display: flex; align-items: center; gap: 8px;">
             <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">🏥 Chuyên khoa:</label>
             <select id="filterSpecialty" class="filter-select" style="min-width: 170px;">
                 <option value="">Tất cả chuyên khoa</option>
             </select>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div class="filter-item-wrap" style="display: flex; align-items: center; gap: 8px;">
             <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">📍 Cơ sở y tế:</label>
             <select id="filterFacility" class="filter-select" style="min-width: 170px;">
                 <option value="">Tất cả cơ sở</option>
             </select>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+        <div class="filter-item-wrap" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
             <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">📅 Ngày khám từ:</label>
             <input type="date" id="filterWorkDateFrom" class="filter-select" style="padding: 7px 10px;" />
             <span style="font-size: 13px; font-weight: 700; color: #94a3b8;">đến</span>
             <input type="date" id="filterWorkDateTo" class="filter-select" style="padding: 7px 10px;" />
         </div>
 
-        <div style="margin-left: auto;">
+        <div class="filter-btn-reset-wrap" style="margin-left: auto;">
             <button id="resetFilterBtn" onclick="resetFilters()" class="filter-btn-reset">
                 🔄 Đặt lại
             </button>

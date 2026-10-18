@@ -257,6 +257,19 @@
   .slot-btn { min-height: 44px; padding: 10px 6px !important; font-size: 13px; border-radius: 10px; }
   .book-appt-btn { display: none; } /* Hidden on mobile; use sticky bar */
   .fee-wrap { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 20px; }
+  .booking-confirm-dialog {
+    padding: 20px 16px !important;
+    border-radius: 20px !important;
+  }
+  .booking-confirm-actions {
+    flex-direction: column !important;
+    gap: 8px !important;
+  }
+  .booking-confirm-actions button {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+  }
 }
 
 
@@ -854,7 +867,7 @@
 
         <!-- Modal Xác nhận thông tin đặt lịch -->
         <div id="bookingConfirmModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
-            <div style="background: white; border-radius: 28px; width: 100%; max-width: 520px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); box-sizing: border-box; max-height: 90vh; overflow-y: auto;">
+            <div class="booking-confirm-dialog" style="background: white; border-radius: 28px; width: 100%; max-width: 520px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); box-sizing: border-box; max-height: 90vh; overflow-y: auto;">
                 <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px;">
                     <div style="display: flex; align-items: center; gap: 14px;">
                         <div style="width: 46px; height: 46px; border-radius: 14px; background: #eef2ff; color: #6366f1; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
@@ -905,7 +918,7 @@
                     </div>
                 </div>
 
-                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                <div class="booking-confirm-actions" style="display: flex; gap: 12px; justify-content: flex-end;">
                     <button type="button" onclick="closeConfirmModal()" style="padding: 12px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
                         Quay lại sửa
                     </button>

@@ -76,11 +76,84 @@
 }
 .pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.modal-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
+    padding: 20px; box-sizing: border-box;
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+.modal-content {
+    background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 480px;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: scale(0.95); transition: transform 0.3s;
+    box-sizing: border-box; max-height: 90vh; overflow-y: auto;
+}
+.modal-overlay.active .modal-content { transform: scale(1); }
+
+@@media (max-width: 640px) {
+    .filter-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+    }
+    .tab-group {
+        width: 100% !important;
+        overflow-x: auto !important;
+        box-sizing: border-box !important;
+    }
+    .search-box {
+        width: 100% !important;
+        box-sizing: border-box !important;
+    }
+    .admin-card {
+        padding: 16px !important;
+    }
+    .modal-content {
+        padding: 20px 16px !important;
+        border-radius: 20px !important;
+    }
+}
 </style>
 
 <div class="page-header">
     <h2 class="page-title">Đánh giá hệ thống</h2>
     <p class="page-desc">Naive Bayes gợi ý bài cần xem xét. Admin quyết định ẩn nội dung; số sao vẫn được tính.</p>
+</div>
+
+<!-- Modal Xác nhận Ẩn/Hiện Đánh giá -->
+<div id="toggleReviewModal" class="modal-overlay" onclick="closeToggleReviewModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div id="toggleReviewIconBox" style="width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                🚫
+            </div>
+            <div style="flex: 1;">
+                <h3 id="toggleReviewTitle" style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Xác nhận ẩn đánh giá</h3>
+                <p id="toggleReviewSub" style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Nội dung bình luận sẽ bị ẩn khỏi trang công khai.</p>
+            </div>
+            <button type="button" onclick="closeToggleReviewModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <div id="toggleReviewCommentBox" style="background: #f8fafc; border-radius: 14px; padding: 14px 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; font-size: 13px; color: #334155; line-height: 1.5; max-height: 120px; overflow-y: auto;">
+            <span style="color: #64748b; display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 4px;">Nội dung đánh giá:</span>
+            <span id="toggleReviewCommentText" style="font-style: italic;">—</span>
+        </div>
+
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 24px; line-height: 1.4;">
+            💡 <em>Lưu ý: Điểm số số sao của đánh giá này vẫn được bảo lưu và tính vào điểm trung bình của bác sĩ.</em>
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" onclick="closeToggleReviewModal()" style="padding: 11px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
+                Quay lại
+            </button>
+            <button type="button" id="confirmToggleReviewBtn" onclick="confirmToggleReview()" style="padding: 11px 24px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); transition: all 0.2s;">
+                Xác nhận
+            </button>
+        </div>
+    </div>
 </div>
 
 <div class="admin-card">
@@ -92,10 +165,20 @@
             <button class="tab-btn warning-tab" onclick="setTab('profane', this)">⚠️ Nghi vấn thô tục</button>
             <button class="tab-btn warning-tab" onclick="setTab('spam', this)">Nghi vấn spam</button>
             <button class="tab-btn warning-tab" onclick="setTab('advertising', this)">Nghi vấn quảng cáo</button>
-        </div>
-        <div class="search-box">
-            <span style="color: #94a3b8; margin-right: 8px;">🔍</span>
-            <input type="text" id="searchKeyword" placeholder="Tìm theo tên hoặc nội dung..." oninput="handleSearch()" />
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; font-weight: 600;">
+                <label for="reviewPageSizeSelect">Hiển thị:</label>
+                <select id="reviewPageSizeSelect" onchange="changeReviewPageSize(this.value)" style="padding: 7px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; background: #fff; font-size: 13px; font-weight: 600; color: #1e293b; outline: none; cursor: pointer;">
+                    <option value="3">3 / trang</option>
+                    <option value="5" selected>5 / trang</option>
+                    <option value="10">10 / trang</option>
+                    <option value="20">20 / trang</option>
+                </select>
+            </div>
+            <div class="search-box">
+                <span style="color: #94a3b8; margin-right: 8px;">🔍</span>
+                <input type="text" id="searchKeyword" placeholder="Tìm theo tên hoặc nội dung..." oninput="handleSearch()" />
+            </div>
         </div>
     </div>
 
@@ -115,7 +198,10 @@
             </tbody>
         </table>
     </div>
-    <div class="pagination" id="pagination"></div>
+    <div id="reviewPaginationWrapper" style="display: none; flex-direction: column; align-items: center; gap: 12px; margin-top: 28px;">
+        <div class="pagination" id="pagination"></div>
+        <div id="reviewPaginationInfo" style="font-size: 13px; color: #64748b; font-weight: 600;"></div>
+    </div>
 </div>
 
 @section Scripts {
@@ -125,7 +211,7 @@ DocBookingPage.mount(page => {
 
         let rawReviews = [];
         let filteredReviews = [];
-        let state = { page: 0, size: 10, totalPages: 1 };
+        let state = { page: 0, size: 5, totalPages: 1, totalElements: 0 };
         let currentTab = 'all';
         let searchKeyword = '';
 
@@ -137,7 +223,9 @@ DocBookingPage.mount(page => {
         async function loadReviews() {
             const version = ++reviewRequestVersion;
             const tbody = document.getElementById('tableBody');
+            const wrapper = document.getElementById('reviewPaginationWrapper');
             tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
+            if (wrapper) wrapper.style.display = 'none';
             
             try {
                 const res = await fetch(`/api/v1/admin/reviews?page=${state.page}&size=${state.size}&category=${currentTab}&search=${encodeURIComponent(searchKeyword)}`, {
@@ -149,6 +237,7 @@ DocBookingPage.mount(page => {
                 
                 rawReviews = data.content || [];
                 state.totalPages = data.totalPages || 1;
+                state.totalElements = data.totalElements != null ? data.totalElements : rawReviews.length;
                 applyFilter();
             } catch (err) {
                 if (version !== reviewRequestVersion) return;
@@ -216,7 +305,7 @@ DocBookingPage.mount(page => {
                                     ? '<span class="badge-status badge-hidden">● Đã ẩn</span>' 
                                     : '<span class="badge-status badge-visible">● Đang hiển thị</span>'}
                             </div>
-                            <button class="btn-action ${isHidden ? 'btn-unhide' : 'btn-hide'}" onclick="toggleHideReview(${id}, ${isHidden})">
+                            <button class="btn-action ${isHidden ? 'btn-unhide' : 'btn-hide'}" onclick='openToggleReviewModal(${id}, ${isHidden}, "${escapeHtml(r.comment || "")}")'>
                                 ${isHidden ? '👁️ Hiện lại' : '🚫 Ẩn'}
                             </button>
                         </td>
@@ -227,44 +316,130 @@ DocBookingPage.mount(page => {
             renderPagination();
         }
 
-        page.globals.toggleHideReview = async (id, isCurrentlyHidden) => {
-            const actionText = isCurrentlyHidden ? 'hiển thị lại' : 'ẩn';
-            if (!confirm(`Bạn có chắc chắn muốn ${actionText} đánh giá này? Điểm số đánh giá vẫn sẽ được giữ nguyên và cập nhật.`)) return;
+        let targetToggleReviewId = null;
+        let targetToggleIsHidden = false;
+
+        page.globals.openToggleReviewModal = function(id, isCurrentlyHidden, comment) {
+            targetToggleReviewId = id;
+            targetToggleIsHidden = isCurrentlyHidden;
+
+            const iconBox = document.getElementById('toggleReviewIconBox');
+            const title = document.getElementById('toggleReviewTitle');
+            const sub = document.getElementById('toggleReviewSub');
+            const commentText = document.getElementById('toggleReviewCommentText');
+            const confirmBtn = document.getElementById('confirmToggleReviewBtn');
+
+            if (isCurrentlyHidden) {
+                iconBox.innerHTML = '👁️';
+                iconBox.style.background = '#dcfce7';
+                iconBox.style.color = '#16a34a';
+                title.innerText = 'Xác nhận hiện lại đánh giá';
+                sub.innerText = 'Nội dung bình luận sẽ được hiển thị công khai trở lại trên trang bác sĩ.';
+                confirmBtn.style.background = '#16a34a';
+                confirmBtn.innerText = 'Hiện lại đánh giá';
+            } else {
+                iconBox.innerHTML = '🚫';
+                iconBox.style.background = '#fee2e2';
+                iconBox.style.color = '#ef4444';
+                title.innerText = 'Xác nhận ẩn đánh giá';
+                sub.innerText = 'Nội dung bình luận sẽ bị ẩn khỏi trang công khai của bác sĩ.';
+                confirmBtn.style.background = '#ef4444';
+                confirmBtn.innerText = 'Ẩn đánh giá';
+            }
+
+            commentText.innerText = comment ? `"${comment}"` : '(Không có nội dung bình luận)';
+            confirmBtn.disabled = false;
+            document.getElementById('toggleReviewModal').classList.add('active');
+        };
+
+        page.globals.closeToggleReviewModal = function() {
+            document.getElementById('toggleReviewModal').classList.remove('active');
+            targetToggleReviewId = null;
+        };
+
+        page.globals.confirmToggleReview = async function() {
+            if (!targetToggleReviewId) return;
+            const btn = document.getElementById('confirmToggleReviewBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang xử lý...';
+
             try {
-                const res = await fetch(`/api/v1/admin/reviews/${id}/hide`, { 
+                const res = await fetch(`/api/v1/admin/reviews/${targetToggleReviewId}/hide`, { 
                     method: 'PATCH',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
+                    page.globals.closeToggleReviewModal();
                     Toastify({ 
-                        text: isCurrentlyHidden ? "Đã hiển thị lại đánh giá" : "Đã ẩn đánh giá", 
+                        text: targetToggleIsHidden ? "Đã hiển thị lại đánh giá" : "Đã ẩn đánh giá", 
                         style: { background: "#10b981" } 
                     }).showToast();
                     loadReviews();
                 } else {
                     Toastify({ text: "Lỗi khi cập nhật trạng thái", style: { background: "#ef4444" } }).showToast();
+                    btn.disabled = false;
+                    btn.innerText = 'Xác nhận';
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) {
+                console.error(e);
+                Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast();
+                btn.disabled = false;
+                btn.innerText = 'Xác nhận';
+            }
         };
 
+        page.globals.toggleHideReview = page.globals.openToggleReviewModal;
+
         function renderPagination() {
+            const wrapper = document.getElementById('reviewPaginationWrapper');
             const pagi = document.getElementById('pagination');
-            if (state.totalPages <= 1) { pagi.innerHTML = ''; return; }
-            let html = `<button ${state.page === 0 ? 'disabled' : ''} onclick="changePage(${state.page - 1})">←</button>`;
-            for(let i = 0; i < state.totalPages; i++) {
-                if (i >= state.page - 2 && i <= state.page + 2) {
-                    html += `<button class="${state.page === i ? 'active' : ''}" onclick="changePage(${i})">${i + 1}</button>`;
+            const info = document.getElementById('reviewPaginationInfo');
+            if (!wrapper || !pagi) return;
+
+            if (state.totalElements === 0) {
+                wrapper.style.display = 'none';
+                return;
+            }
+
+            wrapper.style.display = 'flex';
+
+            const fromItem = state.page * state.size + 1;
+            const toItem = Math.min((state.page + 1) * state.size, state.totalElements);
+            if (info) {
+                info.innerHTML = `Hiển thị <strong>${fromItem} - ${toItem}</strong> trên tổng số <strong>${state.totalElements}</strong> đánh giá (Trang ${state.page + 1}/${Math.max(1, state.totalPages)})`;
+            }
+
+            const total = Math.max(1, state.totalPages);
+            let html = `<button type="button" ${state.page === 0 ? 'disabled' : ''} onclick="changePage(${state.page - 1})">← Trước</button>`;
+            
+            for(let i = 0; i < total; i++) {
+                if (total <= 7 || (i >= state.page - 2 && i <= state.page + 2) || i === 0 || i === total - 1) {
+                    html += `<button type="button" class="${state.page === i ? 'active' : ''}" onclick="changePage(${i})">${i + 1}</button>`;
+                } else if (i === state.page - 3 || i === state.page + 3) {
+                    html += `<span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; color: #94a3b8; font-weight: 700;">...</span>`;
                 }
             }
-            html += `<button ${state.page === state.totalPages - 1 ? 'disabled' : ''} onclick="changePage(${state.page + 1})">→</button>`;
+            
+            html += `<button type="button" ${state.page >= total - 1 ? 'disabled' : ''} onclick="changePage(${state.page + 1})">Sau →</button>`;
             pagi.innerHTML = html;
         }
 
-        page.globals.changePage = (p) => { state.page = p; loadReviews(); };
+        page.globals.changePage = (p) => {
+            if (p < 0 || (state.totalPages > 0 && p >= state.totalPages)) return;
+            state.page = p;
+            loadReviews();
+            document.querySelector('.table-scroll')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        page.globals.changeReviewPageSize = function(newSize) {
+            state.size = parseInt(newSize) || 5;
+            state.page = 0;
+            loadReviews();
+        };
 
         loadReviews();
 
-    page.expose({suggestedLabel, loadReviews, setTab, handleSearch, applyFilter, highlightProfanity, renderTable, renderPagination});
+    page.expose({suggestedLabel, loadReviews, setTab, handleSearch, applyFilter, highlightProfanity, renderTable, renderPagination, changePage: page.globals.changePage, changeReviewPageSize: page.globals.changeReviewPageSize, openToggleReviewModal: page.globals.openToggleReviewModal, closeToggleReviewModal: page.globals.closeToggleReviewModal, confirmToggleReview: page.globals.confirmToggleReview});
 });
 </script>
 }

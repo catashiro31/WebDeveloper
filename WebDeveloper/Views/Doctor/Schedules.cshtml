@@ -57,10 +57,30 @@
     background: white; color: #475569; cursor: pointer; transition: all 0.2s;
 }
 .quick-date-btn:hover { background: #f1f5f9; color: #5f6dfc; border-color: #5f6dfc; }
+
+@@media (max-width: 640px) {
+    .schedule-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+    }
+    .schedule-header button {
+        width: 100% !important;
+        justify-content: center !important;
+        min-height: 44px !important;
+    }
+    .modal-content {
+        padding: 20px 16px !important;
+        border-radius: 20px !important;
+    }
+    #slotsGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
 </style>
 
 <div class="reveal">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div class="schedule-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
         <div>
             <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Lịch làm việc</h2>
             <p style="margin: 4px 0 0; font-size: 14px; color: #64748b;">Quản lý các ca khám bệnh trong ngày</p>
@@ -418,11 +438,11 @@ DocBookingPage.mount(page => {
                     const dateStr = d.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
                     
                     let slotsHtml = grouped[date].sort((a,b) => a.timeSlot.localeCompare(b.timeSlot)).map(slot => `
-                        <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 8px; background: ${slot.slotStatus === 'BOOKED' ? '#fee2e2' : '#dcfce7'}; border: 1px solid ${slot.slotStatus === 'BOOKED' ? '#fecaca' : '#bbf7d0'};">
-                            <span style="font-weight: 500; color: ${slot.slotStatus === 'BOOKED' ? '#dc2626' : '#16a34a'}">${formatTimeSlot(slot.timeSlot)}</span>
+                        <div style="display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 10px; background: ${slot.slotStatus === 'BOOKED' ? '#fee2e2' : '#dcfce7'}; border: 1px solid ${slot.slotStatus === 'BOOKED' ? '#fecaca' : '#bbf7d0'};">
+                            <span style="font-weight: 600; font-size: 13px; color: ${slot.slotStatus === 'BOOKED' ? '#dc2626' : '#16a34a'}">${formatTimeSlot(slot.timeSlot)}</span>
                             ${slot.slotStatus === 'BOOKED' 
-                                ? `<span style="font-size: 12px; color: #dc2626;">Đã đặt</span>` 
-                                : `<button onclick="openDeleteScheduleModal(${slot.scheduleId})" style="background: none; border: none; color: #6b7280; cursor: pointer; padding: 2px; font-size: 14px;" title="Xóa">✕</button>`}
+                                ? `<span style="font-size: 11px; font-weight: 700; color: #dc2626; background: #fee2e2; padding: 2px 6px; border-radius: 6px;">Đã đặt</span>` 
+                                : `<button onclick="openDeleteScheduleModal(${slot.scheduleId})" style="background: rgba(0,0,0,0.05); border: none; color: #475569; cursor: pointer; min-width: 26px; min-height: 26px; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; border-radius: 6px; transition: all 0.2s;" onmouseenter="this.style.background='#fee2e2'; this.style.color='#ef4444';" onmouseleave="this.style.background='rgba(0,0,0,0.05)'; this.style.color='#475569';" title="Xóa khung giờ này">✕</button>`}
                         </div>
                     `).join('');
 

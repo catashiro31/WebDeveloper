@@ -24,6 +24,65 @@
 .pagination button:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
 .pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; font-weight: 700; }
 .pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+@@media (max-width: 768px) {
+    .doc-card {
+        flex-direction: column !important;
+        gap: 16px !important;
+        padding: 18px 16px !important;
+        border-radius: 18px !important;
+    }
+    .doc-avatar {
+        margin: 0 auto;
+    }
+    .doc-card-top {
+        flex-direction: column !important;
+        gap: 12px !important;
+        align-items: stretch !important;
+    }
+    .doc-card-top button {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+    .doc-card-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+    }
+    .doc-card-actions button {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+    #detailModal .modal-content {
+        padding: 24px 16px !important;
+        border-radius: 20px !important;
+    }
+    #detailModal #detailContent > div:first-child {
+        grid-template-columns: 1fr !important;
+        gap: 20px !important;
+    }
+    #modalAvatar {
+        margin: 0 auto 16px !important;
+    }
+    #modalActionButtons {
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    #modalActionButtons button {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+    .filter-item-wrap {
+        flex: 1 1 100% !important;
+        min-width: 100% !important;
+    }
+    .filter-btn-reset-wrap {
+        width: 100% !important;
+    }
+    .filter-btn-reset-wrap button {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+}
 </style>
 
 <div class="reveal">
@@ -42,23 +101,23 @@
     <!-- Thanh lọc bác sĩ theo từ khóa, chuyên khoa, cơ sở -->
     <div style="background: white; border-radius: 20px; padding: 18px 24px; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
         <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end;">
-            <div style="flex: 1; min-width: 220px;">
+            <div class="filter-item-wrap" style="flex: 1; min-width: 220px;">
                 <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🔍 Tìm kiếm bác sĩ</label>
                 <input id="adminSearch" type="search" placeholder="Nhập tên hoặc email..." style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; box-sizing: border-box;" />
             </div>
-            <div style="min-width: 200px;">
+            <div class="filter-item-wrap" style="min-width: 200px;">
                 <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🏥 Lọc theo chuyên khoa</label>
                 <select id="filterSpecialty" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; color: #1e293b; box-sizing: border-box;">
                     <option value="">Tất cả chuyên khoa</option>
                 </select>
             </div>
-            <div style="min-width: 200px;">
+            <div class="filter-item-wrap" style="min-width: 200px;">
                 <label style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">📍 Lọc theo cơ sở y tế</label>
                 <select id="filterFacility" style="width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; color: #1e293b; box-sizing: border-box;">
                     <option value="">Tất cả cơ sở</option>
                 </select>
             </div>
-            <div>
+            <div class="filter-btn-reset-wrap">
                 <button type="button" onclick="resetDoctorFilters()" style="padding: 10px 18px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: #f8fafc; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f1f5f9'" onmouseleave="this.style.background='#f8fafc'">
                     🔄 Đặt lại
                 </button>
@@ -75,9 +134,26 @@
         <div style="color: #64748b; font-weight: 700;">Danh sách hiện đang trống</div>
     </div>
 
+    <!-- Toolbar: summary & page size -->
+    <div id="docToolbar" style="display: none; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div id="docCountSummary" style="font-size: 14.5px; font-weight: 700; color: #334155;"></div>
+        <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; font-weight: 600;">
+            <label for="docPageSizeSelect">Hiển thị:</label>
+            <select id="docPageSizeSelect" onchange="changeDocPageSize(this.value)" style="padding: 6px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; background: #fff; font-size: 13px; font-weight: 600; color: #1e293b; outline: none; cursor: pointer;">
+                <option value="3" selected>3 bác sĩ / trang</option>
+                <option value="5">5 bác sĩ / trang</option>
+                <option value="10">10 bác sĩ / trang</option>
+                <option value="20">20 bác sĩ / trang</option>
+            </select>
+        </div>
+    </div>
+
     <div id="doctorsContainer" class="reveal" style="display: none;"></div>
 
-    <div id="pagination" class="pagination" style="display: none;"></div>
+    <div id="docPaginationWrapper" style="display: none; margin-top: 32px; flex-direction: column; align-items: center; gap: 12px;">
+        <div id="pagination" class="pagination"></div>
+        <div id="docPaginationInfo" style="font-size: 13px; color: #64748b; font-weight: 600;"></div>
+    </div>
 </div>
 
 <!-- Detail Modal -->
@@ -151,6 +227,36 @@
     </div>
 </div>
 
+<!-- Approve Confirm Modal -->
+<div id="approveDoctorModal" class="modal-overlay" onclick="closeApproveDoctorModal()">
+    <div class="modal-content" style="max-width: 480px; width: 100%; padding: 32px;" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                ✓
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Phê duyệt hồ sơ bác sĩ</h3>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Bác sĩ sẽ được công khai trên hệ thống và có thể tiếp nhận đặt lịch khám.</p>
+            </div>
+            <button type="button" onclick="closeApproveDoctorModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Bác sĩ:</span> <b id="approveDocName" style="color: #0f172a;">—</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Chuyên khoa:</span> <span id="approveDocSpec" style="font-weight: 600; color: #6366f1;">—</span></div>
+        </div>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" onclick="closeApproveDoctorModal()" style="padding: 11px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
+                Quay lại
+            </button>
+            <button type="button" id="confirmApproveDocBtn" onclick="confirmApproveDoctor()" style="padding: 11px 24px; border-radius: 12px; border: none; background: #1063ff; color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 99, 255, 0.25); transition: all 0.2s;">
+                Xác nhận phê duyệt
+            </button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
 DocBookingPage.mount(page => {
@@ -173,7 +279,10 @@ DocBookingPage.mount(page => {
         let viewMode = notificationParams.get('status') === 'PENDING' ? 'pending' : 'all';
         let currentPage = 0;
         let totalPages = 1;
+        let totalElements = 0;
+        let docPageSize = 3;
         let currentDoctorId = null;
+        let rawPendingDocs = [];
 
         async function loadDoctorCatalogs() {
             try {
@@ -215,10 +324,21 @@ DocBookingPage.mount(page => {
         }
 
         function setPage(page) {
-            if (page < 0 || page >= totalPages) return;
+            if (page < 0 || (totalPages > 0 && page >= totalPages)) return;
             currentPage = page;
             fetchData();
+            const target = document.getElementById('docToolbar') || document.getElementById('doctorsContainer');
+            if (target) {
+                const y = target.getBoundingClientRect().top + window.pageYOffset - 80;
+                window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+            }
         }
+
+        page.globals.changeDocPageSize = function(newSize) {
+            docPageSize = parseInt(newSize) || 3;
+            currentPage = 0;
+            fetchData();
+        };
 
         function getStatusBadge(status) {
             const styles = {
@@ -230,20 +350,36 @@ DocBookingPage.mount(page => {
         }
 
         function renderPagination() {
+            const pagiWrapper = document.getElementById('docPaginationWrapper');
             const pagi = document.getElementById('pagination');
-            if (viewMode !== 'all' || totalPages <= 1) {
-                pagi.style.display = 'none';
-                pagi.innerHTML = '';
+            const info = document.getElementById('docPaginationInfo');
+            if (!pagiWrapper || !pagi) return;
+
+            if (totalElements === 0) {
+                pagiWrapper.style.display = 'none';
                 return;
             }
-            pagi.style.display = 'flex';
-            let html = `<button ${currentPage === 0 ? 'disabled' : ''} onclick="setPage(${currentPage - 1})">Trang trước</button>`;
-            for(let i = 0; i < totalPages; i++) {
-                if (i >= currentPage - 2 && i <= currentPage + 2) {
-                    html += `<button class="${currentPage === i ? 'active' : ''}" onclick="setPage(${i})">${i + 1}</button>`;
+
+            pagiWrapper.style.display = 'flex';
+
+            const fromItem = currentPage * docPageSize + 1;
+            const toItem = Math.min((currentPage + 1) * docPageSize, totalElements);
+            if (info) {
+                info.innerHTML = `Hiển thị <strong>${fromItem} - ${toItem}</strong> trên tổng số <strong>${totalElements}</strong> bác sĩ (Trang ${currentPage + 1}/${Math.max(1, totalPages)})`;
+            }
+
+            const total = Math.max(1, totalPages);
+            let html = `<button type="button" ${currentPage === 0 ? 'disabled' : ''} onclick="setPage(${currentPage - 1})">Trang trước</button>`;
+            
+            for(let i = 0; i < total; i++) {
+                if (total <= 7 || (i >= currentPage - 2 && i <= currentPage + 2) || i === 0 || i === total - 1) {
+                    html += `<button type="button" class="${currentPage === i ? 'active' : ''}" onclick="setPage(${i})">${i + 1}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; color: #94a3b8; font-weight: 700;">...</span>`;
                 }
             }
-            html += `<button ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="setPage(${currentPage + 1})">Trang sau</button>`;
+            
+            html += `<button type="button" ${currentPage >= total - 1 ? 'disabled' : ''} onclick="setPage(${currentPage + 1})">Trang sau</button>`;
             pagi.innerHTML = html;
         }
 
@@ -252,9 +388,12 @@ DocBookingPage.mount(page => {
             document.getElementById('loading').style.display = 'block';
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('doctorsContainer').style.display = 'none';
-            document.getElementById('pagination').style.display = 'none';
+            const pagiWrapper = document.getElementById('docPaginationWrapper');
+            const toolbar = document.getElementById('docToolbar');
+            if (pagiWrapper) pagiWrapper.style.display = 'none';
+            if (toolbar) toolbar.style.display = 'none';
 
-            let url = viewMode === 'pending' ? '/api/v1/admin/doctor-pending' : `/api/v1/admin/doctor-all?page=${currentPage}&size=10`;
+            let url = viewMode === 'pending' ? '/api/v1/admin/doctor-pending' : `/api/v1/admin/doctor-all?page=${currentPage}&size=${docPageSize}`;
 
             const search = document.getElementById('adminSearch').value.trim();
             if (search) url += (url.includes('?') ? '&' : '?') + 'search=' + encodeURIComponent(search);
@@ -273,16 +412,30 @@ DocBookingPage.mount(page => {
                 
                 let docs = [];
                 if (viewMode === 'pending') {
-                    docs = Array.isArray(data) ? data : [];
-                    totalPages = 1;
+                    rawPendingDocs = Array.isArray(data) ? data : [];
+                    totalElements = rawPendingDocs.length;
+                    totalPages = Math.ceil(totalElements / docPageSize) || 1;
+                    if (currentPage >= totalPages) currentPage = totalPages - 1;
+                    if (currentPage < 0) currentPage = 0;
+                    const start = currentPage * docPageSize;
+                    docs = rawPendingDocs.slice(start, start + docPageSize);
                 } else {
                     docs = data.content || [];
                     totalPages = data.totalPages || 1;
+                    totalElements = data.totalElements != null ? data.totalElements : docs.length;
                 }
 
-                if (docs.length === 0) {
+                if (totalElements === 0 || docs.length === 0) {
                     document.getElementById('emptyState').style.display = 'block';
                     return;
+                }
+
+                if (toolbar) {
+                    toolbar.style.display = 'flex';
+                    const summary = document.getElementById('docCountSummary');
+                    if (summary) summary.innerHTML = `Tìm thấy <strong style="color: #6366f1;">${totalElements}</strong> bác sĩ ${viewMode === 'pending' ? 'chờ duyệt' : 'trong hệ thống'}`;
+                    const sizeSel = document.getElementById('docPageSizeSelect');
+                    if (sizeSel) sizeSel.value = docPageSize;
                 }
 
                 let html = '';
@@ -299,7 +452,7 @@ DocBookingPage.mount(page => {
                         <div class="doc-card">
                             <div class="doc-avatar">${avatarHtml}</div>
                             <div style="flex: 1;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                <div class="doc-card-top" style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <div>
                                         <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">BS. ${name}</h3>
                                         <div style="margin-top: 4px;">
@@ -313,8 +466,8 @@ DocBookingPage.mount(page => {
                                     <button onclick="viewDetail(${doc.doctorId || doc.id})" style="background: #f1f5f9; color: #1e293b; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; white-space: nowrap;">Xem hồ sơ</button>
                                 </div>
                                 ${doc.verificationStatus === 'PENDING' ? `
-                                <div style="display: flex; gap: 12px; margin-top: 20px;">
-                                    <button onclick="approveDoctor(${doc.doctorId || doc.id})" style="background: #1063ff; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Phê duyệt ngay</button>
+                                <div class="doc-card-actions" style="display: flex; gap: 12px; margin-top: 20px;">
+                                    <button onclick="openApproveDoctorModal(${doc.doctorId || doc.id}, '${escapeHtml(name)}', '${escapeHtml(spec)}')" style="background: #1063ff; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Phê duyệt ngay</button>
                                     <button onclick="openRejectModal(${doc.doctorId || doc.id})" style="background: #fee2e2; color: #ef4444; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Từ chối</button>
                                 </div>
                                 ` : ''}
@@ -391,7 +544,7 @@ DocBookingPage.mount(page => {
                 const actions = document.getElementById('modalActionButtons');
                 if (data.verificationStatus === 'PENDING') {
                     actions.style.display = 'flex';
-                    document.getElementById('modalApproveBtn').onclick = () => { closeDetailModal(); approveDoctor(id); };
+                    document.getElementById('modalApproveBtn').onclick = () => { closeDetailModal(); openApproveDoctorModal(id, name, data.specialty?.specialtyName || data.specialtyName || ''); };
                     document.getElementById('modalRejectBtn').onclick = () => { closeDetailModal(); openRejectModal(id); };
                 } else {
                     actions.style.display = 'none';
@@ -405,20 +558,51 @@ DocBookingPage.mount(page => {
 
         page.globals.closeDetailModal = () => document.getElementById('detailModal').classList.remove('active');
 
-        page.globals.approveDoctor = function(id) {
-            if (!confirm("Phê duyệt bác sĩ này?")) return;
-            fetch(`/api/v1/admin/${id}/approve`, {
+        let targetApproveDocId = null;
+        page.globals.openApproveDoctorModal = function(id, name, spec) {
+            targetApproveDocId = id;
+            document.getElementById('approveDocName').innerText = name ? `BS. ${name}` : '—';
+            document.getElementById('approveDocSpec').innerText = spec || 'Chưa cập nhật';
+            const btn = document.getElementById('confirmApproveDocBtn');
+            btn.disabled = false;
+            btn.innerText = 'Xác nhận phê duyệt';
+            document.getElementById('approveDoctorModal').classList.add('active');
+        };
+
+        page.globals.closeApproveDoctorModal = function() {
+            document.getElementById('approveDoctorModal').classList.remove('active');
+            targetApproveDocId = null;
+        };
+
+        page.globals.confirmApproveDoctor = function() {
+            if (!targetApproveDocId) return;
+            const btn = document.getElementById('confirmApproveDocBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang phê duyệt...';
+
+            fetch(`/api/v1/admin/${targetApproveDocId}/approve`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: "Phê duyệt thành công", style: {background: "#10b981"} }).showToast();
+                    closeApproveDoctorModal();
+                    Toastify({ text: "Phê duyệt hồ sơ bác sĩ thành công", style: {background: "#10b981"} }).showToast();
                     fetchData();
-                } else Toastify({ text: await readApiMessage(res) || "Lỗi phê duyệt", style: {background: "#ef4444"} }).showToast();
+                } else {
+                    Toastify({ text: await readApiMessage(res) || "Lỗi phê duyệt", style: {background: "#ef4444"} }).showToast();
+                    btn.disabled = false;
+                    btn.innerText = 'Xác nhận phê duyệt';
+                }
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
+            .catch(() => {
+                Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast();
+                btn.disabled = false;
+                btn.innerText = 'Xác nhận phê duyệt';
+            });
         };
+
+        page.globals.approveDoctor = page.globals.openApproveDoctorModal;
 
         page.globals.openRejectModal = function(id) {
             currentDoctorId = id;
@@ -454,7 +638,7 @@ DocBookingPage.mount(page => {
         const linkedDoctor = Number(notificationParams.get("doctorId"));
         if (Number.isInteger(linkedDoctor) && linkedDoctor > 0) viewDetail(linkedDoctor);
 
-    page.expose({loadDoctorCatalogs, setViewMode, setPage, getStatusBadge, renderPagination, fetchData});
+    page.expose({loadDoctorCatalogs, setViewMode, setPage, changeDocPageSize: page.globals.changeDocPageSize, getStatusBadge, renderPagination, fetchData, openApproveDoctorModal: page.globals.openApproveDoctorModal, closeApproveDoctorModal: page.globals.closeApproveDoctorModal, confirmApproveDoctor: page.globals.confirmApproveDoctor});
 });
 </script>
 }

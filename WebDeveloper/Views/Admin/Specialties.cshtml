@@ -54,6 +54,26 @@
     box-sizing: border-box;
 }
 .form-input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
+
+@@media (max-width: 640px) {
+    .page-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 16px !important;
+    }
+    .page-header .btn-primary {
+        width: 100% !important;
+        justify-content: center !important;
+        min-height: 44px !important;
+    }
+    .modal-content {
+        padding: 24px 16px !important;
+        border-radius: 20px !important;
+    }
+    .admin-card {
+        padding: 16px !important;
+    }
+}
 </style>
 
 <div class="page-header">
@@ -65,10 +85,19 @@
 </div>
 
 <!-- Thanh tìm kiếm chuyên khoa chuẩn phong cách Admin -->
-<div style="background: white; border-radius: 20px; padding: 18px 24px; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-    <div style="max-width: 480px;">
+<div style="background: white; border-radius: 20px; padding: 18px 24px; margin-bottom: 24px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02); display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px;">
+    <div style="flex: 1; max-width: 480px; min-width: 220px;">
         <label for="adminSearch" style="display: block; font-size: 13px; font-weight: 700; color: #475569; margin-bottom: 6px;">🔍 Tìm kiếm chuyên khoa</label>
         <input id="adminSearch" type="search" placeholder="Nhập tên hoặc mô tả chuyên khoa..." style="width: 100%; padding: 11px 16px; border: 1.5px solid #cbd5e1; border-radius: 12px; font-size: 14px; outline: none; background: #fff; box-sizing: border-box; transition: all 0.2s; font-family: var(--font-app);" onfocus="this.style.borderColor='#6366f1'; this.style.boxShadow='0 0 0 3px rgba(99,102,241,0.1)';" onblur="this.style.borderColor='#cbd5e1'; this.style.boxShadow='none';" />
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; font-weight: 600;">
+        <label for="specPageSizeSelect">Hiển thị:</label>
+        <select id="specPageSizeSelect" onchange="changeSpecPageSize(this.value)" style="padding: 10px 14px; border-radius: 12px; border: 1.5px solid #cbd5e1; background: #fff; font-size: 13px; font-weight: 600; color: #1e293b; outline: none; cursor: pointer;">
+            <option value="4" selected>4 / trang</option>
+            <option value="8">8 / trang</option>
+            <option value="15">15 / trang</option>
+            <option value="30">30 / trang</option>
+        </select>
     </div>
 </div>
 
@@ -88,7 +117,10 @@
             </tbody>
         </table>
     </div>
-    <div class="pagination" id="specPagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px;"></div>
+    <div id="specPaginationWrapper" style="display: none; flex-direction: column; align-items: center; gap: 12px; margin-top: 24px;">
+        <div class="pagination" id="specPagination" style="display: flex; justify-content: center; align-items: center; gap: 8px;"></div>
+        <div id="specPaginationInfo" style="font-size: 13px; color: #64748b; font-weight: 600;"></div>
+    </div>
 </div>
 
 <!-- Edit Modal -->
@@ -149,14 +181,14 @@ DocBookingPage.mount(page => {
 
         let specialties = [];
         let currentPage = 0;
-        const pageSize = 10;
+        let specPageSize = 4;
 
         async function loadSpecialties() {
             const version = ++searchVersion;
             const tbody = document.getElementById('tableBody');
-            const pagi = document.getElementById('specPagination');
+            const wrapper = document.getElementById('specPaginationWrapper');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
-            if (pagi) pagi.style.display = 'none';
+            if (wrapper) wrapper.style.display = 'none';
             
             try {
                 const res = await fetch('/api/v1/admin/specialties?search=' + encodeURIComponent(document.getElementById('adminSearch').value), { cache: 'no-store' });
@@ -174,19 +206,21 @@ DocBookingPage.mount(page => {
 
         function renderSpecialtiesTable() {
             const tbody = document.getElementById('tableBody');
+            const wrapper = document.getElementById('specPaginationWrapper');
             const pagi = document.getElementById('specPagination');
+            const info = document.getElementById('specPaginationInfo');
             if (specialties.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #64748b;">Chưa có dữ liệu</td></tr>`;
-                if (pagi) pagi.style.display = 'none';
+                if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            const totalPages = Math.ceil(specialties.length / pageSize);
+            const totalPages = Math.ceil(specialties.length / specPageSize) || 1;
             if (currentPage >= totalPages) currentPage = totalPages - 1;
             if (currentPage < 0) currentPage = 0;
 
-            const start = currentPage * pageSize;
-            const pageItems = specialties.slice(start, start + pageSize);
+            const start = currentPage * specPageSize;
+            const pageItems = specialties.slice(start, start + specPageSize);
 
             tbody.innerHTML = pageItems.map(s => `
                 <tr>
@@ -207,23 +241,35 @@ DocBookingPage.mount(page => {
             `).join('');
 
             // Render pagination
-            if (totalPages <= 1) {
-                if (pagi) pagi.style.display = 'none';
-                return;
+            if (wrapper) wrapper.style.display = 'flex';
+            if (info) {
+                const toItem = Math.min(start + specPageSize, specialties.length);
+                info.innerHTML = `Hiển thị <strong>${start + 1} - ${toItem}</strong> trên tổng số <strong>${specialties.length}</strong> chuyên khoa (Trang ${currentPage + 1}/${totalPages})`;
             }
 
-            pagi.style.display = 'flex';
-            let html = `<button type="button" class="btn-action" ${currentPage === 0 ? 'disabled' : ''} onclick="setSpecPage(${currentPage - 1})">←</button>`;
+            let html = `<button type="button" class="btn-action" ${currentPage === 0 ? 'disabled' : ''} onclick="setSpecPage(${currentPage - 1})">← Trước</button>`;
             for (let i = 0; i < totalPages; i++) {
-                const isActive = i === currentPage;
-                html += `<button type="button" class="btn-action" style="${isActive ? 'background: #6366f1; color: white; border-color: #6366f1; font-weight: 800;' : ''}" onclick="setSpecPage(${i})">${i + 1}</button>`;
+                if (totalPages <= 7 || (i >= currentPage - 2 && i <= currentPage + 2) || i === 0 || i === totalPages - 1) {
+                    const isActive = i === currentPage;
+                    html += `<button type="button" class="btn-action" style="${isActive ? 'background: #6366f1; color: white; border-color: #6366f1; font-weight: 800;' : ''}" onclick="setSpecPage(${i})">${i + 1}</button>`;
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                    html += `<span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; color: #94a3b8; font-weight: 700;">...</span>`;
+                }
             }
-            html += `<button type="button" class="btn-action" ${currentPage === totalPages - 1 ? 'disabled' : ''} onclick="setSpecPage(${currentPage + 1})">→</button>`;
-            pagi.innerHTML = html;
+            html += `<button type="button" class="btn-action" ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="setSpecPage(${currentPage + 1})">Sau →</button>`;
+            if (pagi) pagi.innerHTML = html;
         }
 
         window.setSpecPage = function(p) {
+            if (p < 0) return;
             currentPage = p;
+            renderSpecialtiesTable();
+            document.querySelector('.admin-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+
+        window.changeSpecPageSize = function(newSize) {
+            specPageSize = parseInt(newSize) || 4;
+            currentPage = 0;
             renderSpecialtiesTable();
         };
 
@@ -331,7 +377,7 @@ DocBookingPage.mount(page => {
 
         loadSpecialties();
 
-    page.expose({loadSpecialties, openModal, closeModal, saveSpecialty, openDeleteModal, closeDeleteModal, confirmDeleteSpecialty});
+    page.expose({loadSpecialties, openModal, closeModal, saveSpecialty, openDeleteModal, closeDeleteModal, confirmDeleteSpecialty, setSpecPage: window.setSpecPage, changeSpecPageSize: window.changeSpecPageSize});
 });
 </script>
 }

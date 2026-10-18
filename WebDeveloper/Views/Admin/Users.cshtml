@@ -54,6 +54,44 @@
 .modal-overlay.active { opacity: 1; pointer-events: auto; }
 .modal-content { background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 480px; transform: scale(0.95); transition: transform 0.3s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
 .modal-overlay.active .modal-content { transform: scale(1); }
+
+@@media (max-width: 640px) {
+    .filter-card {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 14px !important;
+        padding: 16px !important;
+    }
+    .filter-search-wrap {
+        min-width: 100% !important;
+        width: 100% !important;
+    }
+    .filter-card > div:last-child {
+        width: 100% !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 10px !important;
+    }
+    .filter-card > div:last-child > div {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    .filter-card > div:last-child > div select {
+        flex: 1 !important;
+    }
+    .filter-card > div:last-child button {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+    .modal-content {
+        padding: 20px 16px !important;
+        border-radius: 20px !important;
+    }
+    #userDetailModal .modal-content > div:nth-child(2) {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+}
 </style>
 
 <div class="reveal">

@@ -81,21 +81,142 @@
 .spec-item:hover { background: #f8fafc; color: #6366f1; }
 .spec-item.active { background: #eef2ff; color: #6366f1; }
 
+.doctors-content-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctors-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding: 4px 2px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.doctors-count-summary {
+  font-size: 15px;
+  font-weight: 700;
+  color: #334155;
+  font-family: var(--font-app);
+}
+
+.doctors-page-size-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: #64748b;
+  font-weight: 600;
+  font-family: var(--font-app);
+}
+
+.page-size-select {
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: var(--font-app);
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.page-size-select:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
 .grid-doctors { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 32px; }
 .empty { 
   grid-column: 1 / -1; text-align: center; padding: 100px 40px; color: #64748b; 
   background: #fff; border-radius: 28px; border: 2px dashed #e2e8f0;
 }
 
-.pagination { display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 60px; grid-column: 1 / -1; }
-.pagination button { 
-  display: flex; align-items: center; justify-content: center; min-width: 44px; height: 44px; padding: 0 18px; 
-  border-radius: 14px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-weight: 700; font-size: 14px;
-  cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-family: var(--font-app);
+/* ===== PAGINATION ===== */
+.pagination-wrapper {
+  margin-top: 48px;
+  margin-bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
 }
-.pagination button:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; transform: translateY(-3px); box-shadow: 0 8px 20px rgba(99,102,241,0.15); }
-.pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
-.pagination button.active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border-color: transparent; box-shadow: 0 10px 20px rgba(99,102,241,0.3); }
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pagination button { 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 16px; 
+  border-radius: 14px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-app);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+.pagination button:hover:not(:disabled) {
+  border-color: #6366f1;
+  color: #6366f1;
+  background: #f8faff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(99, 102, 241, 0.15);
+}
+.pagination button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: #e2e8f0;
+  background: #f8fafc;
+  color: #94a3b8;
+  transform: none;
+  box-shadow: none;
+}
+.pagination button.active {
+  background: linear-gradient(135deg, #6366f1 0%, #7c3aed 100%);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.35);
+  cursor: default;
+  transform: none;
+}
+.pagination-ellipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 42px;
+  color: #94a3b8;
+  font-weight: 700;
+  font-size: 14px;
+}
+.pagination-info {
+  font-size: 13.5px;
+  color: #64748b;
+  font-weight: 600;
+  font-family: var(--font-app);
+}
  
  /* ===== PRICE SLIDER ===== */
  .price-slider-wrap { padding: 10px 4px 20px; }
@@ -542,6 +663,37 @@
     border-radius: 8px;
     font-weight: 700;
   }
+  .doctors-toolbar {
+    margin-bottom: 14px;
+    gap: 10px;
+  }
+  .doctors-count-summary {
+    font-size: 13.5px;
+  }
+  .doctors-page-size-wrap {
+    font-size: 12px;
+  }
+  .page-size-select {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 10px;
+  }
+  .pagination-wrapper {
+    margin-top: 28px;
+    margin-bottom: 16px;
+    gap: 10px;
+  }
+  .pagination button {
+    min-width: 38px;
+    height: 38px;
+    padding: 0 10px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+  .pagination-info {
+    font-size: 12px;
+    text-align: center;
+  }
 }
 </style>
 
@@ -644,13 +796,35 @@
             </div>
         </aside>
 
-        <!-- DOCTORS GRID -->
-        <section class="grid-doctors" id="doctorsGrid" style="width: 100%;">
-            <!-- Doctors will be rendered here -->
-        </section>
-        
-        <!-- PAGINATION -->
-        <div class="pagination" id="pagination" style="display: none;"></div>
+        <!-- DOCTORS CONTENT COLUMN -->
+        <main class="doctors-content-col">
+            <!-- TOOLBAR: Count summary + Page size selector -->
+            <div class="doctors-toolbar" id="doctorsToolbar">
+                <div class="doctors-count-summary" id="doctorsCountSummary">
+                    Đang tìm kiếm bác sĩ...
+                </div>
+                <div class="doctors-page-size-wrap">
+                    <label for="pageSizeSelect">Hiển thị:</label>
+                    <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize(this.value)">
+                        <option value="3" selected>3 bác sĩ / trang</option>
+                        <option value="6">6 bác sĩ / trang</option>
+                        <option value="9">9 bác sĩ / trang</option>
+                        <option value="12">12 bác sĩ / trang</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- DOCTORS GRID -->
+            <section class="grid-doctors" id="doctorsGrid" style="width: 100%;">
+                <!-- Doctors will be rendered here -->
+            </section>
+            
+            <!-- PAGINATION -->
+            <div class="pagination-wrapper" id="paginationWrapper" style="display: none;">
+                <div class="pagination" id="pagination"></div>
+                <div class="pagination-info" id="paginationInfo"></div>
+            </div>
+        </main>
     </div>
 </div>
 
@@ -666,8 +840,9 @@
             minPrice: 0,
             maxPrice: priceLimit,
             page: 0,
-            size: 12,
+            size: 3,
             totalPages: 0,
+            totalElements: 0,
             facSearch: ''
         };
 
@@ -687,6 +862,8 @@
         if(urlParams.has('province')) state.province = urlParams.get('province');
         if(urlParams.has('minPrice')) state.minPrice = parseInt(urlParams.get('minPrice'));
         if(urlParams.has('maxPrice')) state.maxPrice = parseInt(urlParams.get('maxPrice'));
+        if(urlParams.has('page')) state.page = parseInt(urlParams.get('page')) || 0;
+        if(urlParams.has('size')) state.size = parseInt(urlParams.get('size')) || 3;
 
         // Elements
         const elSearch = document.getElementById('searchInput');
@@ -703,6 +880,8 @@
         const elTrack = document.getElementById('rangeTrack');
         const elGrid = document.getElementById('doctorsGrid');
         const elPagi = document.getElementById('pagination');
+        const elPageSize = document.getElementById('pageSizeSelect');
+        if (elPageSize) elPageSize.value = state.size;
 
         // Init values
         elSearch.value = state.search;
@@ -717,6 +896,8 @@
             if(state.province) params.set('province', state.province);
             if(state.minPrice > 0) params.set('minPrice', state.minPrice);
             if(state.maxPrice < priceLimit) params.set('maxPrice', state.maxPrice);
+            if(state.page > 0) params.set('page', state.page);
+            if(state.size !== 3) params.set('size', state.size);
             
             const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
             window.history.replaceState({}, '', newUrl);
@@ -909,9 +1090,10 @@
         let searchRequestId = 0;
         async function fetchDoctors() {
             const requestId = ++searchRequestId;
-            // Loading state
-            elGrid.innerHTML = Array(6).fill(`<div style="background: #eee; border-radius: 24px; height: 300px; animation: pulse 1.5s infinite;"></div>`).join('');
-            elPagi.style.display = 'none';
+            const elWrapper = document.getElementById('paginationWrapper');
+            // Loading skeleton
+            elGrid.innerHTML = Array(state.size).fill(`<div style="background: #eee; border-radius: 24px; height: 300px; animation: pulse 1.5s infinite;"></div>`).join('');
+            if (elWrapper) elWrapper.style.display = 'none';
 
             let query = `?page=${state.page}&size=${state.size}`;
             if(state.search) query += `&keyword=${encodeURIComponent(state.search)}`;
@@ -929,6 +1111,13 @@
                 if (requestId !== searchRequestId) return;
                 const docs = data.content;
                 state.totalPages = data.totalPages || 0;
+                state.totalElements = data.totalElements || 0;
+
+                // Sync page size selector if changed externally
+                if (elPageSize) elPageSize.value = state.size;
+
+                // Update summary count
+                updateSummaryCounts();
 
                 if (docs.length === 0) {
                     elGrid.innerHTML = `
@@ -938,6 +1127,7 @@
                             <button onclick="clearFilters()" style="margin-top: 20px; padding: 10px 20px; border-radius: 12px; border: none; background: #6366f1; color: #fff; font-weight: 600; cursor: pointer;">Xóa tất cả bộ lọc</button>
                         </div>
                     `;
+                    if (elWrapper) elWrapper.style.display = 'none';
                 } else {
                     elGrid.innerHTML = docs.map(doc => {
                         const name = doc.doctorName || doc.name || doc.fullName || "Bác sĩ";
@@ -998,12 +1188,20 @@
 
                     renderPagination();
                 }
-                window.scrollTo({ top: 0, behavior: 'smooth' });
             } catch(e) {
                 if (requestId !== searchRequestId) return;
                 elGrid.innerHTML = '<div class="empty" role="alert"><h3>Không thể tải danh sách bác sĩ</h3><p>Vui lòng thử lại sau.</p><button type="button" class="book-btn" onclick="fetchDoctors()">Thử lại</button></div>';
-                elPagi.style.display = 'none';
+                if (elWrapper) elWrapper.style.display = 'none';
             }
+        }
+
+        function updateSummaryCounts() {
+            const elSummary = document.getElementById('doctorsCountSummary');
+            const elMobile = document.getElementById('mobileResultCount');
+            const total = state.totalElements || 0;
+            const text = `Tìm thấy <strong style="color: #6366f1;">${total}</strong> bác sĩ`;
+            if (elSummary) elSummary.innerHTML = text;
+            if (elMobile) elMobile.innerHTML = text;
         }
 
         window.clearFilters = () => {
@@ -1015,6 +1213,7 @@
             state.province = '';
             state.minPrice = 0;
             state.maxPrice = priceLimit;
+            state.page = 0;
             
             elSearch.value = '';
             elProvince.value = '';
@@ -1028,27 +1227,83 @@
         };
 
         function renderPagination() {
-            if (state.totalPages <= 1) {
-                elPagi.style.display = 'none';
+            const elWrapper = document.getElementById('paginationWrapper');
+            const elPagi = document.getElementById('pagination');
+            const elInfo = document.getElementById('paginationInfo');
+            if (!elWrapper || !elPagi) return;
+
+            if (state.totalElements === 0) {
+                elWrapper.style.display = 'none';
                 return;
             }
-            
-            elPagi.style.display = 'flex';
-            let start = Math.max(0, state.page - 2);
-            let end = Math.min(state.totalPages - 1, start + 4);
-            start = Math.max(0, end - 4);
-            
-            let html = `<button ${state.page === 0 ? 'disabled' : ''} onclick="setPage(${state.page - 1})">←</button>`;
-            for(let i = start; i <= end; i++) {
-                html += `<button class="${state.page === i ? 'active' : ''}" onclick="setPage(${i})">${i + 1}</button>`;
+
+            elWrapper.style.display = 'flex';
+
+            const fromItem = state.page * state.size + 1;
+            const toItem = Math.min((state.page + 1) * state.size, state.totalElements);
+            if (elInfo) {
+                elInfo.innerHTML = `Hiển thị <strong>${fromItem} - ${toItem}</strong> trên tổng số <strong>${state.totalElements}</strong> bác sĩ (Trang ${state.page + 1}/${Math.max(1, state.totalPages)})`;
             }
-            html += `<button ${state.page === state.totalPages - 1 ? 'disabled' : ''} onclick="setPage(${state.page + 1})">→</button>`;
-            
+
+            const total = Math.max(1, state.totalPages);
+            const current = state.page;
+
+            let html = '';
+            // Nút "Trước"
+            html += `<button type="button" class="pagi-btn pagi-prev" ${current === 0 ? 'disabled' : ''} onclick="setPage(${current - 1})" aria-label="Trang trước">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                <span>Trước</span>
+            </button>`;
+
+            // Các nút số trang
+            if (total <= 7) {
+                for (let i = 0; i < total; i++) {
+                    html += `<button type="button" class="pagi-btn pagi-num ${current === i ? 'active' : ''}" onclick="setPage(${i})">${i + 1}</button>`;
+                }
+            } else {
+                let pages = [0];
+                let left = Math.max(1, current - 1);
+                let right = Math.min(total - 2, current + 1);
+
+                if (left > 1) pages.push('ellipsis-1');
+                for (let i = left; i <= right; i++) pages.push(i);
+                if (right < total - 2) pages.push('ellipsis-2');
+                pages.push(total - 1);
+
+                pages.forEach(p => {
+                    if (typeof p === 'string') {
+                        html += `<span class="pagination-ellipsis">...</span>`;
+                    } else {
+                        html += `<button type="button" class="pagi-btn pagi-num ${current === p ? 'active' : ''}" onclick="setPage(${p})">${p + 1}</button>`;
+                    }
+                });
+            }
+
+            // Nút "Sau"
+            html += `<button type="button" class="pagi-btn pagi-next" ${current >= total - 1 ? 'disabled' : ''} onclick="setPage(${current + 1})" aria-label="Trang sau">
+                <span>Sau</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>`;
+
             elPagi.innerHTML = html;
         }
 
         window.setPage = (p) => {
+            if (p < 0 || (state.totalPages > 0 && p >= state.totalPages)) return;
             state.page = p;
+            triggerFetch();
+            const toolbar = document.getElementById('doctorsToolbar');
+            if (toolbar) {
+                const y = toolbar.getBoundingClientRect().top + window.pageYOffset - 90;
+                window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+            } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        };
+
+        window.changePageSize = (newSize) => {
+            state.size = parseInt(newSize) || 3;
+            state.page = 0;
             triggerFetch();
         };
 

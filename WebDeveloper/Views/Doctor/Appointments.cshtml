@@ -362,8 +362,11 @@ DocBookingPage.mount(page => {
                         <button onclick="openDoctorRejectModal(${apt.appointmentId || apt.id})" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #ef4444; background: white; color: #ef4444; cursor: pointer; font-weight: 700; font-size: 13px;">Từ chối</button>
                     `;
                 } else if (apt.bookingStatus === 'CONFIRMED') {
+                    const resultBtn = started
+                        ? `<button onclick="openResultModal(${apt.appointmentId || apt.id}, 'create')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #5f6dfc, #3b82f6); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(95,109,252,0.2);">Trả kết quả</button>`
+                        : `<button onclick="openResultModal(${apt.appointmentId || apt.id}, 'create')" style="padding: 10px 16px; border-radius: 10px; border: 1.5px dashed #cbd5e1; background: #f8fafc; color: #94a3b8; cursor: pointer; font-weight: 700; font-size: 13px;" title="Chưa đến giờ khám (nhấn để xem hướng dẫn)">⏳ Trả kết quả</button>`;
                     actionsHtml = `
-                        <button onclick="openResultModal(${apt.appointmentId || apt.id}, 'create')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #5f6dfc, #3b82f6); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(95,109,252,0.2);">Trả kết quả</button>
+                        ${resultBtn}
                         <button onclick="openDoctorNoShowModal(${apt.appointmentId || apt.id})" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #94a3b8; background: white; color: #64748b; cursor: pointer; font-weight: 700; font-size: 13px;">Không đến</button>
                     `;
                 } else if (apt.bookingStatus === 'COMPLETED') {
@@ -371,9 +374,6 @@ DocBookingPage.mount(page => {
                         <button onclick="openResultModal(${apt.appointmentId || apt.id}, 'edit')" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #5f6dfc; background: #f5f7ff; color: #5f6dfc; cursor: pointer; font-weight: 700; font-size: 13px;">Sửa kết quả</button>
                     `;
                 }
-
-                if (!started && (apt.bookingStatus === 'CONFIRMED' || apt.bookingStatus === 'COMPLETED'))
-                    actionsHtml = '<button disabled title="Chưa đến giờ khám" style="padding:10px;border-radius:10px;opacity:.6;">Chưa đến giờ khám — chưa thể trả kết quả</button>';
                 html += `
                     <div class="appointment-card">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
