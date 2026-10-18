@@ -47,9 +47,18 @@
 </head>
 <body data-workspace="Admin" style="min-height: 100vh; display: flex; flex-direction: column;">
     
-    @await Html.PartialAsync("_WorkspaceControls")
-    <header class="role-header" style="background: white; padding: 16px 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;">
-        <div style="font-size: 24px; font-weight: 900; color: #0ea47a; cursor: pointer;" onclick="window.location.href='/'">
+    @* Shade / loading / error overlays (no hamburger here — it lives inside the header) *@
+    <button id="workspaceShade" type="button" aria-label="Đóng menu"></button>
+    <div id="workspaceLoading" class="workspace-loading" role="status" hidden>
+        <span class="workspace-spinner" aria-hidden="true"></span><span>Đang tải trang…</span>
+    </div>
+    <div id="workspaceError" role="alert" hidden></div>
+    <header class="role-header" style="background: white; padding: 16px 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000; gap: 12px;">
+        @* Hamburger — visible only on ≤1024px via CSS *@
+        <button id="workspaceMenu" class="workspace-menu" type="button" aria-controls="workspaceSidebar" aria-expanded="false" aria-label="Mở menu">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <div style="font-size: 24px; font-weight: 900; color: #0ea47a; cursor: pointer; flex: 1;" onclick="window.location.href='/'"
             Doc<span style="color: #0f172a">Booking</span>
         </div>
         <div style="display: flex; align-items: center; gap: 16px;">
@@ -169,5 +178,34 @@
     <script src="/js/api-messages.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
     @await Html.PartialAsync("_Notifications")
+    <script>
+        (function () {
+            var btn = document.getElementById('workspaceMenu');
+            var shade = document.getElementById('workspaceShade');
+            var body = document.body;
+            function openMenu() {
+                body.classList.add('workspace-menu-open');
+                btn.setAttribute('aria-expanded', 'true');
+                var sidebar = document.getElementById('workspaceSidebar');
+                if (sidebar && !sidebar.querySelector('.workspace-menu-close')) {
+                    var closeBtn = document.createElement('button');
+                    closeBtn.className = 'workspace-menu-close';
+                    closeBtn.setAttribute('aria-label', 'Đóng menu');
+                    closeBtn.innerHTML = '✕';
+                    closeBtn.onclick = closeMenu;
+                    sidebar.insertBefore(closeBtn, sidebar.firstChild);
+                }
+            }
+            function closeMenu() { body.classList.remove('workspace-menu-open'); btn.setAttribute('aria-expanded', 'false'); }
+            if (btn) btn.addEventListener('click', function () { body.classList.contains('workspace-menu-open') ? closeMenu() : openMenu(); });
+            if (shade) shade.addEventListener('click', closeMenu);
+            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+            document.addEventListener('click', function (e) {
+                var sidebar = document.getElementById('workspaceSidebar');
+                var link = e.target.closest('a[href]');
+                if (link && sidebar && sidebar.contains(link) && body.classList.contains('workspace-menu-open')) closeMenu();
+            });
+        })();
+    </script>
 </body>
 </html>

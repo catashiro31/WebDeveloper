@@ -197,16 +197,68 @@
 .book-appt-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 15px 30px rgba(99,102,241,0.3); }
 .book-appt-btn:disabled { background: #e2e8f0; color: #94a3b8; cursor: not-allowed; box-shadow: none; transform: none; }
 
+/* ===== STICKY BOTTOM BOOKING BAR (mobile) ===== */
+.sticky-book-bar {
+  display: none;
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 200;
+  background: rgba(255,255,255,0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid #e2e8f0;
+  padding: 12px 20px 20px;
+  box-shadow: 0 -8px 24px rgba(15,23,42,0.10);
+}
+.sticky-book-bar.visible { display: flex; align-items: center; gap: 12px; }
+.sticky-book-info { flex: 1; min-width: 0; }
+.sticky-book-label { font-size: 11px; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.sticky-book-fee { font-size: 18px; font-weight: 800; color: #0f172a; }
+.sticky-book-btn {
+  padding: 13px 22px; border-radius: 14px; border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white; font-size: 15px; font-weight: 800; cursor: pointer;
+  box-shadow: 0 8px 20px rgba(99,102,241,0.35); white-space: nowrap;
+  transition: all 0.2s; font-family: var(--font-app);
+  min-height: 48px;
+}
+.sticky-book-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(99,102,241,0.45); }
+
 @@media (max-width: 1024px) {
-  .hero-card { flex-direction: column; padding: 32px; gap: 40px; }
-  .img-wrap { width: 100%; height: 420px; }
+  .hero-card { flex-direction: column; padding: 28px; gap: 32px; border-radius: 28px; }
+  .img-wrap { width: 100%; height: 360px; }
   .detail-grid { grid-template-columns: 1fr; }
-  .doc-name { font-size: 32px; }
-}
-@@media (max-width: 640px) {
-  .day-grid { grid-template-columns: repeat(4, 1fr); }
+  .doc-name { font-size: 30px; }
+  .stat-pills { gap: 10px; }
+  .week-tabs {
+    overflow-x: auto; flex-wrap: nowrap !important;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding: 4px;
+  }
+  .week-tabs::-webkit-scrollbar { display: none; }
+  .week-tab-btn { flex-shrink: 0; scroll-snap-align: start; min-height: 40px; }
   .slot-grid { grid-template-columns: repeat(3, 1fr); }
+  .slot-btn { min-height: 44px; padding: 10px 8px; }
+  .day-btn { min-height: 44px; }
 }
+
+@@media (max-width: 640px) {
+  .appt-page { padding-bottom: 100px; } /* Room for sticky bar */
+  .sticky-book-bar.visible { display: flex; }
+  .hero-card { padding: 20px !important; border-radius: 20px !important; gap: 24px !important; }
+  .img-wrap { height: 260px !important; }
+  .doc-name { font-size: 24px !important; }
+  .booking-slots { padding: 18px !important; border-radius: 18px !important; }
+  .booking-form { padding: 16px !important; }
+  .day-grid { grid-template-columns: repeat(4, 1fr) !important; gap: 6px !important; }
+  .day-btn { min-height: 52px; padding: 10px 2px !important; border-radius: 12px; }
+  .day-name { font-size: 10px; }
+  .day-num { font-size: 14px; }
+  .slot-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px; }
+  .slot-btn { min-height: 44px; padding: 10px 6px !important; font-size: 13px; border-radius: 10px; }
+  .book-appt-btn { display: none; } /* Hidden on mobile; use sticky bar */
+  .fee-wrap { flex-direction: column; align-items: flex-start; gap: 12px; padding: 16px 20px; }
+}
+
 
 /* ===== CAROUSEL & DOCTOR CARD STYLES ===== */
 .section-row {
@@ -653,6 +705,17 @@
             </button>
         </div>
 
+        <!-- STICKY BOTTOM BOOKING BAR (mobile ≤640px) -->
+        <div class="sticky-book-bar" id="stickyBookBar">
+            <div class="sticky-book-info">
+                <div class="sticky-book-label">Phí khám</div>
+                <div class="sticky-book-fee" id="stickyFeeText">@(Model.Price?.ToString("N0") ?? "0")đ</div>
+            </div>
+            <button type="button" class="sticky-book-btn" onclick="handleBook()">
+                🩺 Đặt lịch ngay
+            </button>
+        </div>
+
         <!-- Modal Xác nhận thông tin đặt lịch -->
         <div id="bookingConfirmModal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;">
             <div style="background: white; border-radius: 28px; width: 100%; max-width: 520px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); box-sizing: border-box; max-height: 90vh; overflow-y: auto;">
@@ -966,14 +1029,17 @@
         }
 
         function updateBookingForm() {
+            const stickyBar = document.getElementById('stickyBookBar');
             if (!selectedSlot) {
                 bookingForm.style.display = 'none';
                 bookBtn.disabled = true;
                 bookBtn.innerText = 'Xác nhận đặt lịch';
+                if (stickyBar) stickyBar.classList.remove('visible');
                 return;
             }
             
             bookingForm.style.display = 'block';
+            if (stickyBar) stickyBar.classList.add('visible');
             if (!isAuth) {
                 authPrompt.style.display = 'block';
                 patientForm.style.display = 'none';

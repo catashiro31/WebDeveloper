@@ -30,6 +30,33 @@
     color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit;
 }
 .quick-reason-btn:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
+@@media (max-width: 640px) {
+    .appointment-card {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+    .appointment-card > div {
+        flex-direction: column !important;
+        gap: 16px !important;
+    }
+    .appointment-card > div > div:last-child {
+        width: 100% !important;
+        min-width: 0 !important;
+        flex-direction: row !important;
+        gap: 8px !important;
+        flex-wrap: wrap;
+    }
+    .appointment-card > div > div:last-child > button {
+        flex: 1 1 120px !important;
+        min-height: 44px !important;
+        text-align: center;
+        justify-content: center;
+    }
+    .modal-content {
+        padding: 20px 16px !important;
+        border-radius: 20px !important;
+    }
+}
 </style>
 
 <div class="reveal">

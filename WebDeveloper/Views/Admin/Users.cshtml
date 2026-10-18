@@ -103,17 +103,19 @@
     </div>
 
     <div id="tableContainer" style="display: none;">
-        <table class="premium-table">
-            <thead>
-                <tr>
-                    <th>Thành viên</th>
-                    <th>Vai trò</th>
-                    <th>Trạng thái</th>
-                    <th style="text-align: right;">Hành động</th>
-                </tr>
-            </thead>
-            <tbody id="userTableBody"></tbody>
-        </table>
+        <div class="table-scroll">
+            <table class="premium-table">
+                <thead>
+                    <tr>
+                        <th>Thành viên</th>
+                        <th>Vai trò</th>
+                        <th>Trạng thái</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody id="userTableBody"></tbody>
+            </table>
+        </div>
 
         <!-- Pagination formatted as [Trang trước] [1] [2] [Trang sau] -->
         <div class="pagination" id="userPagination"></div>

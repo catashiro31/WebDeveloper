@@ -1,6 +1,61 @@
-<button id="workspaceMenu" class="workspace-menu" type="button" aria-controls="workspaceSidebar" aria-expanded="false">☰ Menu</button>
+@* Hamburger button is positioned at the START of .role-header via CSS (display:flex only on ≤1024px) *@
+<button id="workspaceMenu" class="workspace-menu" type="button" aria-controls="workspaceSidebar" aria-expanded="false" aria-label="Mở menu điều hướng">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <line x1="3" y1="12" x2="21" y2="12"/>
+        <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+</button>
 <button id="workspaceShade" type="button" aria-label="Đóng menu"></button>
 <div id="workspaceLoading" class="workspace-loading" role="status" hidden>
     <span class="workspace-spinner" aria-hidden="true"></span><span>Đang tải trang…</span>
 </div>
 <div id="workspaceError" role="alert" hidden></div>
+<script>
+    (function () {
+        const btn = document.getElementById('workspaceMenu');
+        const shade = document.getElementById('workspaceShade');
+        const body = document.body;
+
+        function openMenu() {
+            body.classList.add('workspace-menu-open');
+            btn.setAttribute('aria-expanded', 'true');
+            // Inject close button into sidebar if not already there
+            const sidebar = document.getElementById('workspaceSidebar');
+            if (sidebar && !sidebar.querySelector('.workspace-menu-close')) {
+                const closeBtn = document.createElement('button');
+                closeBtn.className = 'workspace-menu-close';
+                closeBtn.setAttribute('aria-label', 'Đóng menu');
+                closeBtn.innerHTML = '✕';
+                closeBtn.onclick = closeMenu;
+                sidebar.insertBefore(closeBtn, sidebar.firstChild);
+            }
+        }
+
+        function closeMenu() {
+            body.classList.remove('workspace-menu-open');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+
+        btn.addEventListener('click', function () {
+            body.classList.contains('workspace-menu-open') ? closeMenu() : openMenu();
+        });
+
+        shade.addEventListener('click', closeMenu);
+
+        // Close on Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && body.classList.contains('workspace-menu-open')) closeMenu();
+        });
+
+        // Close when a sidebar nav link is tapped on mobile
+        document.addEventListener('click', function (e) {
+            const sidebar = document.getElementById('workspaceSidebar');
+            if (!sidebar) return;
+            const link = e.target.closest('a[href]');
+            if (link && sidebar.contains(link) && body.classList.contains('workspace-menu-open')) {
+                closeMenu();
+            }
+        });
+    })();
+</script>

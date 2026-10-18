@@ -124,16 +124,124 @@
  .fac-search-input:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
 
 
+/* ===== MOBILE FILTER BAR (≤1024px) ===== */
+.mobile-filter-bar {
+  display: none;
+  position: sticky;
+  top: 64px;
+  z-index: 50;
+  background: rgba(255,255,255,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #e2e8f0;
+  padding: 12px 20px;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+}
+.mobile-filter-btn {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 18px; border-radius: 12px;
+  background: #f1f5f9; border: 1.5px solid #e2e8f0;
+  color: #475569; font-weight: 700; font-size: 14px;
+  cursor: pointer; transition: all 0.2s;
+  font-family: var(--font-app); white-space: nowrap;
+}
+.mobile-filter-btn:hover { background: #e0e7ff; border-color: #6366f1; color: #6366f1; }
+.mobile-filter-btn.active { background: #6366f1; border-color: #6366f1; color: white; }
+.mobile-filter-count {
+  background: #ef4444; color: white;
+  border-radius: 20px; padding: 1px 7px;
+  font-size: 11px; font-weight: 800;
+}
+.mobile-result-count { font-size: 13px; color: #64748b; font-weight: 600; }
+
+/* ===== BOTTOM SHEET ===== */
+.filter-sheet-overlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 2000;
+  background: rgba(15,23,42,0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+.filter-sheet-overlay.open { display: block; }
+.filter-sheet {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  background: #fff;
+  border-radius: 24px 24px 0 0;
+  max-height: 85dvh;
+  overflow-y: auto;
+  padding: 0 0 32px;
+  box-shadow: 0 -8px 32px rgba(15,23,42,0.15);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.filter-sheet.open { transform: translateY(0); }
+.filter-sheet::-webkit-scrollbar { width: 4px; }
+.filter-sheet::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+.filter-sheet-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky; top: 0; background: #fff; z-index: 1;
+}
+.filter-sheet-handle {
+  width: 40px; height: 4px; background: #e2e8f0;
+  border-radius: 2px; margin: 12px auto 0;
+}
+.filter-sheet-title { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; }
+.filter-sheet-close {
+  width: 36px; height: 36px; border: none; background: #f1f5f9;
+  border-radius: 10px; cursor: pointer; font-size: 18px; color: #475569;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.filter-sheet-close:hover { background: #e2e8f0; }
+.filter-sheet-body { padding: 20px 24px 0; }
+.filter-sheet-apply {
+  display: block; width: calc(100% - 48px); margin: 20px 24px 0;
+  padding: 14px 0; border-radius: 14px; border: none;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white; font-size: 16px; font-weight: 800;
+  cursor: pointer; transition: all 0.2s; font-family: var(--font-app);
+  box-shadow: 0 8px 20px rgba(99,102,241,0.3);
+}
+.filter-sheet-apply:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(99,102,241,0.4); }
+.filter-sheet-reset {
+  display: block; width: calc(100% - 48px); margin: 10px 24px 0;
+  padding: 12px 0; border-radius: 14px; border: 1.5px solid #e2e8f0;
+  background: #f8fafc; color: #475569; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s; font-family: var(--font-app);
+}
+.filter-sheet-reset:hover { border-color: #6366f1; color: #6366f1; }
+
 @@media (max-width: 768px) {
   .hero-wrapper { padding: 0 16px; }
   .hero { padding: 32px 24px; border-radius: 24px; flex-direction: column; gap: 20px; }
   .hero-title { font-size: 24px; text-align: center; }
   .hero-desc { text-align: center; }
   .search-wrap { width: 100%; }
-  .main { flex-direction: column; gap: 24px; padding: 0 20px; }
-  .sidebar { width: 100%; position: static; padding: 24px; box-sizing: border-box; }
-  .grid-doctors { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+  .main { flex-direction: column; gap: 20px; padding: 0 16px; }
+  .grid-doctors { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
+  /* Doctor card on mobile — horizontal compact layout */
+  .doc-card { flex-direction: row; border-radius: 16px; height: auto; }
+  .avatar-wrap { width: 90px; height: auto; min-height: 90px; flex-shrink: 0; border-bottom: none; border-right: 1px solid #f1f5f9; border-radius: 16px 0 0 16px; }
+  .card-body { padding: 14px 16px; }
+  .doc-name { font-size: 15px; height: auto; white-space: normal; }
+  .doc-spec { font-size: 12px; height: auto; }
+  .doc-facility { font-size: 11px; height: auto; }
+  .meta-row-stats { flex-wrap: wrap; }
+  .book-btn { padding: 10px 0; font-size: 13px; border-radius: 10px; }
 }
+
+@@media (max-width: 1024px) {
+  .sidebar { display: none !important; } /* Hidden; opened via bottom sheet */
+  .mobile-filter-bar { display: flex; }
+  .page { padding-top: 64px; }
+  .main { padding: 0 16px; margin-top: 16px; }
+  .grid-doctors { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%; }
+}
+
 
 /* Card Styling Ported */
 .doc-card { 
@@ -345,6 +453,34 @@
                 </svg>
                 <input type="text" id="searchInput" class="search-input" placeholder="Tên bác sĩ, chuyên khoa, cơ sở..." />
             </div>
+        </div>
+    </div>
+
+    <!-- MOBILE FILTER BAR (≤1024px only) -->
+    <div class="mobile-filter-bar" id="mobileFilterBar">
+        <span class="mobile-result-count" id="mobileResultCount">Đang tải...</span>
+        <div style="display: flex; gap: 8px;">
+            <button type="button" class="mobile-filter-btn" id="mobileFilterBtn" onclick="openFilterSheet()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/></svg>
+                Bộ lọc
+                <span class="mobile-filter-count" id="mobileFilterCount" style="display:none;">0</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- BOTTOM SHEET OVERLAY -->
+    <div class="filter-sheet-overlay" id="filterSheetOverlay" onclick="closeFilterSheet()">
+        <div class="filter-sheet" id="filterSheet" onclick="event.stopPropagation()">
+            <div class="filter-sheet-handle"></div>
+            <div class="filter-sheet-header">
+                <h2 class="filter-sheet-title">🔍 Bộ lọc tìm kiếm</h2>
+                <button type="button" class="filter-sheet-close" onclick="closeFilterSheet()" aria-label="Đóng bộ lọc">✕</button>
+            </div>
+            <div class="filter-sheet-body" id="filterSheetBody">
+                <!-- Filter content cloned from sidebar by JS -->
+            </div>
+            <button type="button" class="filter-sheet-apply" onclick="closeFilterSheet()">✓ Áp dụng bộ lọc</button>
+            <button type="button" class="filter-sheet-reset" onclick="clearFilters(); closeFilterSheet();">✕ Xóa tất cả bộ lọc</button>
         </div>
     </div>
 
@@ -816,5 +952,85 @@
 
         updateSliderUI();
         initData();
+
+        // ===== BOTTOM SHEET FILTER (mobile) =====
+        window.openFilterSheet = function() {
+            const overlay = document.getElementById('filterSheetOverlay');
+            const sheet = document.getElementById('filterSheet');
+            const body = document.getElementById('filterSheetBody');
+            // Clone sidebar content into sheet body
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar && body) {
+                body.innerHTML = sidebar.innerHTML;
+                // Re-attach province select event inside sheet
+                const sheetProvince = body.querySelector('#provinceSelect');
+                if (sheetProvince) {
+                    sheetProvince.value = state.province;
+                    sheetProvince.onchange = (e) => {
+                        state.province = e.target.value;
+                        elProvince.value = e.target.value;
+                        state.facilityId = null;
+                        state.page = 0;
+                        renderFacilities();
+                        triggerFetch();
+                    };
+                }
+            }
+            overlay.classList.add('open');
+            requestAnimationFrame(() => sheet.classList.add('open'));
+            document.body.style.overflow = 'hidden';
+        };
+
+        window.closeFilterSheet = function() {
+            const overlay = document.getElementById('filterSheetOverlay');
+            const sheet = document.getElementById('filterSheet');
+            sheet.classList.remove('open');
+            setTimeout(() => overlay.classList.remove('open'), 350);
+            document.body.style.overflow = '';
+        };
+
+        // Update mobile UI after fetch
+        const _originalFetch = fetchDoctors;
+        const elMobileCount = document.getElementById('mobileResultCount');
+        const elMobileFilterCount = document.getElementById('mobileFilterCount');
+
+        function updateMobileFilterCount() {
+            let count = 0;
+            if (state.specId) count++;
+            if (state.facilityId) count++;
+            if (state.province) count++;
+            if (state.minPrice > 0) count++;
+            if (state.maxPrice < priceLimit) count++;
+            if (state.search) count++;
+            const badge = document.getElementById('mobileFilterCount');
+            const btn = document.getElementById('mobileFilterBtn');
+            if (badge) {
+                if (count > 0) { badge.style.display = 'inline-block'; badge.textContent = count; }
+                else { badge.style.display = 'none'; }
+            }
+            if (btn) btn.classList.toggle('active', count > 0);
+        }
+
+        // Hook into triggerFetch to update mobile UI
+        const _origTrigger = triggerFetch;
+        triggerFetch = function() { updateMobileFilterCount(); _origTrigger(); };
+
+        // Patch result count display
+        const origFetchDoctors = fetchDoctors;
+        fetchDoctors = async function() {
+            await origFetchDoctors();
+            // Update result count text
+            const total = state.totalPages * state.size;
+            if (elMobileCount) {
+                const grid = document.getElementById('doctorsGrid');
+                const cards = grid ? grid.querySelectorAll('.doc-card').length : 0;
+                elMobileCount.textContent = cards > 0 ? `${cards} bác sĩ được tìm thấy` : 'Không tìm thấy bác sĩ';
+            }
+        };
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeFilterSheet();
+        });
     </script>
+
 }

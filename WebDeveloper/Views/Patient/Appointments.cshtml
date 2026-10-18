@@ -21,6 +21,27 @@
     color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-family: inherit;
 }
 .quick-reason-btn:hover { background: #fee2e2; border-color: #fecaca; color: #dc2626; }
+@@media (max-width: 640px) {
+    .premium-card {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        padding: 16px !important;
+        gap: 16px !important;
+    }
+    .premium-card > div:last-child {
+        padding-left: 0 !important;
+        width: 100% !important;
+    }
+    .premium-card > div:last-child button {
+        width: 100% !important;
+        justify-content: center !important;
+        min-height: 44px !important;
+    }
+    .modal-content {
+        padding: 20px 16px !important;
+        border-radius: 20px !important;
+    }
+}
 </style>
 
 <div class="reveal">
