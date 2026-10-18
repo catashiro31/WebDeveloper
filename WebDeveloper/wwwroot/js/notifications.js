@@ -92,14 +92,66 @@
         finally { loading = false; }
     }
     bell.onclick = () => { panel.hidden = !panel.hidden; bell.setAttribute('aria-expanded', String(!panel.hidden)); if (!panel.hidden) load(); };
-    document.getElementById('notificationClose').onclick = () => { close(); bell.focus(); };
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') close(); });
-    document.addEventListener('click', e => { if (!center.contains(e.target) && !panel.contains(e.target)) close(); });
-    more.onclick = () => load(true); retry.onclick = () => load();
     const removeRead = document.getElementById('notificationDeleteRead');
+    const confirmModal = document.getElementById('notificationConfirmModal');
+    if (confirmModal) document.body.appendChild(confirmModal);
+    const modalIcon = document.getElementById('notifModalIcon');
+    const modalTitle = document.getElementById('notifModalTitle');
+    const modalDesc = document.getElementById('notifModalDesc');
+    const modalCancel = document.getElementById('notifModalCancel');
+    const modalConfirm = document.getElementById('notifModalConfirm');
+    let pendingDeleteRead = false;
+
+    function openConfirmModal(deleteRead) {
+        pendingDeleteRead = deleteRead;
+        if (!confirmModal) {
+            updateNotifications(deleteRead);
+            return;
+        }
+        if (deleteRead) {
+            if (modalIcon) { modalIcon.className = 'notification-modal-icon icon-delete'; modalIcon.textContent = '🗑️'; }
+            if (modalTitle) modalTitle.textContent = 'Xóa thông báo đã đọc';
+            if (modalDesc) modalDesc.textContent = 'Chỉ xóa các thông báo đã đọc. Các thông báo chưa đọc sẽ được giữ lại.';
+            if (modalConfirm) { modalConfirm.className = 'btn-notif-confirm btn-delete'; modalConfirm.textContent = 'Xóa thông báo'; }
+        } else {
+            if (modalIcon) { modalIcon.className = 'notification-modal-icon icon-read'; modalIcon.textContent = '✓'; }
+            if (modalTitle) modalTitle.textContent = 'Đánh dấu tất cả đã đọc';
+            if (modalDesc) modalDesc.textContent = 'Bạn có chắc chắn muốn đánh dấu tất cả thông báo là đã đọc?';
+            if (modalConfirm) { modalConfirm.className = 'btn-notif-confirm btn-read'; modalConfirm.textContent = 'Đánh dấu đã đọc'; }
+        }
+        confirmModal.hidden = false;
+    }
+
+    function closeConfirmModal() {
+        if (confirmModal) confirmModal.hidden = true;
+    }
+
+    if (modalCancel) modalCancel.onclick = closeConfirmModal;
+    if (confirmModal) {
+        confirmModal.onclick = (e) => {
+            if (e.target === confirmModal) closeConfirmModal();
+        };
+    }
+    if (modalConfirm) {
+        modalConfirm.onclick = () => {
+            closeConfirmModal();
+            updateNotifications(pendingDeleteRead);
+        };
+    }
+
+    document.getElementById('notificationClose').onclick = () => { close(); bell.focus(); };
+    document.addEventListener('keydown', e => { 
+        if (e.key === 'Escape') {
+            if (confirmModal && !confirmModal.hidden) closeConfirmModal();
+            else close();
+        } 
+    });
+    document.addEventListener('click', e => { 
+        if (!center.contains(e.target) && !panel.contains(e.target) && (!confirmModal || !confirmModal.contains(e.target))) close(); 
+    });
+    more.onclick = () => load(true); retry.onclick = () => load();
     async function updateNotifications(deleteRead) {
         if (actionPending) return;
-        if (!confirm(deleteRead ? 'Chỉ xóa thông báo đã đọc? Thông báo chưa đọc sẽ được giữ lại.' : 'Đánh dấu tất cả thông báo là đã đọc?')) return;
         actionPending = true; all.disabled = removeRead.disabled = true;
         try {
             await pendingLoad;
@@ -110,8 +162,8 @@
         } catch (error) { status.textContent = error.message; }
         finally { actionPending = false; all.disabled = removeRead.disabled = false; }
     }
-    all.onclick = () => updateNotifications(false);
-    removeRead.onclick = () => updateNotifications(true);
+    all.onclick = () => openConfirmModal(false);
+    removeRead.onclick = () => openConfirmModal(true);
     load(false, true);
     setInterval(() => { if (!document.hidden && !actionPending) load(false, true); }, 30000);
 })();

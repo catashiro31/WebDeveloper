@@ -157,6 +157,78 @@
     </div>
 </div>
 
+<!-- Modal Xác nhận lịch hẹn của Bác sĩ -->
+<div id="doctorApproveModal" class="modal-overlay" onclick="closeDoctorApproveModal()">
+    <div class="modal-content" style="max-width: 480px; padding: 32px;" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                ✓
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Xác nhận lịch hẹn khám</h3>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Tiếp nhận lịch khám và gửi thông báo tới bệnh nhân.</p>
+            </div>
+            <button type="button" onclick="closeDoctorApproveModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Bệnh nhân:</span> <b id="approveModalPatientName" style="color: #0f172a;">—</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Thời gian:</span> <span id="approveModalTime" style="font-weight: 700; color: #1e293b;">—</span></div>
+            <div id="approveModalReasonRow" style="display: none; flex-direction: column; gap: 4px; border-top: 1px dashed #e2e8f0; padding-top: 8px;">
+                <span style="color: #64748b; font-size: 12px; text-transform: uppercase; font-weight: 700;">Lý do khám:</span>
+                <span id="approveModalReason" style="color: #334155; font-size: 13px;">—</span>
+            </div>
+        </div>
+
+        <p style="font-size: 14px; color: #475569; line-height: 1.5; margin: 0 0 24px;">
+            Bạn có chắc chắn muốn tiếp nhận và xác nhận lịch hẹn khám bệnh này?
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" onclick="closeDoctorApproveModal()" style="padding: 11px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
+                Quay lại
+            </button>
+            <button type="button" id="confirmDoctorApproveBtn" onclick="confirmDoctorApprove()" style="padding: 11px 24px; border-radius: 12px; border: none; background: linear-gradient(135deg, #10b981, #059669); color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: all 0.2s;">
+                Xác nhận lịch hẹn
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Đánh dấu Không đến của Bác sĩ -->
+<div id="doctorNoShowModal" class="modal-overlay" onclick="closeDoctorNoShowModal()">
+    <div class="modal-content" style="max-width: 480px; padding: 32px;" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; color: #dc2626; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                ⚠️
+            </div>
+            <div style="flex: 1;">
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Đánh dấu không đến</h3>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Cập nhật trạng thái bệnh nhân vắng mặt cho ca khám này.</p>
+            </div>
+            <button type="button" onclick="closeDoctorNoShowModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Bệnh nhân:</span> <b id="noShowModalPatientName" style="color: #0f172a;">—</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Thời gian:</span> <span id="noShowModalTime" style="font-weight: 700; color: #1e293b;">—</span></div>
+        </div>
+
+        <p style="font-size: 14px; color: #475569; line-height: 1.5; margin: 0 0 24px;">
+            Bạn có chắc chắn muốn đánh dấu bệnh nhân không đến khám? Trạng thái lịch hẹn sẽ được chuyển thành <strong>Không đến</strong>.
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" onclick="closeDoctorNoShowModal()" style="padding: 11px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
+                Quay lại
+            </button>
+            <button type="button" id="confirmDoctorNoShowBtn" onclick="confirmDoctorNoShow()" style="padding: 11px 24px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); transition: all 0.2s;" onmouseenter="this.style.background='#dc2626'" onmouseleave="this.style.background='#ef4444'">
+                Xác nhận không đến
+            </button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
 DocBookingPage.mount(page => {
@@ -167,6 +239,9 @@ DocBookingPage.mount(page => {
 
         // Keep the fixed dialog outside the animated layout's transformed main element.
         document.body.appendChild(page.own(document.getElementById('resultModal')));
+        document.body.appendChild(page.own(document.getElementById('doctorRejectModal')));
+        document.body.appendChild(page.own(document.getElementById('doctorApproveModal')));
+        document.body.appendChild(page.own(document.getElementById('doctorNoShowModal')));
         const container = document.getElementById('appointmentsContainer');
         let allAppointments = [];
         let currentFilter = 'ALL';
@@ -240,13 +315,13 @@ DocBookingPage.mount(page => {
                 const started = visitHasStarted(apt);
                 if (apt.bookingStatus === 'PENDING') {
                     actionsHtml = `
-                        <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'CONFIRMED')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #10b981, #059669); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Xác nhận</button>
+                        <button onclick="openDoctorApproveModal(${apt.appointmentId || apt.id})" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #10b981, #059669); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(16,185,129,0.2);">Xác nhận</button>
                         <button onclick="openDoctorRejectModal(${apt.appointmentId || apt.id})" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #ef4444; background: white; color: #ef4444; cursor: pointer; font-weight: 700; font-size: 13px;">Từ chối</button>
                     `;
                 } else if (apt.bookingStatus === 'CONFIRMED') {
                     actionsHtml = `
                         <button onclick="openResultModal(${apt.appointmentId || apt.id}, 'create')" style="padding: 10px 16px; border-radius: 10px; border: none; background: linear-gradient(135deg, #5f6dfc, #3b82f6); color: white; cursor: pointer; font-weight: 700; font-size: 13px; box-shadow: 0 4px 12px rgba(95,109,252,0.2);">Trả kết quả</button>
-                        <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'NO_SHOW')" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #94a3b8; background: white; color: #64748b; cursor: pointer; font-weight: 700; font-size: 13px;">Không đến</button>
+                        <button onclick="openDoctorNoShowModal(${apt.appointmentId || apt.id})" style="padding: 10px 16px; border-radius: 10px; border: 1.5px solid #94a3b8; background: white; color: #64748b; cursor: pointer; font-weight: 700; font-size: 13px;">Không đến</button>
                     `;
                 } else if (apt.bookingStatus === 'COMPLETED') {
                     actionsHtml = `
@@ -361,10 +436,112 @@ DocBookingPage.mount(page => {
             });
         };
 
-        page.globals.updateStatus = function(id, status) {
-            const msgs = { 'CONFIRMED': 'Xác nhận lịch hẹn này?', 'NO_SHOW': 'Đánh dấu bệnh nhân không đến?', 'COMPLETED': 'Đánh dấu đã hoàn thành khám?' };
-            if (!confirm(msgs[status] || 'Xác nhận thay đổi?')) return;
+        let currentApproveAptId = null;
+        page.globals.openDoctorApproveModal = function(id) {
+            currentApproveAptId = id;
+            const apt = allAppointments.find(a => (a.appointmentId || a.id) == id);
+            document.getElementById('approveModalPatientName').innerText = apt ? apt.patientName : '—';
+            document.getElementById('approveModalTime').innerText = apt ? `${apt.dateWorking} (${formatSlotLabel(apt.timeSlot || apt.startTime)})` : '—';
+            const reasonRow = document.getElementById('approveModalReasonRow');
+            if (apt && apt.reason) {
+                document.getElementById('approveModalReason').innerText = apt.reason;
+                reasonRow.style.display = 'flex';
+            } else {
+                reasonRow.style.display = 'none';
+            }
+            const btn = document.getElementById('confirmDoctorApproveBtn');
+            btn.disabled = false;
+            btn.innerText = 'Xác nhận lịch hẹn';
+            document.getElementById('doctorApproveModal').classList.add('active');
+        };
 
+        page.globals.closeDoctorApproveModal = function() {
+            document.getElementById('doctorApproveModal').classList.remove('active');
+            currentApproveAptId = null;
+        };
+
+        page.globals.confirmDoctorApprove = function() {
+            if (!currentApproveAptId) return;
+            const btn = document.getElementById('confirmDoctorApproveBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang xử lý...';
+
+            fetch(`/api/v1/doctor/appointment/${currentApproveAptId}/status?status=CONFIRMED`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    closeDoctorApproveModal();
+                    showApiToast('Đã xác nhận lịch hẹn thành công', 'success');
+                    fetchAppointments();
+                } else {
+                    showApiToast(await readApiMessage(res) || "Lỗi khi xác nhận lịch hẹn", "error");
+                    btn.disabled = false;
+                    btn.innerText = 'Xác nhận lịch hẹn';
+                }
+            })
+            .catch(() => {
+                showApiToast("Lỗi mạng", "error");
+                btn.disabled = false;
+                btn.innerText = 'Xác nhận lịch hẹn';
+            });
+        };
+
+        let currentNoShowAptId = null;
+        page.globals.openDoctorNoShowModal = function(id) {
+            currentNoShowAptId = id;
+            const apt = allAppointments.find(a => (a.appointmentId || a.id) == id);
+            document.getElementById('noShowModalPatientName').innerText = apt ? apt.patientName : '—';
+            document.getElementById('noShowModalTime').innerText = apt ? `${apt.dateWorking} (${formatSlotLabel(apt.timeSlot || apt.startTime)})` : '—';
+            const btn = document.getElementById('confirmDoctorNoShowBtn');
+            btn.disabled = false;
+            btn.innerText = 'Xác nhận không đến';
+            document.getElementById('doctorNoShowModal').classList.add('active');
+        };
+
+        page.globals.closeDoctorNoShowModal = function() {
+            document.getElementById('doctorNoShowModal').classList.remove('active');
+            currentNoShowAptId = null;
+        };
+
+        page.globals.confirmDoctorNoShow = function() {
+            if (!currentNoShowAptId) return;
+            const btn = document.getElementById('confirmDoctorNoShowBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang xử lý...';
+
+            fetch(`/api/v1/doctor/appointment/${currentNoShowAptId}/status?status=NO_SHOW`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            })
+            .then(async res => {
+                if (res.ok) {
+                    closeDoctorNoShowModal();
+                    showApiToast('Đã đánh dấu bệnh nhân không đến', 'success');
+                    fetchAppointments();
+                } else {
+                    showApiToast(await readApiMessage(res) || "Lỗi khi cập nhật trạng thái", "error");
+                    btn.disabled = false;
+                    btn.innerText = 'Xác nhận không đến';
+                }
+            })
+            .catch(() => {
+                showApiToast("Lỗi mạng", "error");
+                btn.disabled = false;
+                btn.innerText = 'Xác nhận không đến';
+            });
+        };
+
+        page.globals.updateStatus = function(id, status) {
+            if (status === 'CONFIRMED') {
+                page.globals.openDoctorApproveModal(id);
+                return;
+            }
+            if (status === 'NO_SHOW') {
+                page.globals.openDoctorNoShowModal(id);
+                return;
+            }
             const url = `/api/v1/doctor/appointment/${id}/status?status=${status}`;
             fetch(url, {
                 method: 'PUT',
@@ -504,7 +681,7 @@ DocBookingPage.mount(page => {
 
         fetchAppointments();
 
-    page.expose({formatSlotLabel, getStatusStyle, getStatusText, fetchAppointments, renderAppointments, visitHasStarted});
+    page.expose({formatSlotLabel, getStatusStyle, getStatusText, fetchAppointments, renderAppointments, visitHasStarted, openDoctorApproveModal, closeDoctorApproveModal, confirmDoctorApprove, openDoctorNoShowModal, closeDoctorNoShowModal, confirmDoctorNoShow});
 });
 </script>
 }

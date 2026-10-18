@@ -15,6 +15,19 @@
             <button id="notificationMore" type="button" hidden>Xem thêm</button>
             <button id="notificationRetry" type="button" hidden>Thử lại</button>
         </section>
+
+        <!-- Modal xác nhận thao tác thông báo -->
+        <div id="notificationConfirmModal" class="notification-modal-overlay" hidden>
+            <div class="notification-modal-card" role="dialog" aria-modal="true" aria-labelledby="notifModalTitle" onclick="event.stopPropagation()">
+                <div id="notifModalIcon" class="notification-modal-icon"></div>
+                <h4 id="notifModalTitle" class="notification-modal-title"></h4>
+                <p id="notifModalDesc" class="notification-modal-desc"></p>
+                <div class="notification-modal-actions">
+                    <button type="button" id="notifModalCancel" class="btn-notif-cancel">Hủy</button>
+                    <button type="button" id="notifModalConfirm" class="btn-notif-confirm">Xác nhận</button>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="~/js/notifications.js" asp-append-version="true" defer></script>
 }

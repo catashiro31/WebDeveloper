@@ -88,9 +88,9 @@
     </table>
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="specModal">
-    <div class="modal-content">
+<!-- Edit Modal -->
+<div class="modal-overlay" id="specModal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
         <h3 id="modalTitle" style="margin: 0 0 24px; font-size: 20px; font-weight: 800; color: #1e293b;">Thêm chuyên khoa</h3>
         <input type="hidden" id="specId" />
         
@@ -107,6 +107,28 @@
         <div style="display: flex; gap: 12px; margin-top: 32px;">
             <button class="form-input" style="flex: 1; cursor: pointer; background: #f1f5f9; border: none; font-weight: 600;" onclick="closeModal()">Hủy bỏ</button>
             <button class="btn-primary" style="flex: 1;" onclick="saveSpecialty()">Lưu lại</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteSpecModal" onclick="closeDeleteModal()">
+    <div class="modal-content" style="max-width: 440px;" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div style="width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
+                🗑️
+            </div>
+            <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;">Xóa chuyên khoa</h3>
+                <p style="margin: 4px 0 0; color: #64748b; font-size: 13px;">Hành động này không thể hoàn tác.</p>
+            </div>
+        </div>
+        <p style="font-size: 14px; color: #334155; line-height: 1.6; margin-bottom: 24px;">
+            Bạn có chắc chắn muốn xóa chuyên khoa <strong id="deleteSpecName" style="color: #0f172a;"></strong> khỏi hệ thống?
+        </p>
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" class="form-input" style="width: auto; padding: 10px 20px; cursor: pointer; background: #f1f5f9; border: none; font-weight: 700; color: #64748b;" onclick="closeDeleteModal()">Hủy bỏ</button>
+            <button type="button" id="confirmDeleteBtn" style="padding: 10px 22px; border-radius: 12px; border: none; background: #ef4444; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25); transition: all 0.2s;" onclick="confirmDeleteSpecialty()">Xác nhận xóa</button>
         </div>
     </div>
 </div>
@@ -217,26 +239,55 @@ DocBookingPage.mount(page => {
             } catch(e) { showApiToast("Không thể lưu chuyên khoa. Vui lòng thử lại.", 'error'); }
         }
 
-        page.globals.deleteSpecialty = async (id) => {
-            if (!confirm('Bạn có chắc chắn muốn xóa chuyên khoa này?')) return;
+        let targetDeleteId = null;
+
+        function openDeleteModal(id) {
+            targetDeleteId = id;
+            const spec = specialties.find(s => (s.id || s.specialtyId) === id);
+            document.getElementById('deleteSpecName').innerText = spec ? `"${spec.name || spec.specialtyName}"` : '';
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.disabled = false;
+            btn.innerText = 'Xác nhận xóa';
+            document.getElementById('deleteSpecModal').style.display = 'flex';
+        }
+
+        function closeDeleteModal() {
+            document.getElementById('deleteSpecModal').style.display = 'none';
+            targetDeleteId = null;
+        }
+
+        async function confirmDeleteSpecialty() {
+            if (!targetDeleteId) return;
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang xóa...';
             try {
-                const res = await fetch(`/api/v1/admin/specialty/${id}`, { 
+                const res = await fetch(`/api/v1/admin/specialty/${targetDeleteId}`, { 
                     method: 'DELETE',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
-                    showApiToast("Đã xóa");
+                    showApiToast("Đã xóa chuyên khoa thành công", 'success');
+                    closeDeleteModal();
                     loadSpecialties();
                 } else {
                     const text = await readApiMessage(res);
                     showApiToast("Không thể xóa: " + text, 'error');
+                    btn.disabled = false;
+                    btn.innerText = 'Xác nhận xóa';
                 }
-            } catch(e) { showApiToast("Không thể xóa chuyên khoa. Vui lòng thử lại.", 'error'); }
-        };
+            } catch(e) { 
+                showApiToast("Không thể xóa chuyên khoa. Vui lòng thử lại.", 'error'); 
+                btn.disabled = false;
+                btn.innerText = 'Xác nhận xóa';
+            }
+        }
+
+        page.globals.deleteSpecialty = openDeleteModal;
 
         loadSpecialties();
 
-    page.expose({loadSpecialties, openModal, closeModal, saveSpecialty});
+    page.expose({loadSpecialties, openModal, closeModal, saveSpecialty, openDeleteModal, closeDeleteModal, confirmDeleteSpecialty});
 });
 </script>
 }

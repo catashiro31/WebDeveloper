@@ -3,6 +3,22 @@
     Layout = "_DoctorLayout";
 }
 
+<style>
+.modal-overlay {
+    position: fixed; inset: 0; background: rgba(15, 23, 42, 0.45); backdrop-filter: blur(4px);
+    display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;
+}
+.modal-content {
+    background: white; border-radius: 24px; width: 100%; max-width: 480px; padding: 32px;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25); box-sizing: border-box;
+    animation: overduePopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@@keyframes overduePopIn {
+    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+}
+</style>
+
 <div class="reveal">
     <div style="margin-bottom: 24px;">
         <h2 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a;">Lịch hẹn quá hạn</h2>
@@ -19,25 +35,53 @@
     </div>
 </div>
 
+<!-- Overdue Status Modal -->
+<div id="overdueStatusModal" class="modal-overlay" onclick="closeOverdueModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
+            <div id="overdueModalIcon" style="width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;"></div>
+            <div style="flex: 1;">
+                <h3 id="overdueModalTitle" style="margin: 0; font-size: 20px; font-weight: 800; color: #0f172a;"></h3>
+                <p id="overdueModalSubtitle" style="margin: 4px 0 0; color: #64748b; font-size: 13px;"></p>
+            </div>
+            <button type="button" onclick="closeOverdueModal()" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: #64748b; font-size: 18px; display: flex; align-items: center; justify-content: center;">✕</button>
+        </div>
+
+        <div style="background: #f8fafc; border-radius: 16px; padding: 16px; margin-bottom: 20px; border: 1px solid #e2e8f0; font-size: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Bệnh nhân:</span> <b id="overdueModalPatientName" style="color: #0f172a;">—</b></div>
+            <div style="display: flex; justify-content: space-between;"><span style="color: #64748b;">Thời gian:</span> <span id="overdueModalTime" style="font-weight: 700; color: #1e293b;">—</span></div>
+        </div>
+
+        <p id="overdueModalMessage" style="font-size: 14px; color: #475569; line-height: 1.5; margin: 0 0 24px;"></p>
+
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+            <button type="button" onclick="closeOverdueModal()" style="padding: 11px 20px; border-radius: 12px; border: 1.5px solid #e2e8f0; background: white; color: #64748b; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">
+                Quay lại
+            </button>
+            <button type="button" id="confirmOverdueBtn" onclick="confirmOverdueStatus()" style="padding: 11px 24px; border-radius: 12px; border: none; color: white; font-weight: 700; font-size: 14px; cursor: pointer; transition: all 0.2s;"></button>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
 DocBookingPage.mount(page => {
     const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
 
-        
-        
-
+        document.body.appendChild(page.own(document.getElementById('overdueStatusModal')));
         const container = document.getElementById('appointmentsContainer');
+        let overdueList = [];
+        let targetAptId = null, targetStatus = null;
 
         function fetchOverdue() {
             if (user && user.verificationStatus !== 'APPROVED') return;
             fetch('/api/v1/doctor/appointments/overdue', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
             .then(data => {
-                if (!Array.isArray(data)) data = [];
+                overdueList = Array.isArray(data) ? data : [];
                 
                 const countAlert = document.getElementById('overdueCountAlert');
-                if (data.length === 0) {
+                if (overdueList.length === 0) {
                     countAlert.style.display = 'none';
                     container.innerHTML = `
                         <div style="text-align: center; padding: 60px; color: #6b7280; background: white; border-radius: 24px; border: 1px dashed #cbd5e1;">
@@ -49,11 +93,11 @@ DocBookingPage.mount(page => {
                     return;
                 }
 
-                document.getElementById('overdueCount').innerText = data.length;
+                document.getElementById('overdueCount').innerText = overdueList.length;
                 countAlert.style.display = 'flex';
 
                 let html = '';
-                data.forEach(apt => {
+                overdueList.forEach(apt => {
                     html += `
                         <div style="background: white; border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); border: 2px solid #fbbf24; transition: all 0.2s;">
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
@@ -70,8 +114,8 @@ DocBookingPage.mount(page => {
                                     ${apt.reason ? `<div style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; font-size: 14px; color: #475569;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; display: block;">Lý do khám:</strong> ${apt.reason}</div>` : ''}
                                 </div>
                                 <div style="display: flex; gap: 12px;">
-                                    <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'COMPLETED')" style="padding: 12px 20px; border-radius: 12px; border: none; background: #10b981; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transition: all 0.2s;" onmouseenter="this.style.background='#059669'" onmouseleave="this.style.background='#10b981'">Đã khám</button>
-                                    <button onclick="updateStatus(${apt.appointmentId || apt.id}, 'NO_SHOW')" style="padding: 12px 20px; border-radius: 12px; border: 1.5px solid #cbd5e1; background: white; color: #64748b; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Không đến</button>
+                                    <button onclick="openOverdueModal(${apt.appointmentId || apt.id}, 'COMPLETED')" style="padding: 12px 20px; border-radius: 12px; border: none; background: #10b981; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transition: all 0.2s;" onmouseenter="this.style.background='#059669'" onmouseleave="this.style.background='#10b981'">Đã khám</button>
+                                    <button onclick="openOverdueModal(${apt.appointmentId || apt.id}, 'NO_SHOW')" style="padding: 12px 20px; border-radius: 12px; border: 1.5px solid #cbd5e1; background: white; color: #64748b; cursor: pointer; font-weight: 600; transition: all 0.2s;" onmouseenter="this.style.background='#f8fafc'" onmouseleave="this.style.background='white'">Không đến</button>
                                 </div>
                             </div>
                         </div>
@@ -84,29 +128,79 @@ DocBookingPage.mount(page => {
             });
         }
 
-        page.globals.updateStatus = function(id, status) {
-            const msg = status === 'COMPLETED' ? 'Đánh dấu đã hoàn thành khám?' : 'Đánh dấu bệnh nhân không đến?';
-            if (!confirm(msg)) return;
+        page.globals.openOverdueModal = function(id, status) {
+            targetAptId = id;
+            targetStatus = status;
+            const apt = overdueList.find(a => (a.appointmentId || a.id) == id);
+            document.getElementById('overdueModalPatientName').innerText = apt ? apt.patientName : '—';
+            document.getElementById('overdueModalTime').innerText = apt ? `${apt.dateWorking} (${apt.timeSlot ? apt.timeSlot.replace('SLOT_','').replace('_',':') : ''})` : '—';
+            
+            const icon = document.getElementById('overdueModalIcon');
+            const title = document.getElementById('overdueModalTitle');
+            const subtitle = document.getElementById('overdueModalSubtitle');
+            const message = document.getElementById('overdueModalMessage');
+            const btn = document.getElementById('confirmOverdueBtn');
+            btn.disabled = false;
 
-            fetch(`/api/v1/doctor/appointment/${id}/status?status=${status}`, {
+            if (status === 'COMPLETED') {
+                icon.style.background = '#dcfce7'; icon.style.color = '#16a34a'; icon.innerText = '✓';
+                title.innerText = 'Xác nhận đã hoàn thành khám';
+                subtitle.innerText = 'Cập nhật trạng thái lịch hẹn quá hạn';
+                message.innerText = 'Bạn có chắc chắn muốn đánh dấu ca khám quá hạn này là ĐÃ KHÁM hoàn tất?';
+                btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                btn.style.boxShadow = '0 4px 12px rgba(16, 185, 129, 0.25)';
+                btn.innerText = 'Xác nhận đã khám';
+            } else {
+                icon.style.background = '#fee2e2'; icon.style.color = '#dc2626'; icon.innerText = '⚠️';
+                title.innerText = 'Đánh dấu không đến';
+                subtitle.innerText = 'Bệnh nhân vắng mặt cho ca khám';
+                message.innerText = 'Bạn có chắc chắn muốn đánh dấu bệnh nhân KHÔNG ĐẾN khám cho lịch hẹn quá hạn này?';
+                btn.style.background = '#ef4444';
+                btn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.25)';
+                btn.innerText = 'Xác nhận không đến';
+            }
+            document.getElementById('overdueStatusModal').style.display = 'flex';
+        };
+
+        page.globals.closeOverdueModal = function() {
+            document.getElementById('overdueStatusModal').style.display = 'none';
+            targetAptId = null;
+            targetStatus = null;
+        };
+
+        page.globals.confirmOverdueStatus = function() {
+            if (!targetAptId || !targetStatus) return;
+            const btn = document.getElementById('confirmOverdueBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang xử lý...';
+
+            fetch(`/api/v1/doctor/appointment/${targetAptId}/status?status=${targetStatus}`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(async res => {
                 if (res.ok) {
+                    page.globals.closeOverdueModal();
                     fetchOverdue();
-                    // update badge in layout
                     if (typeof fetchOverdueCount === 'function') fetchOverdueCount();
+                } else {
+                    Toastify({ text: await readApiMessage(res) || "Không thể cập nhật trạng thái", style: { background: "#ef4444" } }).showToast();
+                    btn.disabled = false;
+                    btn.innerText = targetStatus === 'COMPLETED' ? 'Xác nhận đã khám' : 'Xác nhận không đến';
                 }
-                else Toastify({ text: await readApiMessage(res) || "Không thể cập nhật trạng thái", style: { background: "#ef4444" } }).showToast();
             })
-            .catch(() => Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast());
+            .catch(() => {
+                Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast();
+                btn.disabled = false;
+                btn.innerText = targetStatus === 'COMPLETED' ? 'Xác nhận đã khám' : 'Xác nhận không đến';
+            });
         };
+
+        page.globals.updateStatus = page.globals.openOverdueModal;
 
         fetchOverdue();
 
-    page.expose({fetchOverdue});
+    page.expose({fetchOverdue, openOverdueModal: page.globals.openOverdueModal, closeOverdueModal: page.globals.closeOverdueModal, confirmOverdueStatus: page.globals.confirmOverdueStatus});
 });
 </script>
 }
-

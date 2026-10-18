@@ -617,7 +617,6 @@
         <div id="booking-section" class="booking-slots">
             <h3 class="booking-title">Lịch khám của bác sĩ</h3>
 
-            <p class="booking-range-note">Chọn lịch từ hôm nay đến 30 ngày tới.</p>
             <div class="week-tabs" id="bookingWeeks" role="group" aria-label="Chọn tuần khám"></div>
 
             <div id="dayGrid" class="day-grid"></div>
@@ -810,7 +809,7 @@
         for (let i = 0; i < Math.ceil(allDays.length / 7); i++) {
             const button = document.createElement('button'); button.type = 'button';
             button.id = 'week' + i + 'Btn'; button.className = 'week-tab-btn' + (i === 0 ? ' week-tab-btn--active' : '');
-            button.textContent = i === 0 ? '7 ngày đầu' : 'Tuần ' + (i + 1);
+            button.textContent = i === 0 ? 'Tuần đầu' : 'Tuần ' + (i + 1);
             button.setAttribute('aria-pressed', String(i === 0)); button.onclick = () => setWeek(i); weeks.append(button);
         }
 
