@@ -156,92 +156,8 @@
 }
 .mobile-result-count { font-size: 13px; color: #64748b; font-weight: 600; }
 
-/* ===== BOTTOM SHEET ===== */
-.filter-sheet-overlay {
-  display: none;
-  position: fixed; inset: 0; z-index: 2000;
-  background: rgba(15,23,42,0.5);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-}
-.filter-sheet-overlay.open { display: block; }
-.filter-sheet {
-  position: absolute; left: 0; right: 0; bottom: 0;
-  background: #fff;
-  border-radius: 24px 24px 0 0;
-  max-height: 85dvh;
-  overflow-y: auto;
-  padding: 0 0 32px;
-  box-shadow: 0 -8px 32px rgba(15,23,42,0.15);
-  transform: translateY(100%);
-  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.filter-sheet.open { transform: translateY(0); }
-.filter-sheet::-webkit-scrollbar { width: 4px; }
-.filter-sheet::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-.filter-sheet-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #f1f5f9;
-  position: sticky; top: 0; background: #fff; z-index: 1;
-}
-.filter-sheet-handle {
-  width: 40px; height: 4px; background: #e2e8f0;
-  border-radius: 2px; margin: 12px auto 0;
-}
-.filter-sheet-title { font-size: 18px; font-weight: 800; color: #0f172a; margin: 0; }
-.filter-sheet-close {
-  width: 36px; height: 36px; border: none; background: #f1f5f9;
-  border-radius: 10px; cursor: pointer; font-size: 18px; color: #475569;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.2s;
-}
-.filter-sheet-close:hover { background: #e2e8f0; }
-.filter-sheet-body { padding: 20px 24px 0; }
-.filter-sheet-apply {
-  display: block; width: calc(100% - 48px); margin: 20px 24px 0;
-  padding: 14px 0; border-radius: 14px; border: none;
-  background: linear-gradient(135deg, #6366f1, #8b5cf6);
-  color: white; font-size: 16px; font-weight: 800;
-  cursor: pointer; transition: all 0.2s; font-family: var(--font-app);
-  box-shadow: 0 8px 20px rgba(99,102,241,0.3);
-}
-.filter-sheet-apply:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(99,102,241,0.4); }
-.filter-sheet-reset {
-  display: block; width: calc(100% - 48px); margin: 10px 24px 0;
-  padding: 12px 0; border-radius: 14px; border: 1.5px solid #e2e8f0;
-  background: #f8fafc; color: #475569; font-size: 14px; font-weight: 700;
-  cursor: pointer; transition: all 0.2s; font-family: var(--font-app);
-}
-.filter-sheet-reset:hover { border-color: #6366f1; color: #6366f1; }
-
-@@media (max-width: 768px) {
-  .hero-wrapper { padding: 0 16px; }
-  .hero { padding: 32px 24px; border-radius: 24px; flex-direction: column; gap: 20px; }
-  .hero-title { font-size: 24px; text-align: center; }
-  .hero-desc { text-align: center; }
-  .search-wrap { width: 100%; }
-  .main { flex-direction: column; gap: 20px; padding: 0 16px; }
-  .grid-doctors { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; }
-  /* Doctor card on mobile — horizontal compact layout */
-  .doc-card { flex-direction: row; border-radius: 16px; height: auto; }
-  .avatar-wrap { width: 90px; height: auto; min-height: 90px; flex-shrink: 0; border-bottom: none; border-right: 1px solid #f1f5f9; border-radius: 16px 0 0 16px; }
-  .card-body { padding: 14px 16px; }
-  .doc-name { font-size: 15px; height: auto; white-space: normal; }
-  .doc-spec { font-size: 12px; height: auto; }
-  .doc-facility { font-size: 11px; height: auto; }
-  .meta-row-stats { flex-wrap: wrap; }
-  .book-btn { padding: 10px 0; font-size: 13px; border-radius: 10px; }
-}
-
-@@media (max-width: 1024px) {
-  .sidebar { display: none !important; } /* Hidden; opened via bottom sheet */
-  .mobile-filter-bar { display: flex; }
-  .page { padding-top: 64px; }
-  .main { padding: 0 16px; margin-top: 16px; }
-  .grid-doctors { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; width: 100%; }
-}
-
+/* Mobile Sidebar drawer elements */
+.sidebar-mobile-header, .sidebar-mobile-actions, .sidebar-backdrop { display: none; }
 
 /* Card Styling Ported */
 .doc-card { 
@@ -438,6 +354,195 @@
   color: #fff; 
   box-shadow: 0 8px 20px rgba(99,102,241,0.28); 
 }
+
+/* ===== RESPONSIVE & MOBILE BOTTOM SHEET ===== */
+@@media (max-width: 1024px) {
+  .hero-wrapper { padding: 16px 20px; }
+  .hero { padding: 36px 28px; border-radius: 24px; }
+  .hero-title { font-size: 28px; }
+  .search-wrap { width: 100%; }
+  .main { flex-direction: column; padding: 0 20px; margin: 20px auto 60px; }
+  .mobile-filter-bar { display: flex; }
+
+  /* Backdrop */
+  .sidebar-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    z-index: 9998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .sidebar-backdrop.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  /* Sidebar transformed into Bottom Sheet */
+  .sidebar {
+    position: fixed;
+    inset: auto 0 0 0;
+    width: 100%;
+    max-width: 100%;
+    height: 85vh;
+    max-height: 85vh;
+    border-radius: 24px 24px 0 0;
+    z-index: 9999;
+    overflow-y: auto;
+    box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
+    transform: translateY(105%);
+    transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+    padding: 20px 20px 40px;
+    box-sizing: border-box;
+    top: auto;
+  }
+  .sidebar.open {
+    transform: translateY(0);
+  }
+
+  .sidebar-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    position: sticky;
+    top: -20px;
+    background: #fff;
+    z-index: 10;
+    padding-top: 6px;
+  }
+  .sidebar-mobile-handle {
+    width: 36px;
+    height: 4px;
+    background: #cbd5e1;
+    border-radius: 2px;
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .sidebar-mobile-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    position: sticky;
+    bottom: -40px;
+    background: #fff;
+    padding: 14px 0 16px;
+    border-top: 1px solid #f1f5f9;
+    z-index: 10;
+  }
+}
+
+@@media (max-width: 768px) {
+  .hero-wrapper { padding: 12px 14px; }
+  .hero { padding: 24px 18px; border-radius: 20px; }
+  .hero-title { font-size: 22px; }
+  .hero-desc { font-size: 14px; }
+  .main { padding: 0 14px; margin: 16px auto 60px; }
+
+  /* COMPACT DOCTOR CARD FOR MOBILE */
+  .grid-doctors {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .doc-card {
+    flex-direction: row;
+    align-items: stretch;
+    height: auto;
+    min-height: 135px;
+    border-radius: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  }
+  .doc-card:hover {
+    transform: none;
+  }
+  .avatar-wrap {
+    width: 105px;
+    min-width: 105px;
+    max-width: 105px;
+    height: auto;
+    min-height: 135px;
+    border-bottom: none;
+    border-right: 1px solid #f1f5f9;
+  }
+  .initials-avatar {
+    font-size: 30px;
+  }
+  .card-body {
+    padding: 10px 12px;
+    justify-content: space-between;
+    gap: 4px;
+    border-top: none;
+  }
+  .avail-badge {
+    margin-bottom: 0;
+  }
+  .avail-badge span:last-child {
+    font-size: 11.5px !important;
+  }
+  .doc-name {
+    font-size: 15px;
+    height: auto;
+    line-height: 1.25;
+    margin-bottom: 1px;
+    white-space: normal;
+  }
+  .doc-spec {
+    font-size: 12px;
+    height: auto;
+    line-height: 1.2;
+    margin-top: 1px;
+  }
+  .doc-facility {
+    font-size: 11px;
+    height: auto;
+    line-height: 15px;
+    margin-top: 2px;
+  }
+  .card-bottom-wrap {
+    padding-top: 6px;
+    gap: 6px;
+  }
+  .card-meta-container {
+    gap: 4px;
+  }
+  .meta-row-stats {
+    gap: 6px;
+  }
+  .meta-pill {
+    height: 25px;
+    padding: 2px 7px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+  .meta-pill.fee {
+    height: 25px;
+    padding: 2px 7px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+  .fee-val {
+    font-size: 11.5px;
+  }
+  .fee-unit {
+    font-size: 10px;
+  }
+  .book-btn {
+    padding: 6px 0;
+    font-size: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
+}
 </style>
 
 <div class="page">
@@ -468,25 +573,21 @@
         </div>
     </div>
 
-    <!-- BOTTOM SHEET OVERLAY -->
-    <div class="filter-sheet-overlay" id="filterSheetOverlay" onclick="closeFilterSheet()">
-        <div class="filter-sheet" id="filterSheet" onclick="event.stopPropagation()">
-            <div class="filter-sheet-handle"></div>
-            <div class="filter-sheet-header">
-                <h2 class="filter-sheet-title">🔍 Bộ lọc tìm kiếm</h2>
-                <button type="button" class="filter-sheet-close" onclick="closeFilterSheet()" aria-label="Đóng bộ lọc">✕</button>
-            </div>
-            <div class="filter-sheet-body" id="filterSheetBody">
-                <!-- Filter content cloned from sidebar by JS -->
-            </div>
-            <button type="button" class="filter-sheet-apply" onclick="closeFilterSheet()">✓ Áp dụng bộ lọc</button>
-            <button type="button" class="filter-sheet-reset" onclick="clearFilters(); closeFilterSheet();">✕ Xóa tất cả bộ lọc</button>
-        </div>
-    </div>
+    <!-- SIDEBAR BACKDROP (mobile) -->
+    <div class="sidebar-backdrop" id="sidebarBackdrop" onclick="closeFilterSheet()"></div>
 
     <div class="main">
-        <!-- SIDEBAR -->
-        <aside class="sidebar">
+        <!-- SIDEBAR (desktop left column, mobile bottom sheet drawer) -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-mobile-handle"></div>
+            <div class="sidebar-mobile-header">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-size: 18px;">🔍</span>
+                    <h2 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">Bộ lọc tìm kiếm</h2>
+                </div>
+                <button type="button" onclick="closeFilterSheet()" aria-label="Đóng bộ lọc" style="background: #f1f5f9; border: none; width: 34px; height: 34px; border-radius: 50%; font-size: 16px; cursor: pointer; color: #64748b; font-weight: 700; display: flex; align-items: center; justify-content: center;">✕</button>
+            </div>
+
             <div class="sidebar-group">
                 <h3>
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
@@ -534,6 +635,12 @@
                     </div>
                     <p style="font-size: 11px; color: #94a3b8; margin-top: 12px; text-align: center; font-weight: 500;">Khoảng giá tối ưu cho bạn</p>
                 </div>
+            </div>
+
+            <!-- Mobile actions -->
+            <div class="sidebar-mobile-actions">
+                <button type="button" onclick="closeFilterSheet()" style="flex: 2; padding: 12px; background: #6366f1; color: #fff; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer;">✓ Áp dụng bộ lọc</button>
+                <button type="button" onclick="clearFilters(); closeFilterSheet();" style="flex: 1; padding: 12px; background: #f1f5f9; color: #64748b; border: none; border-radius: 12px; font-weight: 700; font-size: 14px; cursor: pointer;">✕ Đặt lại</button>
             </div>
         </aside>
 
@@ -955,37 +1062,20 @@
 
         // ===== BOTTOM SHEET FILTER (mobile) =====
         window.openFilterSheet = function() {
-            const overlay = document.getElementById('filterSheetOverlay');
-            const sheet = document.getElementById('filterSheet');
-            const body = document.getElementById('filterSheetBody');
-            // Clone sidebar content into sheet body
-            const sidebar = document.querySelector('.sidebar');
-            if (sidebar && body) {
-                body.innerHTML = sidebar.innerHTML;
-                // Re-attach province select event inside sheet
-                const sheetProvince = body.querySelector('#provinceSelect');
-                if (sheetProvince) {
-                    sheetProvince.value = state.province;
-                    sheetProvince.onchange = (e) => {
-                        state.province = e.target.value;
-                        elProvince.value = e.target.value;
-                        state.facilityId = null;
-                        state.page = 0;
-                        renderFacilities();
-                        triggerFetch();
-                    };
-                }
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar && backdrop) {
+                backdrop.classList.add('open');
+                sidebar.classList.add('open');
+                document.body.style.overflow = 'hidden';
             }
-            overlay.classList.add('open');
-            requestAnimationFrame(() => sheet.classList.add('open'));
-            document.body.style.overflow = 'hidden';
         };
 
         window.closeFilterSheet = function() {
-            const overlay = document.getElementById('filterSheetOverlay');
-            const sheet = document.getElementById('filterSheet');
-            sheet.classList.remove('open');
-            setTimeout(() => overlay.classList.remove('open'), 350);
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('sidebarBackdrop');
+            if (sidebar) sidebar.classList.remove('open');
+            if (backdrop) backdrop.classList.remove('open');
             document.body.style.overflow = '';
         };
 

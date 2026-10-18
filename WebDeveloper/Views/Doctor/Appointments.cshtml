@@ -77,6 +77,7 @@
         <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
         <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
     </div>
+    <div class="pagination" id="doctorAptPagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 32px;"></div>
 </div>
 
 <!-- Result Modal -->
@@ -295,10 +296,14 @@ DocBookingPage.mount(page => {
             return texts[status] || status;
         }
 
+        let currentAptPage = 0;
+        const aptPageSize = 8;
+
         page.globals.setFilter = function(filter, btn) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = filter;
+            currentAptPage = 0;
             renderAppointments();
         };
 
@@ -309,6 +314,8 @@ DocBookingPage.mount(page => {
                 <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
                 <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
             `;
+            const pagi = document.getElementById('doctorAptPagination');
+            if (pagi) pagi.style.display = 'none';
             
             fetch('/api/v1/doctor/appointment?page=0&size=200', { headers: { 'Authorization': `Bearer ${token}` } })
             .then(res => res.json())
@@ -323,6 +330,7 @@ DocBookingPage.mount(page => {
 
         function renderAppointments() {
             const filtered = currentFilter === 'ALL' ? allAppointments : allAppointments.filter(a => a.bookingStatus === currentFilter);
+            const pagi = document.getElementById('doctorAptPagination');
             
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -332,11 +340,19 @@ DocBookingPage.mount(page => {
                         <p style="color: #64748b; margin-top: 8px;">Bạn hiện không có yêu cầu nào trong danh mục này.</p>
                     </div>
                 `;
+                if (pagi) pagi.style.display = 'none';
                 return;
             }
 
+            const totalPages = Math.ceil(filtered.length / aptPageSize);
+            if (currentAptPage >= totalPages) currentAptPage = totalPages - 1;
+            if (currentAptPage < 0) currentAptPage = 0;
+
+            const start = currentAptPage * aptPageSize;
+            const pageItems = filtered.slice(start, start + aptPageSize);
+
             let html = '';
-            filtered.forEach(apt => {
+            pageItems.forEach(apt => {
                 const sStyle = getStatusStyle(apt.bookingStatus);
                 let actionsHtml = '';
                 const started = visitHasStarted(apt);
@@ -400,7 +416,28 @@ DocBookingPage.mount(page => {
                 `;
             });
             container.innerHTML = html;
+
+            // Render pagination
+            if (totalPages <= 1) {
+                if (pagi) pagi.style.display = 'none';
+                return;
+            }
+
+            pagi.style.display = 'flex';
+            let phtml = `<button type="button" class="filter-btn" style="padding: 8px 14px; min-width: 40px;" ${currentAptPage === 0 ? 'disabled' : ''} onclick="setDoctorAptPage(${currentAptPage - 1})">←</button>`;
+            for (let i = 0; i < totalPages; i++) {
+                const isActive = i === currentAptPage;
+                phtml += `<button type="button" class="filter-btn ${isActive ? 'active' : ''}" style="padding: 8px 14px; min-width: 40px;" onclick="setDoctorAptPage(${i})">${i + 1}</button>`;
+            }
+            phtml += `<button type="button" class="filter-btn" style="padding: 8px 14px; min-width: 40px;" ${currentAptPage === totalPages - 1 ? 'disabled' : ''} onclick="setDoctorAptPage(${currentAptPage + 1})">→</button>`;
+            pagi.innerHTML = phtml;
         }
+
+        window.setDoctorAptPage = function(p) {
+            currentAptPage = p;
+            renderAppointments();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
 
         let currentRejectAptId = null;
 

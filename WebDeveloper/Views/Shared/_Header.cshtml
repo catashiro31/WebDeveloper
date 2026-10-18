@@ -166,25 +166,45 @@
 .hdr-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 .hdr-overlay { display: none; }
 
+.hdr-drawer-header { display: none; }
+
 @@media (max-width: 900px) {
   .hdr-container { padding: 0 20px; }
   .hdr-mobile-toggle { display: block; z-index: 202; }
-  .hdr-overlay { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; opacity: 0; visibility: hidden; transition: 0.3s; }
+  .hdr-overlay { display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
   .hdr-overlay.show { opacity: 1; visibility: visible; }
+  body.hdr-drawer-open .hdr-mobile-toggle { opacity: 0; pointer-events: none; }
   .hdr-nav-wrap {
-    position: fixed; top: 0; right: -300px; width: 280px; height: 100vh;
-    background: #fff; z-index: 201; padding: 72px 20px 24px;
-    display: flex; flex-direction: column; gap: 12px;
-    transition: right 0.3s; overflow-y: auto;
+    position: fixed; top: 0; right: -320px; width: min(300px, 85vw); height: 100dvh;
+    background: #fff; z-index: 10001; padding: 20px 20px 32px;
+    display: flex; flex-direction: column; gap: 8px;
+    transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    box-shadow: -4px 0 24px rgba(15,23,42,0.15);
   }
   .hdr-nav-wrap.show { right: 0; }
+  .hdr-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 14px; margin-bottom: 6px; border-bottom: 1px solid #f1f5f9;
+  }
+  .hdr-drawer-brand { font-size: 18px; font-weight: 800; color: #0f172a; }
+  .hdr-drawer-close {
+    width: 36px; height: 36px; border-radius: 10px; border: none;
+    background: #f1f5f9; color: #475569; font-size: 18px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+  }
+  .hdr-drawer-close:hover { background: #e2e8f0; }
   .hdr-nav { flex-direction: column; gap: 4px; margin: 0; }
-  .hdr-nav a { font-size: 15px; padding: 12px 14px; }
-  .hdr-auth { flex-direction: column; gap: 8px; width: 100%; }
+  .hdr-nav a { font-size: 15px; padding: 12px 14px; border-radius: 10px; }
+  .hdr-auth { flex-direction: column; gap: 8px; width: 100%; margin-top: 8px; }
   .hdr-btn-login, .hdr-btn-register { width: 100%; text-align: center; }
-  .hdr-user { width: 100%; }
-  .hdr-user-btn { width: 100%; justify-content: center; }
-  .hdr-dropdown { width: 100%; left: 0; right: 0; }
+  .hdr-user { width: 100%; margin-top: 8px; }
+  .hdr-user-btn { width: 100%; justify-content: space-between; border-radius: 12px; }
+  .hdr-dropdown {
+    position: static !important; width: 100% !important;
+    box-shadow: none !important; border: 1.5px solid #eef2ff !important;
+    margin-top: 8px !important; border-radius: 14px !important;
+  }
 }
 </style>
 
@@ -202,7 +222,7 @@
     </a>
 
     <!-- Mobile toggle -->
-    <button class="hdr-mobile-toggle" id="mobileToggleBtn">
+    <button class="hdr-mobile-toggle" id="mobileToggleBtn" aria-label="Mở menu">
       <div class="hdr-hamburger" id="hamburgerIcon">
         <span></span><span></span><span></span>
       </div>
@@ -210,6 +230,10 @@
     <div class="hdr-overlay" id="mobileOverlay"></div>
 
     <div class="hdr-nav-wrap" id="navWrap">
+      <div class="hdr-drawer-header">
+        <span class="hdr-drawer-brand">DocBooking</span>
+        <button type="button" class="hdr-drawer-close" id="drawerCloseBtn" aria-label="Đóng menu">✕</button>
+      </div>
       <ul class="hdr-nav">
         <li><a href="/">Trang chủ</a></li>
         <li><a href="/Portal/Doctors">Bác sĩ</a></li>
@@ -370,16 +394,18 @@
     const overlay = document.getElementById('mobileOverlay');
     const navWrap = document.getElementById('navWrap');
     const hamburger = document.getElementById('hamburgerIcon');
+    const drawerCloseBtn = document.getElementById('drawerCloseBtn');
 
-    if (mobileBtn) {
-      function toggleMobile() {
-        overlay.classList.toggle('show');
-        navWrap.classList.toggle('show');
-        hamburger.classList.toggle('open');
-      }
-      mobileBtn.addEventListener('click', toggleMobile);
-      overlay.addEventListener('click', toggleMobile);
+    function toggleMobile() {
+      const isOpen = navWrap.classList.toggle('show');
+      overlay.classList.toggle('show', isOpen);
+      hamburger.classList.toggle('open', isOpen);
+      document.body.classList.toggle('hdr-drawer-open', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
     }
+    if (mobileBtn) mobileBtn.addEventListener('click', toggleMobile);
+    if (overlay) overlay.addEventListener('click', toggleMobile);
+    if (drawerCloseBtn) drawerCloseBtn.addEventListener('click', toggleMobile);
   });
 
 </script>

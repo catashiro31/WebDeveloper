@@ -81,13 +81,22 @@
 }
 
 /* ── Tablet / Mobile: Off-canvas Drawer (≤ 1024px) ── */
+.sidebar-mobile-only { display: none !important; }
+
 @media (max-width: 1024px) {
     /* Show the hamburger that lives inside the header */
     .workspace-menu { display: flex; }
 
-    /* Reset the header — NO more padding-left hack */
-    .role-header { padding: 12px 16px !important; min-height: 64px; flex-wrap: nowrap; }
+    /* Clean, non-colliding header on mobile */
+    .role-header { padding: 10px 14px !important; min-height: 60px; flex-wrap: nowrap !important; }
     .role-header h1 { font-size: 20px !important; }
+    .role-header-actions { gap: 8px !important; flex-shrink: 0; }
+    .role-header-actions .role-nav-link { display: none !important; }
+    .role-header-title-wrap { display: none !important; }
+    .role-user-pill .role-user-name { display: none !important; }
+    .role-user-pill .role-logout-btn { display: none !important; }
+    .role-header-actions .role-logout-btn { display: none !important; }
+    .role-user-pill { padding: 2px 4px !important; background: transparent !important; border: none !important; }
 
     /* Shell becomes single-column block */
     .role-shell { display: block !important; padding: 16px !important; width: 100%; }
@@ -109,6 +118,7 @@
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.3s;
     }
     .role-shell > aside > * { position: static !important; max-height: none !important; box-shadow: none !important; }
+    .sidebar-mobile-only { display: flex !important; }
 
     /* Close (X) button inside sidebar on mobile */
     .workspace-menu-close {
@@ -139,11 +149,7 @@
 @media (max-width: 640px) {
     .role-shell { padding: 10px !important; }
     .role-header { gap: 8px; padding: 10px 12px !important; }
-    .role-header > div:last-child { width: auto; gap: 6px !important; }
-    .role-header > div:last-child > div { padding: 4px !important; }
-    .role-header > div:last-child a { padding: 6px 10px !important; font-size: 12px !important; }
-    /* Hide verbose text labels in header, keep avatar/icon */
-    .role-header > div:last-child > div[style*="text-align: right"] { display: none; }
+    .role-header-actions { gap: 6px !important; }
     .role-content-card, #mainContentArea { padding: 14px !important; border-radius: 14px !important; }
     #workspaceContent h1 { font-size: 22px !important; }
     #workspaceContent h2 { font-size: 20px !important; }

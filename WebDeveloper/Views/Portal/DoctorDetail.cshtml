@@ -468,6 +468,142 @@
   color: #fff; 
   box-shadow: 0 8px 20px rgba(99,102,241,0.28); 
 }
+
+/* ===== TOP RATED PAGINATION & MOBILE COMPACT ===== */
+.top-rated-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 28px;
+}
+.top-rated-pagination button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  height: 42px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #fff;
+  color: #475569;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: var(--font-app);
+}
+.top-rated-pagination button:hover:not(:disabled) {
+  border-color: #6366f1;
+  color: #6366f1;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(99,102,241,0.15);
+}
+.top-rated-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.top-rated-pagination button.active {
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 8px 18px rgba(99,102,241,0.3);
+}
+
+@@media (max-width: 768px) {
+  .carousel-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .carousel-item {
+    width: 100%;
+  }
+  .carousel-item .doc-card {
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 135px;
+    border-radius: 18px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  }
+  .carousel-item .avatar-wrap {
+    width: 105px;
+    min-width: 105px;
+    max-width: 105px;
+    height: auto;
+    min-height: 135px;
+    border-bottom: none;
+    border-right: 1px solid #f1f5f9;
+  }
+  .carousel-item .initials-avatar {
+    font-size: 30px;
+  }
+  .carousel-item .card-body {
+    padding: 10px 12px;
+    justify-content: space-between;
+    gap: 4px;
+    border-top: none;
+  }
+  .carousel-item .avail-badge span:last-child {
+    font-size: 11.5px !important;
+  }
+  .carousel-item .card-doc-name {
+    font-size: 15px;
+    height: auto;
+    line-height: 1.25;
+    margin-bottom: 1px;
+    white-space: normal;
+  }
+  .carousel-item .doc-spec {
+    font-size: 12px;
+    height: auto;
+    line-height: 1.2;
+    margin-top: 1px;
+  }
+  .carousel-item .doc-facility {
+    font-size: 11px;
+    height: auto;
+    line-height: 15px;
+    margin-top: 2px;
+  }
+  .carousel-item .card-bottom-wrap {
+    padding-top: 6px;
+    gap: 6px;
+  }
+  .carousel-item .card-meta-container {
+    gap: 4px;
+  }
+  .carousel-item .meta-row-stats {
+    gap: 6px;
+  }
+  .carousel-item .meta-pill {
+    height: 25px;
+    padding: 2px 7px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+  .carousel-item .meta-pill.fee {
+    height: 25px;
+    padding: 2px 7px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+  .carousel-item .fee-val {
+    font-size: 11.5px;
+  }
+  .carousel-item .fee-unit {
+    font-size: 10px;
+  }
+  .carousel-item .book-btn {
+    padding: 6px 0;
+    font-size: 12px;
+    border-radius: 8px;
+    font-weight: 700;
+  }
+}
 </style>
 
 <div class="appt-page">
@@ -785,10 +921,16 @@
         {
             <section style="margin-bottom: 60px;">
                 <div class="section-row">
-                    <h2 style="font-size: 24px; font-weight: 800; margin: 0;">Bác sĩ uy tín</h2>
-                    <a href="/Portal/Doctors" style="color: #6366f1; font-weight: 600; text-decoration: none;">Xem tất cả</a>
+                    <div>
+                        <h2 style="font-size: 24px; font-weight: 800; margin: 0; color: #0f172a;">Bác sĩ uy tín</h2>
+                        <p style="margin: 4px 0 0; font-size: 14px; color: #64748b;">Các chuyên gia hàng đầu được bệnh nhân tin tưởng nhất</p>
+                    </div>
+                    <a href="/Portal/Doctors" style="color: #6366f1; font-weight: 700; text-decoration: none; font-size: 14px; display: flex; align-items: center; gap: 4px;">
+                        Xem tất cả
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
                 </div>
-                <div class="carousel-container">
+                <div class="carousel-container" id="topRatedContainer">
                     @foreach (var d in topRated)
                     {
                         var dPhoto = !string.IsNullOrEmpty(d.AvatarUrl) ? d.AvatarUrl : "/images/placeholder.jpg";
@@ -847,6 +989,8 @@
                         </div>
                     }
                 </div>
+                <!-- Pagination for Top Rated -->
+                <div class="top-rated-pagination" id="topRatedPagination"></div>
             </section>
         }
     </div>
@@ -1151,5 +1295,63 @@
         if (isAuth && userRole === 'PATIENT') {
             fetchRelatives();
         }
+
+        // ===== TOP RATED PAGINATION =====
+        function initTopRatedPagination() {
+            const container = document.getElementById('topRatedContainer');
+            const pagination = document.getElementById('topRatedPagination');
+            if (!container || !pagination) return;
+
+            const items = Array.from(container.querySelectorAll('.carousel-item'));
+            if (items.length === 0) return;
+
+            function getPageSize() {
+                return window.innerWidth <= 768 ? 2 : 3;
+            }
+
+            let currentTopRatedPage = 0;
+
+            function renderTopRatedPage(page) {
+                const pageSize = getPageSize();
+                const totalPages = Math.ceil(items.length / pageSize);
+                if (totalPages <= 1) {
+                    pagination.style.display = 'none';
+                    items.forEach(it => it.style.display = 'flex');
+                    return;
+                }
+
+                pagination.style.display = 'flex';
+                if (page < 0) page = 0;
+                if (page >= totalPages) page = totalPages - 1;
+                currentTopRatedPage = page;
+
+                const start = page * pageSize;
+                const end = start + pageSize;
+
+                items.forEach((item, idx) => {
+                    if (idx >= start && idx < end) {
+                        item.style.display = 'flex';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                let html = `<button type="button" ${page === 0 ? 'disabled' : ''} onclick="changeTopRatedPage(${page - 1})">←</button>`;
+                for (let i = 0; i < totalPages; i++) {
+                    html += `<button type="button" class="${page === i ? 'active' : ''}" onclick="changeTopRatedPage(${i})">${i + 1}</button>`;
+                }
+                html += `<button type="button" ${page === totalPages - 1 ? 'disabled' : ''} onclick="changeTopRatedPage(${page + 1})">→</button>`;
+                pagination.innerHTML = html;
+            }
+
+            window.changeTopRatedPage = function(p) {
+                renderTopRatedPage(p);
+            };
+
+            renderTopRatedPage(0);
+            window.addEventListener('resize', () => renderTopRatedPage(currentTopRatedPage));
+        }
+
+        initTopRatedPagination();
     </script>
 }

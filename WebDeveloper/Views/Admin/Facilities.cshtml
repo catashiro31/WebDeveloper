@@ -98,6 +98,7 @@
         <button type="button" class="btn-card-action" onclick="fetchFacilities()">Thử lại</button>
     </div>
     <div id="facilitiesContainer" class="facility-grid" style="display: none;"></div>
+    <div class="pagination" id="facilityPagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 32px;"></div>
 </div>
 
 <!-- Modal -->
@@ -186,16 +187,22 @@ DocBookingPage.mount(page => {
     const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
 
         let searchTimer, searchVersion = 0;
-        document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => {  fetchFacilities(); }, 250); });
-        document.getElementById('provinceFilter').addEventListener('change', () => { fetchFacilities(); });
+        document.getElementById('adminSearch').addEventListener('input', () => { 
+            clearTimeout(searchTimer); 
+            searchTimer = setTimeout(() => { currentFacPage = 0; fetchFacilities(); }, 250); 
+        });
+        document.getElementById('provinceFilter').addEventListener('change', () => { currentFacPage = 0; fetchFacilities(); });
 
         page.globals.resetFacilityFilters = function() {
             document.getElementById('adminSearch').value = '';
             document.getElementById('provinceFilter').value = '';
+            currentFacPage = 0;
             fetchFacilities();
         };
 
         let facilitiesList = [];
+        let currentFacPage = 0;
+        const facPageSize = 6;
         let editingFacility = null;
         let imageFile = null;
         let licenseFile = null;
@@ -222,6 +229,8 @@ DocBookingPage.mount(page => {
             document.getElementById('emptyState').style.display = 'none';
             document.getElementById('loadError').style.display = 'none';
             document.getElementById('facilitiesContainer').style.display = 'none';
+            const pagi = document.getElementById('facilityPagination');
+            if (pagi) pagi.style.display = 'none';
 
             let url = '/api/v1/admin/facilities?search=' + encodeURIComponent(document.getElementById('adminSearch').value.trim());
             const province = document.getElementById('provinceFilter').value;
@@ -244,69 +253,103 @@ DocBookingPage.mount(page => {
                     return;
                 }
 
-                let html = '';
-                facilitiesList.forEach(fac => {
-                    const id = fac.facilityId || fac.id;
-                    const name = fac.facilityName || fac.name || '';
-                    const verified = fac.verified ?? fac.isVerified;
-                    const address = fac.address ? (fac.province ? `${fac.address}, ${fac.province}` : fac.address) : (fac.province || 'Chưa cập nhật');
-                    
-                    html += `
-                        <div class="facility-card">
-                            ${fac.imageUrl 
-                                ? `<img src="${fac.imageUrl}" alt="${name}" class="facility-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />`
-                                : ``
-                            }
-                            <div class="facility-placeholder" style="display: ${fac.imageUrl ? 'none' : 'flex'}">
-                                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="4" y="2" width="16" height="20" rx="3" fill="#6366f1" fill-opacity="0.1"/>
-                                    <rect x="4" y="2" width="16" height="20" rx="3" stroke="#6366f1" stroke-width="2" stroke-dasharray="4 2"/>
-                                    <rect x="8" y="7" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
-                                    <rect x="8" y="11" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
-                                    <rect x="8" y="15" width="4" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
-                                    <circle cx="18" cy="18" r="5" fill="#6366f1"/>
-                                    <path d="M18 15.5V20.5M15.5 18H20.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                                </svg>
-                            </div>
-                            
-                            <div class="facility-content">
-                                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
-                                    <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">${name}</h3>
-                                    <span class="facility-verify-badge ${verified ? 'verified' : ''}">${verified ? 'Đã xác minh' : 'Chờ xác minh'}</span>
-                                </div>
-                                <div style="font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                    ${address}
-                                </div>
-                                <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 24px; flex: 1;">
-                                    ${fac.description || 'Không có mô tả thông tin cho cơ sở y tế này.'}
-                                </p>
-                                
-                                ${fac.licenseUrl ? `
-                                <div style="margin-bottom: 16px;">
-                                    <a href="${fac.licenseUrl}" target="_blank" style="font-size: 12px; color: #6366f1; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #eef2ff; border-radius: 8px; border: 1px solid #e0e7ff; text-decoration: none;">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                                        Giấy phép hoạt động
-                                    </a>
-                                </div>` : ''}
-                                
-                                <div class="card-actions">
-                                    ${!verified ? `<button type="button" class="btn-verify-quick" onclick="verifyFacility(${id})">Xác minh nhanh</button>` : ''}
-                                    <button type="button" class="btn-card-action" onclick='openModal(${JSON.stringify(fac).replace(/'/g, "&apos;")})'>Chỉnh sửa</button>
-                                    <button type="button" class="btn-card-action" style="color: #ef4444;" onclick="deleteFacility(${id})">Gỡ bỏ</button>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                document.getElementById('facilitiesContainer').innerHTML = html;
-                document.getElementById('facilitiesContainer').style.display = 'grid';
+                renderFacilitiesPage();
             })
             .catch(() => {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('loadError').style.display = 'block';
             });
         }
+
+        function renderFacilitiesPage() {
+            const container = document.getElementById('facilitiesContainer');
+            const pagi = document.getElementById('facilityPagination');
+            const totalPages = Math.ceil(facilitiesList.length / facPageSize);
+            if (currentFacPage >= totalPages) currentFacPage = totalPages - 1;
+            if (currentFacPage < 0) currentFacPage = 0;
+
+            const start = currentFacPage * facPageSize;
+            const pageItems = facilitiesList.slice(start, start + facPageSize);
+
+            let html = '';
+            pageItems.forEach(fac => {
+                const id = fac.facilityId || fac.id;
+                const name = fac.facilityName || fac.name || '';
+                const verified = fac.verified ?? fac.isVerified;
+                const address = fac.address ? (fac.province ? `${fac.address}, ${fac.province}` : fac.address) : (fac.province || 'Chưa cập nhật');
+                
+                html += `
+                    <div class="facility-card">
+                        ${fac.imageUrl 
+                            ? `<img src="${fac.imageUrl}" alt="${name}" class="facility-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />`
+                            : ``
+                        }
+                        <div class="facility-placeholder" style="display: ${fac.imageUrl ? 'none' : 'flex'}">
+                            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <rect x="4" y="2" width="16" height="20" rx="3" fill="#6366f1" fill-opacity="0.1"/>
+                                <rect x="4" y="2" width="16" height="20" rx="3" stroke="#6366f1" stroke-width="2" stroke-dasharray="4 2"/>
+                                <rect x="8" y="7" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                                <rect x="8" y="11" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                                <rect x="8" y="15" width="4" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/>
+                                <circle cx="18" cy="18" r="5" fill="#6366f1"/>
+                                <path d="M18 15.5V20.5M15.5 18H20.5" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        
+                        <div class="facility-content">
+                            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
+                                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">${name}</h3>
+                                <span class="facility-verify-badge ${verified ? 'verified' : ''}">${verified ? 'Đã xác minh' : 'Chờ xác minh'}</span>
+                            </div>
+                            <div style="font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                ${address}
+                            </div>
+                            <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 24px; flex: 1;">
+                                ${fac.description || 'Không có mô tả thông tin cho cơ sở y tế này.'}
+                            </p>
+                            
+                            ${fac.licenseUrl ? `
+                            <div style="margin-bottom: 16px;">
+                                <a href="${fac.licenseUrl}" target="_blank" style="font-size: 12px; color: #6366f1; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #eef2ff; border-radius: 8px; border: 1px solid #e0e7ff; text-decoration: none;">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                                    Giấy phép hoạt động
+                                </a>
+                            </div>` : ''}
+                            
+                            <div class="card-actions">
+                                ${!verified ? `<button type="button" class="btn-verify-quick" onclick="verifyFacility(${id})">Xác minh nhanh</button>` : ''}
+                                <button type="button" class="btn-card-action" onclick='openModal(${JSON.stringify(fac).replace(/'/g, "&apos;")})'>Chỉnh sửa</button>
+                                <button type="button" class="btn-card-action" style="color: #ef4444;" onclick="deleteFacility(${id})">Gỡ bỏ</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+            container.style.display = 'grid';
+
+            // Pagination
+            if (totalPages <= 1) {
+                if (pagi) pagi.style.display = 'none';
+                return;
+            }
+
+            pagi.style.display = 'flex';
+            let phtml = `<button type="button" class="btn-card-action" style="padding: 8px 14px; min-width: 40px;" ${currentFacPage === 0 ? 'disabled' : ''} onclick="setFacilityPage(${currentFacPage - 1})">←</button>`;
+            for (let i = 0; i < totalPages; i++) {
+                const isActive = i === currentFacPage;
+                phtml += `<button type="button" class="btn-card-action" style="padding: 8px 14px; min-width: 40px; ${isActive ? 'background: #6366f1; color: white; border-color: #6366f1; font-weight: 800;' : ''}" onclick="setFacilityPage(${i})">${i + 1}</button>`;
+            }
+            phtml += `<button type="button" class="btn-card-action" style="padding: 8px 14px; min-width: 40px;" ${currentFacPage === totalPages - 1 ? 'disabled' : ''} onclick="setFacilityPage(${currentFacPage + 1})">→</button>`;
+            pagi.innerHTML = phtml;
+        }
+
+        window.setFacilityPage = function(p) {
+            currentFacPage = p;
+            renderFacilitiesPage();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
 
         page.globals.openModal = function(fac = null) {
             editingFacility = fac;

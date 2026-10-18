@@ -88,6 +88,7 @@
             </tbody>
         </table>
     </div>
+    <div class="pagination" id="specPagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 24px;"></div>
 </div>
 
 <!-- Edit Modal -->
@@ -141,14 +142,21 @@ DocBookingPage.mount(page => {
     const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
 
         let searchTimer, searchVersion = 0;
-        document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => {  loadSpecialties(); }, 250); });
+        document.getElementById('adminSearch').addEventListener('input', () => { 
+            clearTimeout(searchTimer); 
+            searchTimer = setTimeout(() => { currentPage = 0; loadSpecialties(); }, 250); 
+        });
 
         let specialties = [];
+        let currentPage = 0;
+        const pageSize = 10;
 
         async function loadSpecialties() {
             const version = ++searchVersion;
             const tbody = document.getElementById('tableBody');
+            const pagi = document.getElementById('specPagination');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
+            if (pagi) pagi.style.display = 'none';
             
             try {
                 const res = await fetch('/api/v1/admin/specialties?search=' + encodeURIComponent(document.getElementById('adminSearch').value), { cache: 'no-store' });
@@ -157,33 +165,67 @@ DocBookingPage.mount(page => {
                 if (!Array.isArray(data)) throw new Error('Danh sách chuyên khoa không hợp lệ.');
                 if (version !== searchVersion) return;
                 specialties = data;
-
-                if (specialties.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #64748b;">Chưa có dữ liệu</td></tr>`;
-                } else {
-                    tbody.innerHTML = specialties.map(s => `
-                        <tr>
-                            <td>
-                                <div style="font-weight: 600; color: #64748b;">#${s.id || s.specialtyId}</div>
-                            </td>
-                            <td>
-                                <div style="font-weight: 700; color: #1e293b;">${s.name || s.specialtyName}</div>
-                            </td>
-                            <td style="max-width: 300px;">
-                                <div style="color: #475569; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.description || '-'}</div>
-                            </td>
-                            <td>
-                                <button class="btn-action btn-edit" onclick="openModal(${s.id || s.specialtyId})">Sửa</button>
-                                <button class="btn-action btn-delete" ${s.canDelete === false ? 'disabled title="Chuyên khoa đang có bác sĩ sử dụng"' : ''} onclick="deleteSpecialty(${s.id || s.specialtyId})">Xóa</button>
-                            </td>
-                        </tr>
-                    `).join('');
-                }
+                renderSpecialtiesTable();
             } catch (err) {
                 console.error(err);
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #ef4444;">Không thể tải danh sách chuyên khoa. <button type="button" class="btn-action" onclick="loadSpecialties()">Thử lại</button></td></tr>';
             }
         }
+
+        function renderSpecialtiesTable() {
+            const tbody = document.getElementById('tableBody');
+            const pagi = document.getElementById('specPagination');
+            if (specialties.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #64748b;">Chưa có dữ liệu</td></tr>`;
+                if (pagi) pagi.style.display = 'none';
+                return;
+            }
+
+            const totalPages = Math.ceil(specialties.length / pageSize);
+            if (currentPage >= totalPages) currentPage = totalPages - 1;
+            if (currentPage < 0) currentPage = 0;
+
+            const start = currentPage * pageSize;
+            const pageItems = specialties.slice(start, start + pageSize);
+
+            tbody.innerHTML = pageItems.map(s => `
+                <tr>
+                    <td>
+                        <div style="font-weight: 600; color: #64748b;">#${s.id || s.specialtyId}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 700; color: #1e293b;">${s.name || s.specialtyName}</div>
+                    </td>
+                    <td style="max-width: 300px;">
+                        <div style="color: #475569; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.description || '-'}</div>
+                    </td>
+                    <td>
+                        <button class="btn-action btn-edit" onclick="openModal(${s.id || s.specialtyId})">Sửa</button>
+                        <button class="btn-action btn-delete" ${s.canDelete === false ? 'disabled title="Chuyên khoa đang có bác sĩ sử dụng"' : ''} onclick="deleteSpecialty(${s.id || s.specialtyId})">Xóa</button>
+                    </td>
+                </tr>
+            `).join('');
+
+            // Render pagination
+            if (totalPages <= 1) {
+                if (pagi) pagi.style.display = 'none';
+                return;
+            }
+
+            pagi.style.display = 'flex';
+            let html = `<button type="button" class="btn-action" ${currentPage === 0 ? 'disabled' : ''} onclick="setSpecPage(${currentPage - 1})">←</button>`;
+            for (let i = 0; i < totalPages; i++) {
+                const isActive = i === currentPage;
+                html += `<button type="button" class="btn-action" style="${isActive ? 'background: #6366f1; color: white; border-color: #6366f1; font-weight: 800;' : ''}" onclick="setSpecPage(${i})">${i + 1}</button>`;
+            }
+            html += `<button type="button" class="btn-action" ${currentPage === totalPages - 1 ? 'disabled' : ''} onclick="setSpecPage(${currentPage + 1})">→</button>`;
+            pagi.innerHTML = html;
+        }
+
+        window.setSpecPage = function(p) {
+            currentPage = p;
+            renderSpecialtiesTable();
+        };
 
         function openModal(id = null) {
             document.getElementById('specModal').style.display = 'flex';
