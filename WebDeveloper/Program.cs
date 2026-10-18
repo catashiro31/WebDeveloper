@@ -200,4 +200,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+// Recurring sweep recovers pending appointments even if delayed-job enqueueing failed.
+RecurringJob.AddOrUpdate<IAppointmentJobService>("cancel-overdue-appointments",
+    job => job.CancelOverdueAppointments(), Cron.Minutely());
+
 app.Run();

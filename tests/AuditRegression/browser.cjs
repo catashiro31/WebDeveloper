@@ -1,0 +1,58 @@
+const {chromium}=require('playwright');
+const fs=require('fs');
+const assert=require('assert/strict');
+const fixture=JSON.parse(fs.readFileSync('/tmp/audit-browser-fixtures.json','utf8'));
+(async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_EXECUTABLE || undefined,args:['--no-sandbox']});
+ const context=await browser.newContext({baseURL:process.env.AUDIT_BASE_URL || 'http://127.0.0.1:5010'});
+ const page=await context.newPage();
+ const errors=[]; page.on('pageerror',e=>errors.push(e.message));
+ async function login(email){
+  await context.clearCookies();
+  const res=await context.request.post('/api/v1/auth/signin',{data:{email,password:'AuditTest123!'}});
+  assert.equal(res.status(),200,await res.text());
+ }
+ await login(fixture.admin);
+ await page.goto('/Admin/Appointments');
+ await page.waitForFunction(()=>document.querySelector('#tableBody .patient-name-link'));
+ let data=await (await context.request.get('/api/v1/admin/appointments?size=100')).json();
+ assert.equal(data.totalElements,fixture.allCount);
+ await page.locator('.filter-tab[data-status="CANCELLED"]').click();
+ await page.waitForFunction(()=>document.querySelectorAll('#tableBody .status-pill').length && [...document.querySelectorAll('#tableBody .status-pill')].every(e=>e.textContent.trim()==='Đã hủy'));
+ await page.locator('.filter-tab[data-status=""]').click();
+ await page.waitForFunction(()=>[...document.querySelectorAll('#tableBody .status-pill')].some(e=>e.textContent.trim()==='Hoàn thành'));
+ assert.equal(await page.locator('#tableBody .patient-name-link').count(),10);
+ console.log('PASS: admin All → Cancelled → All renders appointments and preserves filter behavior.');
+ await page.goto('/Admin/Dashboard');
+ await page.locator('#statsContent').waitFor({state:'visible'});
+ await page.locator('#statsStart').fill('2050-01-01'); await page.locator('#statsEnd').fill('2050-01-11');
+ await page.locator('#statsFilter button').click();
+ await page.waitForFunction(()=>document.querySelector('#statsPeriod').textContent.includes('2050-01-01'));
+ // Blocking fixtures cancelled the remaining confirmed appointment: completed=1, cancelled=2, no-show=1.
+ assert.equal(await page.locator('#periodAppointments').textContent(),'4');
+ assert.equal(await page.locator('#cancellationRate').textContent(),'50%');
+ assert.equal(await page.locator('#noShowRate').textContent(),'25%');
+ assert.match(await page.locator('#estimatedRevenue').textContent(),/150.000/);
+ assert.equal(await page.locator('#doctorPerformance tr').count(),1);
+ await page.locator('#statsStart').fill('2051-01-01'); await page.locator('#statsEnd').fill('2051-01-01');
+ await page.locator('#statsFilter button').click();
+ await page.waitForFunction(()=>document.querySelector('#statsPeriod').textContent.includes('2051-01-01'));
+ assert.equal(await page.locator('#periodAppointments').textContent(),'0');
+ assert.equal(await page.locator('#cancellationRate').textContent(),'0%');
+ console.log('PASS: dashboard date filters, estimated revenue, rates, performance table and empty period.');
+ await page.goto('/Admin/Specialties');
+ await page.waitForFunction(()=>document.querySelector('.btn-delete'));
+ assert.equal(await page.locator(`button[onclick="deleteSpecialty(${fixture.specialtyId})"]`).isDisabled(),true);
+ console.log('PASS: specialty in use has disabled Delete action.');
+ await login(fixture.patient);
+ await page.goto('/Patient/History');
+ await page.waitForFunction(()=>document.querySelector('#historyContainer .premium-card'));
+ assert.equal(await page.locator(`#historyContainer button[onclick="openDetail(${fixture.noResultId})"]`).count(),0);
+ assert.equal(await page.locator(`#historyContainer button[onclick="openDetail(${fixture.resultId})"]`).count(),1);
+ await page.locator(`#historyContainer button[onclick="openDetail(${fixture.resultId})"]`).click();
+ await page.waitForFunction(()=>document.querySelector('#detailContent').textContent.includes('Kết quả kiểm thử'));
+ console.log('PASS: no result button for missing result; existing result opens correct diagnosis.');
+ assert.deepEqual(errors,[]);
+ await browser.close();
+ console.log('PASS: browser checks completed without JavaScript errors.');
+})().catch(e=>{console.error(e);process.exit(1)});

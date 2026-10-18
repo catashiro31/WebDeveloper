@@ -153,12 +153,15 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         let searchTimer, searchVersion = 0;
         document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => { currentPage = 0; fetchData(); }, 250); });
         document.getElementById('filterSpecialty').addEventListener('change', () => { currentPage = 0; fetchData(); });
         document.getElementById('filterFacility').addEventListener('change', () => { currentPage = 0; fetchData(); });
 
-        window.resetDoctorFilters = function() {
+        page.globals.resetDoctorFilters = function() {
             document.getElementById('adminSearch').value = '';
             document.getElementById('filterSpecialty').value = '';
             document.getElementById('filterFacility').value = '';
@@ -328,7 +331,7 @@
             .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
         }
 
-        window.viewDetail = function(id) {
+        page.globals.viewDetail = function(id) {
             document.getElementById('detailModal').classList.add('active');
             document.getElementById('detailLoading').style.display = 'block';
             document.getElementById('detailContent').style.display = 'none';
@@ -400,9 +403,9 @@
             });
         };
 
-        window.closeDetailModal = () => document.getElementById('detailModal').classList.remove('active');
+        page.globals.closeDetailModal = () => document.getElementById('detailModal').classList.remove('active');
 
-        window.approveDoctor = function(id) {
+        page.globals.approveDoctor = function(id) {
             if (!confirm("Phê duyệt bác sĩ này?")) return;
             fetch(`/api/v1/admin/${id}/approve`, {
                 method: 'PUT',
@@ -417,15 +420,15 @@
             .catch(() => Toastify({ text: "Lỗi mạng", style: {background: "#ef4444"} }).showToast());
         };
 
-        window.openRejectModal = function(id) {
+        page.globals.openRejectModal = function(id) {
             currentDoctorId = id;
             document.getElementById('rejectReason').value = '';
             document.getElementById('rejectModal').classList.add('active');
         };
 
-        window.closeRejectModal = () => document.getElementById('rejectModal').classList.remove('active');
+        page.globals.closeRejectModal = () => document.getElementById('rejectModal').classList.remove('active');
 
-        window.submitReject = function() {
+        page.globals.submitReject = function() {
             const reason = document.getElementById('rejectReason').value.trim();
             if (!reason) { Toastify({ text: "Vui lòng nhập lý do", style: {background: "#f59e0b"} }).showToast(); return; }
 
@@ -450,5 +453,8 @@
         setViewMode(viewMode);
         const linkedDoctor = Number(notificationParams.get("doctorId"));
         if (Number.isInteger(linkedDoctor) && linkedDoctor > 0) viewDetail(linkedDoctor);
-    </script>
+
+    page.expose({loadDoctorCatalogs, setViewMode, setPage, getStatusBadge, renderPagination, fetchData});
+});
+</script>
 }

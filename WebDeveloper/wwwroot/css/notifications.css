@@ -15,3 +15,13 @@
 #notificationStatus { font-size:14px; }
 
 #notificationList { max-height:50vh; overflow-y:auto; overscroll-behavior:contain; scrollbar-gutter:stable; }
+
+.notification-help { color: #64748b; font-size: 12px; line-height: 1.5; }
+.notification-item { touch-action: manipulation; }
+@media (max-width: 600px) {
+    #notificationPanel { right: 12px; top: 76px; width: calc(100vw - 24px); max-height: calc(100dvh - 100px); padding: 12px; }
+    .notification-actions { flex-wrap: wrap; }
+    .notification-actions button { white-space: normal; min-width: 120px; min-height: 44px; }
+    #notificationCenter { margin: 0 4px; }
+    #notificationList { max-height: 48dvh; }
+}

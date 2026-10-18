@@ -88,6 +88,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         const token = localStorage.getItem('token');
         if (!token) {
             window.location.href = '/Auth/Login';
@@ -143,7 +146,7 @@
             }
         }
 
-        window.openPatientCancelModal = function(id) {
+        page.globals.openPatientCancelModal = function(id) {
             currentCancelAptId = id;
             const apt = currentAppointments.find(a => (a.appointmentId || a.id) == id);
             document.getElementById('cancelModalDoctorName').innerText = apt ? `BS. ${apt.doctorName}` : '—';
@@ -156,19 +159,19 @@
             document.getElementById('patientCancelModal').classList.add('active');
         };
 
-        window.closePatientCancelModal = function() {
+        page.globals.closePatientCancelModal = function() {
             document.getElementById('patientCancelModal').classList.remove('active');
             currentCancelAptId = null;
         };
 
-        window.selectPatientReason = function(txt) {
+        page.globals.selectPatientReason = function(txt) {
             const input = document.getElementById('patientCancelReasonInput');
             input.value = txt;
             document.getElementById('patientCancelError').style.display = 'none';
             input.focus();
         };
 
-        window.confirmPatientCancel = function() {
+        page.globals.confirmPatientCancel = function() {
             if (!currentCancelAptId) return;
             const reason = document.getElementById('patientCancelReasonInput').value.trim();
             if (!reason) {
@@ -267,5 +270,8 @@
         }
 
         fetchAppointments();
-    </script>
+
+    page.expose({fetchAppointments, getStatusStyles, renderAppointments});
+});
+</script>
 }

@@ -70,6 +70,9 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         let currentStatus = 'PENDING';
         let currentPage = 0;
         let selectedId = null;
@@ -149,7 +152,7 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
             .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
         }
 
-        window.openModal = function(req) {
+        page.globals.openModal = function(req) {
             selectedId = req.id || req.transferId;
             document.getElementById('modalDocName').innerText = req.doctor?.user?.fullName || req.doctorName || '';
             document.getElementById('modalNewFac').innerText = req.targetFacility?.facilityName || req.targetFacilityName || '';
@@ -163,12 +166,12 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
             document.getElementById('processModal').classList.add('active');
         };
 
-        window.closeModal = function() {
+        page.globals.closeModal = function() {
             document.getElementById('processModal').classList.remove('active');
             selectedId = null;
         };
 
-        window.processReq = function(action) {
+        page.globals.processReq = function(action) {
             const adminNote = document.getElementById('adminNote').value.trim();
             if (action === 'reject' && !adminNote) {
                 Toastify({ text: "Vui lòng nhập lý do từ chối", style: {background: "#f59e0b"} }).showToast();
@@ -203,5 +206,8 @@ td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
         };
 
         fetchData();
-    </script>
+
+    page.expose({setStatus, setPage, fetchData});
+});
+</script>
 }

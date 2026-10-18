@@ -21,6 +21,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         
         
 
@@ -81,7 +84,7 @@
             });
         }
 
-        window.updateStatus = function(id, status) {
+        page.globals.updateStatus = function(id, status) {
             const msg = status === 'COMPLETED' ? 'Đánh dấu đã hoàn thành khám?' : 'Đánh dấu bệnh nhân không đến?';
             if (!confirm(msg)) return;
 
@@ -101,6 +104,9 @@
         };
 
         fetchOverdue();
-    </script>
+
+    page.expose({fetchOverdue});
+});
+</script>
 }
 

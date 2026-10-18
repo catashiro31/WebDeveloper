@@ -33,6 +33,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         
         
 
@@ -123,6 +126,9 @@
         }
 
         fetchReviews();
-    </script>
+
+    page.expose({renderStars, fetchReviews});
+});
+</script>
 }
 

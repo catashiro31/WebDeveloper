@@ -47,16 +47,42 @@
                 const message = document.createElement('span'); message.textContent = item.message;
                 const time = document.createElement('small'); time.textContent = new Date(item.createdAt).toLocaleString('vi-VN');
                 button.append(title, message, time);
-                button.onclick = async () => {
-                    button.disabled = true;
+                button.dataset.notificationId = item.id;
+                button.title = 'Bấm một lần để đánh dấu đã đọc; bấm đúp để mở. Alt+Enter để mở bằng bàn phím.';
+                let marking = null, lastTap = 0, navigating = false;
+                function markRead() {
+                    if (item.readAt) return Promise.resolve();
+                    if (marking) return marking;
+                    button.setAttribute('aria-busy', 'true');
+                    marking = request(`/api/v1/notifications/${item.id}/read`, { method: 'PATCH' })
+                        .then(() => {
+                            item.readAt = new Date().toISOString();
+                            button.classList.remove('unread');
+                            return load(false, true);
+                        }).finally(() => { marking = null; button.removeAttribute('aria-busy'); });
+                    return marking;
+                }
+                async function openNotification() {
+                    if (navigating) return;
+                    navigating = true;
                     try {
-                        await request(`/api/v1/notifications/${item.id}/read`, { method:'PATCH' });
-                        button.classList.remove('unread');
+                        await markRead();
+                        if (typeof item.url !== 'string') { navigating = false; return; }
                         const url = new URL(item.url, location.origin);
                         if (url.origin === location.origin && item.url.startsWith('/') && !item.url.startsWith('//')) location.assign(url.href);
-                        else await load();
-                    } catch (error) { status.textContent = error.message; }
-                    finally { button.disabled = false; }
+                        else navigating = false;
+                    } catch (error) { navigating = false; status.textContent = error.message; }
+                }
+                button.onclick = () => markRead().catch(error => { status.textContent = error.message; });
+                button.ondblclick = event => { event.preventDefault(); openNotification(); };
+                button.onpointerup = event => {
+                    if (event.pointerType !== 'touch') return;
+                    const now = Date.now();
+                    if (lastTap && now - lastTap < 350) { lastTap = 0; openNotification(); }
+                    else lastTap = now;
+                };
+                button.onkeydown = event => {
+                    if (event.key === 'Enter' && event.altKey) { event.preventDefault(); openNotification(); }
                 };
                 list.append(button); lastId = item.id;
             }

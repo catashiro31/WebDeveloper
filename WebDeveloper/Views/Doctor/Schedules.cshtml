@@ -145,6 +145,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         const TIME_SLOTS = ['SLOT_09_00', 'SLOT_10_00', 'SLOT_11_00', 'SLOT_14_00', 'SLOT_15_00', 'SLOT_16_00', 'SLOT_17_00'];
         let selectedDatesMap = {};
         let activeDate = null;
@@ -328,7 +331,7 @@
             document.getElementById('summaryText').textContent = `📊 Đã chọn: ${validDays} ngày, ${totalSlots} ca khám`;
         }
 
-        window.openModal = function() {
+        page.globals.openModal = function() {
             const today = getTodayStr();
             const dateInput = document.getElementById('datePickerInput');
             dateInput.min = today;
@@ -346,7 +349,7 @@
             modalEl.classList.add('active');
         };
 
-        window.closeModal = () => document.getElementById('scheduleModal').classList.remove('active');
+        page.globals.closeModal = () => document.getElementById('scheduleModal').classList.remove('active');
 
         function fetchSchedules() {
             if (user && user.verificationStatus !== 'APPROVED') return;
@@ -402,7 +405,7 @@
             });
         }
 
-        window.createSchedules = function() {
+        page.globals.createSchedules = function() {
             const items = Object.keys(selectedDatesMap)
                 .filter(d => selectedDatesMap[d] && selectedDatesMap[d].length > 0)
                 .map(d => ({ date: d, slotIds: selectedDatesMap[d] }));
@@ -436,7 +439,7 @@
             });
         };
 
-        window.deleteSchedule = function(id) {
+        page.globals.deleteSchedule = function(id) {
             if (!confirm("Xóa lịch làm việc này?")) return;
             fetch(`/api/v1/doctor/schedules/${id}`, {
                 method: 'DELETE',
@@ -451,6 +454,9 @@
 
         fetchSchedules();
         setInterval(() => { if (!document.hidden && !document.getElementById("scheduleModal").classList.contains("active")) fetchSchedules(); }, 60000);
-    </script>
+
+    page.expose({formatTimeSlot, addDays, getTodayStr, formatDateVi, formatDateFullVi, renderDatesList, selectActiveDate, removeDate, addDate, addPickerDate, quickAddDate, quickAddWeek, renderSlotsGrid, toggleSlot, toggleAllSlotsForActiveDate, renderSummary, fetchSchedules});
+});
+</script>
 }
 

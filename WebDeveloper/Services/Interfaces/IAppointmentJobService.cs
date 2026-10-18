@@ -6,5 +6,6 @@ namespace WebDeveloper.Services.Interfaces
     {
         Task SendWarningToDoctor(int appointmentId);
         Task CancelUnconfirmedAppointment(int appointmentId);
+        Task CancelOverdueAppointments();
     }
 }

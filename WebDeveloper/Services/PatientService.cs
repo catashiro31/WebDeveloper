@@ -149,8 +149,9 @@ namespace WebDeveloper.Services
             var redisDb = _redis.GetDatabase();
             var lockKey = $"lock:schedule:{req.ScheduleId}";
             
-            // Cố gắng lấy khóa (lock) trong 5 giây
-            bool isLocked = await redisDb.StringSetAsync(lockKey, "locked", TimeSpan.FromSeconds(5), StackExchange.Redis.When.NotExists);
+            // Khóa có hạn 30 giây; chỉ chủ sở hữu được giải phóng khóa.
+            var lockToken = Guid.NewGuid().ToString("N");
+            bool isLocked = await redisDb.StringSetAsync(lockKey, lockToken, TimeSpan.FromSeconds(30), StackExchange.Redis.When.NotExists);
 
             if (!isLocked)
             {
@@ -159,6 +160,11 @@ namespace WebDeveloper.Services
 
             try
             {
+                await using var transaction = await _db.Database.BeginTransactionAsync();
+                // Serialize bookings across different slots for the same account.
+                await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-user.UserId})");
+                if (!await _db.Users.AnyAsync(u => u.UserId == user.UserId && u.IsActive == true))
+                    throw new InvalidOperationException("Tài khoản không hoạt động, không thể đặt lịch.");
                 // Giới hạn 3 lịch hẹn active (giống Java)
                 var activeStatuses = new[] { BookingStatus.PENDING, BookingStatus.CONFIRMED };
                 var activeCount = await _db.Appointments
@@ -173,14 +179,24 @@ namespace WebDeveloper.Services
 
                 if (profile.UserId != user.UserId)
                     throw new InvalidOperationException("Hồ sơ này không thuộc về bạn!");
+                if (!profile.IsActive)
+                    throw new InvalidOperationException("Hồ sơ bệnh nhân đã ngừng sử dụng.");
 
                 var schedule = await _db.DoctorSchedules
-                    .Include(s => s.Doctor)
+                    .Include(s => s.Doctor).ThenInclude(d => d.User)
                     .FirstOrDefaultAsync(s => s.ScheduleId == req.ScheduleId)
                     ?? throw new InvalidOperationException("Ca khám không tồn tại");
 
+                // Coordinate with admin blocking this doctor before accepting a new booking.
+                await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-schedule.Doctor.UserId})");
+                await _db.Entry(schedule).ReloadAsync();
+                await _db.Entry(schedule.Doctor).ReloadAsync();
+                await _db.Entry(schedule.Doctor.User).ReloadAsync();
+
                 if (schedule.Doctor.VerificationStatus != VerificationStatus.APPROVED)
                     throw new InvalidOperationException("Bác sĩ chưa được xác minh, không thể đặt lịch!");
+                if (schedule.Doctor.User.IsActive != true)
+                    throw new InvalidOperationException("Tài khoản bác sĩ đã bị khóa, không thể đặt lịch.");
 
                 if (schedule.SlotStatus != SlotStatus.AVAILABLE)
                     throw new InvalidOperationException("Ca khám đã có người đặt hoặc đã đóng");
@@ -188,6 +204,8 @@ namespace WebDeveloper.Services
                 // Dùng giờ Việt Nam (UTC+7) để kiểm tra
                 var vnNow = DateTime.UtcNow.AddHours(7);
                 var today = DateOnly.FromDateTime(vnNow);
+                if (schedule.DateWorking > today.AddDays(BookingWindow.MaxAdvanceDays))
+                    throw new InvalidOperationException("Chỉ có thể đặt lịch trong 30 ngày tới.");
                 if (schedule.DateWorking < today)
                     throw new InvalidOperationException("Không thể đặt lịch cho ngày đã qua!");
 
@@ -212,6 +230,11 @@ namespace WebDeveloper.Services
                 if (isOverlapping)
                     throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có một lịch hẹn khác vào cùng thời gian!");
 
+                if (await _db.Appointments.AnyAsync(a => a.PatientId == req.PatientId &&
+                    a.Schedule.DateWorking == schedule.DateWorking && a.Schedule.DoctorId == schedule.DoctorId &&
+                    overlapStatuses.Contains(a.BookingStatus)))
+                    throw new InvalidOperationException("Hồ sơ bệnh nhân này đã có lịch với bác sĩ trong ngày đã chọn!");
+
                 schedule.SlotStatus = SlotStatus.BOOKED;
                 schedule.Version = (schedule.Version ?? 0) + 1;
 
@@ -226,6 +249,7 @@ namespace WebDeveloper.Services
 
                 _db.Appointments.Add(appointment);
                 await _db.SaveChangesAsync();
+                await transaction.CommitAsync();
 
                 // Lên lịch Hangfire (Gửi cảnh báo cho Bác sĩ sau 25 phút)
                 Hangfire.BackgroundJob.Schedule<WebDeveloper.Services.Interfaces.IAppointmentJobService>(
@@ -242,7 +266,9 @@ namespace WebDeveloper.Services
             finally
             {
                 // Mở khóa sau khi hoàn tất (hoặc có lỗi văng ra)
-                await redisDb.KeyDeleteAsync(lockKey);
+                await redisDb.ScriptEvaluateAsync(
+                    "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end",
+                    new StackExchange.Redis.RedisKey[] { lockKey }, new StackExchange.Redis.RedisValue[] { lockToken });
             }
         }
 

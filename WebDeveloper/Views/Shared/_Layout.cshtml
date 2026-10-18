@@ -15,20 +15,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <!-- Tailwind CSS (V4 Browser Build) -->
-    <script src="https://unpkg.com/@@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/css/utilities.css" asp-append-version="true" />
     
     <!-- Toastify for Notifications (Replacing React-Toastify) -->
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
 
-    <style type="text/tailwindcss">
+    <style>
         /* Global CSS ported from index.css */
-        @@theme {
-            --color-primary: #6366f1;
-            --color-secondary: #0ea47a;
-            --color-accent: #8b5cf6;
-        }
+
         
         :root {
             --primary: #6366f1;
@@ -107,6 +103,8 @@
     </style>
     
     @await RenderSectionAsync("Styles", required: false)
+    <link rel="stylesheet" href="/css/responsive.css" asp-append-version="true" />
+    <script src="/js/responsive.js" asp-append-version="true" defer></script>
 </head>
 <body>
     

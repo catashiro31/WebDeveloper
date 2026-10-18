@@ -182,11 +182,14 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         let searchTimer, searchVersion = 0;
         document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => {  fetchFacilities(); }, 250); });
         document.getElementById('provinceFilter').addEventListener('change', () => { fetchFacilities(); });
 
-        window.resetFacilityFilters = function() {
+        page.globals.resetFacilityFilters = function() {
             document.getElementById('adminSearch').value = '';
             document.getElementById('provinceFilter').value = '';
             fetchFacilities();
@@ -305,7 +308,7 @@
             });
         }
 
-        window.openModal = function(fac = null) {
+        page.globals.openModal = function(fac = null) {
             editingFacility = fac;
             imageFile = null;
             licenseFile = null;
@@ -350,9 +353,9 @@
             document.getElementById('facilityModal').classList.add('active');
         };
 
-        window.closeModal = () => document.getElementById('facilityModal').classList.remove('active');
+        page.globals.closeModal = () => document.getElementById('facilityModal').classList.remove('active');
 
-        window.handleImageChange = function(e) {
+        page.globals.handleImageChange = function(e) {
             const file = e.target.files[0];
             if (file) {
                 if (!validateFacilityFile(file, ['image/jpeg', 'image/png'], 'Ảnh đại diện')) {
@@ -372,7 +375,7 @@
             }
         };
 
-        window.handleLicenseChange = function(e) {
+        page.globals.handleLicenseChange = function(e) {
             const file = e.target.files[0];
             if (file) {
                 if (!validateFacilityFile(file, ['image/jpeg', 'image/png', 'application/pdf'], 'Giấy phép hoạt động')) {
@@ -391,7 +394,7 @@
             }
         };
 
-        window.submitForm = function(e) {
+        page.globals.submitForm = function(e) {
             e.preventDefault();
             if (!editingFacility && !licenseFile) {
                 showApiToast("Vui lòng tải lên Giấy phép hoạt động!", 'warning');
@@ -435,7 +438,7 @@
             .finally(() => { btn.disabled = false; btn.innerText = editingFacility ? 'Lưu thay đổi' : 'Thêm cơ sở'; });
         };
 
-        window.deleteFacility = function(id) {
+        page.globals.deleteFacility = function(id) {
             if (!confirm("Xóa cơ sở y tế này? Hành động không thể hoàn tác.")) return;
             fetch(`/api/v1/admin/facility/${id}`, {
                 method: 'DELETE',
@@ -450,7 +453,7 @@
             .catch(() => showFacilityError("Lỗi mạng. Vui lòng thử lại."));
         };
 
-        window.verifyFacility = function(id) {
+        page.globals.verifyFacility = function(id) {
             fetch(`/api/v1/admin/facility/${id}/verify`, {
                 method: 'PATCH',
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -465,5 +468,8 @@
         };
 
         fetchFacilities();
-    </script>
+
+    page.expose({showFacilityError, validateFacilityFile, fetchFacilities});
+});
+</script>
 }

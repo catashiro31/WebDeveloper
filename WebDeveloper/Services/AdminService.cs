@@ -24,11 +24,14 @@ namespace WebDeveloper.Services
         // === Thống kê: phân biệt tài khoản role DOCTOR với hồ sơ chuyên môn đã được duyệt. ===
         public async Task<StatResponse> GetStats(DateOnly? start, DateOnly? end)
         {
-            var actualStart = start ?? DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-30));
-            var actualEnd = end ?? DateOnly.FromDateTime(DateTime.UtcNow);
+            var today = DateOnly.FromDateTime(VietnamTime.Now);
+            var actualStart = start ?? today.AddDays(-29);
+            var actualEnd = end ?? today;
+            if (actualStart > actualEnd)
+                throw new InvalidOperationException("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.");
 
             var apps = await _db.Appointments
-                .Include(a => a.Schedule)
+                .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.User)
                 .Where(a => a.Schedule.DateWorking >= actualStart && a.Schedule.DateWorking <= actualEnd)
                 .ToListAsync();
 
@@ -36,13 +39,14 @@ namespace WebDeveloper.Services
             long pending = apps.Count(a => a.BookingStatus == BookingStatus.PENDING || a.BookingStatus == BookingStatus.CONFIRMED);
             long cancelled = apps.Count(a => a.BookingStatus == BookingStatus.CANCELLED);
 
-            var startDateTime = actualStart.ToDateTime(TimeOnly.MinValue);
-            var endDateTime = actualEnd.AddDays(1).ToDateTime(TimeOnly.MinValue);
+            var startDateTime = DateTime.SpecifyKind(actualStart.ToDateTime(TimeOnly.MinValue).AddHours(-7), DateTimeKind.Utc);
+            var endDateTime = DateTime.SpecifyKind(actualEnd.AddDays(1).ToDateTime(TimeOnly.MinValue).AddHours(-7), DateTimeKind.Utc);
+            var noShows = apps.Count(a => a.BookingStatus == BookingStatus.NO_SHOW);
+            static double Rate(long count, long total) => total == 0 ? 0 : Math.Round(count * 100.0 / total, 2);
 
             long doctorsInPeriod = await _db.Users.CountAsync(u => u.Role == RoleStatus.DOCTOR && u.IsActive == true && u.CreatedAt >= startDateTime && u.CreatedAt < endDateTime);
             long patientsInPeriod = await _db.Users.CountAsync(u => u.Role == RoleStatus.PATIENT && u.IsActive == true && u.CreatedAt >= startDateTime && u.CreatedAt < endDateTime);
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
             long todayApps = await _db.Appointments.CountAsync(a => a.Schedule.DateWorking == today);
 
             return new StatResponse
@@ -58,7 +62,26 @@ namespace WebDeveloper.Services
                 TotalAppointments = await _db.Appointments.CountAsync(),
                 PendingDoctors = await _db.DoctorDetails.CountAsync(d => d.VerificationStatus == VerificationStatus.PENDING),
                 TodayAppointments = todayApps,
-                TotalReviews = await _db.Reviews.CountAsync()
+                TotalReviews = await _db.Reviews.CountAsync(),
+                PeriodStart = actualStart,
+                PeriodEnd = actualEnd,
+                PeriodAppointments = apps.Count,
+                NumberOfNoShowAppointments = noShows,
+                CancellationRate = Rate(cancelled, apps.Count),
+                NoShowRate = Rate(noShows, apps.Count),
+                // No payments or historical fee snapshots exist; never present this as collected revenue.
+                EstimatedRevenue = apps.Where(a => a.BookingStatus == BookingStatus.COMPLETED)
+                    .Sum(a => (decimal)(a.Schedule.Doctor.Price ?? 0)),
+                DoctorPerformance = apps.GroupBy(a => a.Schedule.DoctorId).Select(g => new DoctorPerformanceResponse
+                {
+                    DoctorId = g.Key,
+                    DoctorName = g.First().Schedule.Doctor.User.FullName ?? "Bác sĩ",
+                    TotalAppointments = g.Count(),
+                    CompletedAppointments = g.Count(a => a.BookingStatus == BookingStatus.COMPLETED),
+                    CancelledAppointments = g.Count(a => a.BookingStatus == BookingStatus.CANCELLED),
+                    NoShowAppointments = g.Count(a => a.BookingStatus == BookingStatus.NO_SHOW),
+                    CompletionRate = Rate(g.Count(a => a.BookingStatus == BookingStatus.COMPLETED), g.Count())
+                }).OrderByDescending(d => d.CompletedAppointments).ThenBy(d => d.DoctorId).ToList()
             };
         }
 
@@ -426,14 +449,22 @@ namespace WebDeveloper.Services
             foreach(var a in pApps)
             {
                 a.BookingStatus = BookingStatus.CANCELLED;
-                if (a.Schedule.DateWorking >= DateOnly.FromDateTime(DateTime.UtcNow))
-                    a.Schedule.SlotStatus = SlotStatus.AVAILABLE;
+                a.CancelledBy = "ADMIN";
+                a.CancellationReason = "Tài khoản bệnh nhân bị khóa: " + reason.Trim();
+                a.Schedule.SlotStatus = VietnamTime.HasStarted(a.Schedule.DateWorking, a.Schedule.TimeSlot, VietnamTime.Now)
+                    ? SlotStatus.CLOSED : SlotStatus.AVAILABLE;
             }
 
             if (user.Role == RoleStatus.DOCTOR)
             {
-                var dApps = await _db.Appointments.Where(a => a.Schedule.Doctor.UserId == id && activeStatuses.Contains(a.BookingStatus)).ToListAsync();
-                foreach(var a in dApps) a.BookingStatus = BookingStatus.CANCELLED;
+                var dApps = await _db.Appointments.Include(a => a.Schedule).Where(a => a.Schedule.Doctor.UserId == id && activeStatuses.Contains(a.BookingStatus)).ToListAsync();
+                foreach(var a in dApps)
+                {
+                    a.BookingStatus = BookingStatus.CANCELLED;
+                    a.CancelledBy = "ADMIN";
+                    a.CancellationReason = "Tài khoản bác sĩ bị khóa; vui lòng chọn bác sĩ khác.";
+                    a.Schedule.SlotStatus = SlotStatus.CLOSED;
+                }
 
                 var dSlots = await _db.DoctorSchedules.Where(s => s.Doctor.UserId == id && s.SlotStatus == SlotStatus.AVAILABLE).ToListAsync();
                 foreach(var s in dSlots) s.SlotStatus = SlotStatus.CLOSED;

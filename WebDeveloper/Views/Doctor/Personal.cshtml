@@ -51,6 +51,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         
         
         if (!token || !userStr) {
@@ -75,7 +78,7 @@
             }
         } catch(e) {}
 
-        window.handleFileChange = function(e) {
+        page.globals.handleFileChange = function(e) {
             const f = e.target.files[0];
             if (f) {
                 if (f.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png'].includes(f.type)) {
@@ -110,7 +113,7 @@
             }
         }
 
-        window.handleSubmit = function(e) {
+        page.globals.handleSubmit = function(e) {
             e.preventDefault();
             
             const fullName = document.getElementById('fullName').value.trim();
@@ -186,6 +189,9 @@
                 btn.style.opacity = '1';
             });
         };
-    </script>
+
+    page.expose({showMessage});
+});
+</script>
 }
 

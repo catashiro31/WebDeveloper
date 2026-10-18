@@ -1,3 +1,11 @@
+@if (Context.Request.Headers["X-Workspace-Navigation"] == "1")
+{
+    Context.Response.Headers.CacheControl = "no-store";
+    <template data-workspace-fragment="Patient" data-title="@ViewData["Title"] - DocBooking">@RenderBody()</template>
+    <template data-workspace-styles>@await RenderSectionAsync("Styles", required: false)</template>
+    <template data-workspace-scripts>@await RenderSectionAsync("Scripts", required: false)</template>
+    return;
+}
 @{
     Layout = null;
     var userName = User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? "Bệnh nhân";
@@ -11,9 +19,10 @@
 <head>
     <link rel="stylesheet" href="~/css/typography.css" asp-append-version="true" />
     <meta charset="utf-8" />
+    <script src="/js/workspace-navigation.js" asp-append-version="true"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - DocBooking</title>
-    <script src="https://unpkg.com/@@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/css/utilities.css" asp-append-version="true" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
     <link rel="stylesheet" href="/css/role-layout.css" asp-append-version="true" />
@@ -41,8 +50,11 @@
         }
     </style>
     @RenderSection("Styles", required: false)
+    <link rel="stylesheet" href="/css/responsive.css" asp-append-version="true" />
+    <script src="/js/responsive.js" asp-append-version="true" defer></script>
 </head>
-<body>
+<body data-workspace="Patient">
+    @await Html.PartialAsync("_WorkspaceControls")
     <!-- Header -->
     <header class="glass role-header" style="position: sticky; top: 0; z-index: 100; padding: 12px 40px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);">
         <div style="display: flex; align-items: center; gap: 20px;">
@@ -71,7 +83,7 @@
 
     <div class="role-shell" style="display: flex; max-width: 1440px; margin: 0 auto; padding: 32px 40px; gap: 32px;">
         <!-- Sidebar -->
-        <aside class="reveal" style="width: 280px; flex-shrink: 0;">
+        <aside id="workspaceSidebar" class="reveal" style="width: 280px; flex-shrink: 0;">
             <div class="premium-card" style="padding: 24px; position: sticky; top: 100px;">
                 <div style="margin-bottom: 28px; text-align: center;">
                     <div id="patientSidebarAvatar" style="width: 72px; height: 72px; border-radius: 24px; background: @(!string.IsNullOrEmpty(userAvatar) ? $"url('{userAvatar}') center/cover" : "linear-gradient(135deg, #6366f1, #8b5cf6)"); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; font-size: 28px; color: white; box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3); overflow: hidden;">
@@ -117,7 +129,7 @@
         <!-- Main Content -->
         <main class="reveal-delayed" style="flex: 1;">
             <div class="premium-card role-content-card" style="padding: 32px; min-height: 600px;">
-                @RenderBody()
+                <div id="workspaceContent" tabindex="-1">@RenderBody()</div>
             </div>
         </main>
     </div>

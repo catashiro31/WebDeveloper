@@ -118,6 +118,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         let rawReviews = [];
         let filteredReviews = [];
         let state = { page: 0, size: 10, totalPages: 1 };
@@ -161,7 +164,7 @@
 
         function handleSearch() {
             searchKeyword = document.getElementById('searchKeyword').value.trim().toLowerCase();
-            state.page = 0; clearTimeout(window.reviewSearchTimer); window.reviewSearchTimer = setTimeout(loadReviews, 300);
+            state.page = 0; clearTimeout(window.reviewSearchTimer); page.globals.reviewSearchTimer = setTimeout(loadReviews, 300);
         }
 
         function applyFilter() {
@@ -222,7 +225,7 @@
             renderPagination();
         }
 
-        window.toggleHideReview = async (id, isCurrentlyHidden) => {
+        page.globals.toggleHideReview = async (id, isCurrentlyHidden) => {
             const actionText = isCurrentlyHidden ? 'hiển thị lại' : 'ẩn';
             if (!confirm(`Bạn có chắc chắn muốn ${actionText} đánh giá này? Điểm số đánh giá vẫn sẽ được giữ nguyên và cập nhật.`)) return;
             try {
@@ -255,8 +258,11 @@
             pagi.innerHTML = html;
         }
 
-        window.changePage = (p) => { state.page = p; loadReviews(); };
+        page.globals.changePage = (p) => { state.page = p; loadReviews(); };
 
         loadReviews();
-    </script>
+
+    page.expose({suggestedLabel, loadReviews, setTab, handleSearch, applyFilter, highlightProfanity, renderTable, renderPagination});
+});
+</script>
 }

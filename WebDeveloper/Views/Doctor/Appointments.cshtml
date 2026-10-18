@@ -159,11 +159,14 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         
         
 
         // Keep the fixed dialog outside the animated layout's transformed main element.
-        document.body.appendChild(document.getElementById('resultModal'));
+        document.body.appendChild(page.own(document.getElementById('resultModal')));
         const container = document.getElementById('appointmentsContainer');
         let allAppointments = [];
         let currentFilter = 'ALL';
@@ -190,7 +193,7 @@
             return texts[status] || status;
         }
 
-        window.setFilter = function(filter, btn) {
+        page.globals.setFilter = function(filter, btn) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = filter;
@@ -299,7 +302,7 @@
 
         let currentRejectAptId = null;
 
-        window.openDoctorRejectModal = function(id) {
+        page.globals.openDoctorRejectModal = function(id) {
             currentRejectAptId = id;
             const apt = allAppointments.find(a => (a.appointmentId || a.id) == id);
             document.getElementById('rejectModalPatientName').innerText = apt ? apt.patientName : '—';
@@ -311,19 +314,19 @@
             document.getElementById('doctorRejectModal').classList.add('active');
         };
 
-        window.closeDoctorRejectModal = function() {
+        page.globals.closeDoctorRejectModal = function() {
             document.getElementById('doctorRejectModal').classList.remove('active');
             currentRejectAptId = null;
         };
 
-        window.selectDoctorReason = function(txt) {
+        page.globals.selectDoctorReason = function(txt) {
             const input = document.getElementById('doctorRejectReasonInput');
             input.value = txt;
             document.getElementById('doctorRejectError').style.display = 'none';
             input.focus();
         };
 
-        window.confirmDoctorReject = function() {
+        page.globals.confirmDoctorReject = function() {
             if (!currentRejectAptId) return;
             const reason = document.getElementById('doctorRejectReasonInput').value.trim();
             if (!reason) {
@@ -358,7 +361,7 @@
             });
         };
 
-        window.updateStatus = function(id, status) {
+        page.globals.updateStatus = function(id, status) {
             const msgs = { 'CONFIRMED': 'Xác nhận lịch hẹn này?', 'NO_SHOW': 'Đánh dấu bệnh nhân không đến?', 'COMPLETED': 'Đánh dấu đã hoàn thành khám?' };
             if (!confirm(msgs[status] || 'Xác nhận thay đổi?')) return;
 
@@ -383,7 +386,7 @@
             return Number.isFinite(start) && start <= Date.now();
         }
 
-        window.openResultModal = function(id, mode) {
+        page.globals.openResultModal = function(id, mode) {
             const apt = allAppointments.find(a => (a.appointmentId || a.id) == id);
             if (!apt) return;
             if (!visitHasStarted(apt)) { showApiToast('Chưa đến giờ khám, chưa thể trả kết quả.', 'warning'); return; }
@@ -420,9 +423,9 @@
             document.getElementById('resultModal').classList.add('active');
         };
 
-        window.closeResultModal = () => document.getElementById('resultModal').classList.remove('active');
+        page.globals.closeResultModal = () => document.getElementById('resultModal').classList.remove('active');
 
-        window.handleFileChange = function(e) {
+        page.globals.handleFileChange = function(e) {
             const f = e.target.files[0];
             const p = document.getElementById('fileStatus');
             if (f) {
@@ -443,7 +446,7 @@
             }
         };
 
-        window.submitResult = function(e) {
+        page.globals.submitResult = function(e) {
             e.preventDefault();
             const id = document.getElementById('appointmentId').value;
             const mode = document.getElementById('resultMode').value;
@@ -500,6 +503,9 @@
         };
 
         fetchAppointments();
-    </script>
+
+    page.expose({formatSlotLabel, getStatusStyle, getStatusText, fetchAppointments, renderAppointments, visitHasStarted});
+});
+</script>
 }
 

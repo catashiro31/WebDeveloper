@@ -305,7 +305,7 @@ namespace WebDeveloper.Services
 
             var now = VietnamTime.Now;
             var today = DateOnly.FromDateTime(now);
-            var maxFutureDate = today.AddDays(30);
+            var maxFutureDate = today.AddDays(BookingWindow.MaxAdvanceDays);
 
             var items = new List<DayScheduleItem>();
             if (req.Items != null && req.Items.Count > 0)
@@ -481,6 +481,8 @@ namespace WebDeveloper.Services
 
         public async Task<string> ConfirmAppointment(User user, int appointmentId)
         {
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT 1 FROM appointments WHERE appointment_id = {appointmentId} FOR UPDATE");
             var app = await _db.Appointments
                 .Include(a => a.Schedule)
                 .ThenInclude(s => s.Doctor)
@@ -493,8 +495,15 @@ namespace WebDeveloper.Services
             if (app.BookingStatus != BookingStatus.PENDING)
                 throw new InvalidOperationException("Chỉ có thể xác nhận lịch hẹn đang chờ duyệt");
 
+            await _db.Entry(app).ReloadAsync();
+            if (app.BookingStatus != BookingStatus.PENDING || app.CreatedAt <= DateTime.UtcNow.AddMinutes(-30) ||
+                VietnamTime.HasStarted(app.Schedule.DateWorking, app.Schedule.TimeSlot, VietnamTime.Now))
+                throw new InvalidOperationException("Lịch hẹn đã quá thời hạn xác nhận.");
+            if (app.Schedule.Doctor.VerificationStatus != VerificationStatus.APPROVED)
+                throw new InvalidOperationException("Hồ sơ bác sĩ chưa được duyệt, không thể nhận lịch.");
             app.BookingStatus = BookingStatus.CONFIRMED;
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
             return "Xác nhận lịch hẹn thành công";
         }
 

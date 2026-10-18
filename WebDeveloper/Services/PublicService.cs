@@ -195,6 +195,8 @@ namespace WebDeveloper.Services
 
         public async Task<List<DoctorSlotResponse>> GetAvailableSlots(int doctorId, DateOnly date)
         {
+            var bookingToday = DateOnly.FromDateTime(VietnamTime.Now);
+            if (date < bookingToday || date > bookingToday.AddDays(BookingWindow.MaxAdvanceDays)) return [];
             var d = await _db.DoctorDetails.FindAsync(doctorId) ?? throw new InvalidOperationException("Không tồn tại");
             if (d.VerificationStatus != VerificationStatus.APPROVED) return new List<DoctorSlotResponse>();
 

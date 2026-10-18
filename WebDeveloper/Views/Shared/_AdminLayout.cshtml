@@ -1,12 +1,21 @@
+@if (Context.Request.Headers["X-Workspace-Navigation"] == "1")
+{
+    Context.Response.Headers.CacheControl = "no-store";
+    <template data-workspace-fragment="Admin" data-title="@ViewData["Title"] - DocBooking">@RenderBody()</template>
+    <template data-workspace-styles>@await RenderSectionAsync("Styles", required: false)</template>
+    <template data-workspace-scripts>@await RenderSectionAsync("Scripts", required: false)</template>
+    return;
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <link rel="stylesheet" href="~/css/typography.css" asp-append-version="true" />
     <meta charset="utf-8" />
+    <script src="/js/workspace-navigation.js" asp-append-version="true"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Admin Dashboard</title>
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <script src="https://unpkg.com/@@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="/css/utilities.css" asp-append-version="true" />
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
     <link rel="stylesheet" href="/css/role-layout.css" asp-append-version="true" />
@@ -33,9 +42,12 @@
         .admin-sidebar-card::-webkit-scrollbar { width: 4px; }
         .admin-sidebar-card::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
+    <link rel="stylesheet" href="/css/responsive.css" asp-append-version="true" />
+    <script src="/js/responsive.js" asp-append-version="true" defer></script>
 </head>
-<body style="min-height: 100vh; display: flex; flex-direction: column;">
+<body data-workspace="Admin" style="min-height: 100vh; display: flex; flex-direction: column;">
     
+    @await Html.PartialAsync("_WorkspaceControls")
     <header class="role-header" style="background: white; padding: 16px 40px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 1000;">
         <div style="font-size: 24px; font-weight: 900; color: #0ea47a; cursor: pointer;" onclick="window.location.href='/'">
             Doc<span style="color: #0f172a">Booking</span>
@@ -59,7 +71,7 @@
 
     <div class="role-shell" style="display: flex; flex: 1; padding: 32px 40px; gap: 32px; max-width: 1600px; margin: 0 auto; width: 100%; box-sizing: border-box; align-items: flex-start;">
         
-        <aside style="width: 280px; flex-shrink: 0; position: sticky; top: 90px; height: fit-content; z-index: 90;">
+        <aside id="workspaceSidebar" style="width: 280px; flex-shrink: 0; position: sticky; top: 90px; height: fit-content; z-index: 90;">
             <div class="admin-sidebar-card" style="background: white; border-radius: 24px; padding: 32px 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border: 1px solid #f1f5f9; max-height: calc(100vh - 110px); overflow-y: auto;">
                 <div style="text-align: center; margin-bottom: 32px;">
                     <div id="adminSidebarAvatar" style="width: 80px; height: 80px; border-radius: 24px; background: linear-gradient(135deg, #6366f1, #4f46e5); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; font-size: 32px; color: white; box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.3); overflow: hidden;">
@@ -106,7 +118,7 @@
         </aside>
 
         <main style="flex: 1; min-width: 0;">
-            @RenderBody()
+            <div id="workspaceContent" tabindex="-1">@RenderBody()</div>
         </main>
     </div>
 

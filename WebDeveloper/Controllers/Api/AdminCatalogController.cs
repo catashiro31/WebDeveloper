@@ -17,7 +17,7 @@ public class AdminCatalogController(ApplicationDbContext db) : ControllerBase
         var pattern = Pattern(search);
         return Ok(await db.Specialties.AsNoTracking().Where(s => s.IsActive == true &&
             EF.Functions.ILike(EF.Functions.Unaccent(s.SpecialtyName), EF.Functions.Unaccent(pattern), "\\"))
-            .OrderBy(s => s.SpecialtyName).Select(s => new { id = s.SpecialtyId, name = s.SpecialtyName, s.Description }).ToListAsync());
+            .OrderBy(s => s.SpecialtyName).Select(s => new { id = s.SpecialtyId, name = s.SpecialtyName, s.Description, canDelete = !db.DoctorDetails.Any(d => d.SpecialtyId == s.SpecialtyId) }).ToListAsync());
     }
 
     [HttpGet("facilities")]

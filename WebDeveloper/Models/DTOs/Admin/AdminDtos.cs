@@ -72,6 +72,17 @@ namespace WebDeveloper.Models.DTOs.Admin
         public Dictionary<string, double>? AiLabels { get; set; }
     }
 
+    public class DoctorPerformanceResponse
+    {
+        public int DoctorId { get; set; }
+        public string DoctorName { get; set; } = "";
+        public int TotalAppointments { get; set; }
+        public int CompletedAppointments { get; set; }
+        public int CancelledAppointments { get; set; }
+        public int NoShowAppointments { get; set; }
+        public double CompletionRate { get; set; }
+    }
+
     public class StatResponse
     {
         public long NumberOfDoctors { get; set; }
@@ -86,5 +97,13 @@ namespace WebDeveloper.Models.DTOs.Admin
         public long PendingDoctors { get; set; }
         public long TodayAppointments { get; set; }
         public long TotalReviews { get; set; }
+        public DateOnly PeriodStart { get; set; }
+        public DateOnly PeriodEnd { get; set; }
+        public long PeriodAppointments { get; set; }
+        public long NumberOfNoShowAppointments { get; set; }
+        public decimal EstimatedRevenue { get; set; }
+        public double CancellationRate { get; set; }
+        public double NoShowRate { get; set; }
+        public List<DoctorPerformanceResponse> DoctorPerformance { get; set; } = [];
     }
 }

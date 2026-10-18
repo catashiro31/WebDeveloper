@@ -1,0 +1,11 @@
+{
+  "name": "docbooking-assets",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i WebDeveloper/Styles/utilities.css -o WebDeveloper/wwwroot/css/utilities.css --minify"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "4.3.3",
+    "tailwindcss": "4.3.3"
+  }
+}

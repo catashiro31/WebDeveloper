@@ -287,6 +287,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         let state = {
             status: '',
             specialtyId: '',
@@ -412,7 +415,7 @@
             pagi.innerHTML = html;
         }
 
-        window.changePage = (p) => {
+        page.globals.changePage = (p) => {
             state.page = p;
             loadAppointments();
         };
@@ -453,7 +456,7 @@
             loadAppointments();
         });
 
-        window.resetFilters = function() {
+        page.globals.resetFilters = function() {
             state.specialtyId = '';
             state.facilityId = '';
             state.workDateFrom = '';
@@ -501,7 +504,7 @@
         }
 
         // Modal Chi tiết lịch hẹn
-        window.openAppointmentModal = function(appointmentId) {
+        page.globals.openAppointmentModal = function(appointmentId) {
             const apt = currentAppointmentsList.find(a => a.appointmentId === appointmentId);
             if (!apt) return;
 
@@ -536,11 +539,14 @@
             document.getElementById('appointmentDetailModal').classList.add('active');
         };
 
-        window.closeAppointmentModal = function() {
+        page.globals.closeAppointmentModal = function() {
             document.getElementById('appointmentDetailModal').classList.remove('active');
         };
 
         loadCatalogs();
         loadAppointments();
-    </script>
+
+    page.expose({getStatusStyle, escapeHtml, loadAppointments, renderPagination, loadCatalogs});
+});
+</script>
 }

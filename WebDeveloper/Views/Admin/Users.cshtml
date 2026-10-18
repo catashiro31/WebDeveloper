@@ -221,6 +221,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         let currentPage = 0;
         let totalPages = 0;
         let selectedUserId = null;
@@ -395,7 +398,7 @@
         }
 
         // Modal Khóa
-        window.openBlockModal = function(id, name) {
+        page.globals.openBlockModal = function(id, name) {
             closeUserDetailModal();
             selectedUserId = id;
             document.getElementById('blockUserName').innerText = name || ('Người dùng #' + id);
@@ -403,13 +406,13 @@
             document.getElementById('blockModal').classList.add('active');
         };
 
-        window.closeBlockModal = function() {
+        page.globals.closeBlockModal = function() {
             if (blockPending) return;
             document.getElementById('blockModal').classList.remove('active');
             selectedUserId = null;
         };
 
-        window.submitBlock = function() {
+        page.globals.submitBlock = function() {
             if (blockPending || selectedUserId === null) return;
             const reason = document.getElementById('blockReason').value.trim();
             if (!reason) {
@@ -444,7 +447,7 @@
         };
 
         // Modal Mở khóa (Giao diện chuẩn như Khóa)
-        window.openUnblockModal = function(id, name, prevReason) {
+        page.globals.openUnblockModal = function(id, name, prevReason) {
             closeUserDetailModal();
             selectedUserId = id;
             document.getElementById('unblockUserName').innerText = name || ('Người dùng #' + id);
@@ -462,13 +465,13 @@
             document.getElementById('unblockModal').classList.add('active');
         };
 
-        window.closeUnblockModal = function() {
+        page.globals.closeUnblockModal = function() {
             if (unblockPending) return;
             document.getElementById('unblockModal').classList.remove('active');
             selectedUserId = null;
         };
 
-        window.submitUnblock = function() {
+        page.globals.submitUnblock = function() {
             if (unblockPending || selectedUserId === null) return;
             const reason = document.getElementById('unblockReason').value.trim();
             if (!reason) {
@@ -503,7 +506,7 @@
         };
 
         // Modal Xem chi tiết người dùng
-        window.openUserDetailModal = function(userId) {
+        page.globals.openUserDetailModal = function(userId) {
             const user = usersDataList.find(u => u.userId === userId);
             if (!user) return;
 
@@ -557,10 +560,13 @@
             document.getElementById('userDetailModal').classList.add('active');
         };
 
-        window.closeUserDetailModal = function() {
+        page.globals.closeUserDetailModal = function() {
             document.getElementById('userDetailModal').classList.remove('active');
         };
 
         fetchUsers();
-    </script>
+
+    page.expose({escapeHtml, getRoleBadge, setPage, resetFilters, fetchUsers, renderPagination});
+});
+</script>
 }

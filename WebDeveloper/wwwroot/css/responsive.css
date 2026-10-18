@@ -1,0 +1,80 @@
+/* Shared small-screen constraints; wide data tables scroll inside their own region. */
+*, *::before, *::after { box-sizing: border-box; }
+img, video, canvas { max-width: 100%; }
+main, section, form { min-width: 0; }
+input:not([type=checkbox]):not([type=radio]), select, textarea { max-width: 100%; }
+.table-scroll { max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+@media (max-width: 1024px) {
+    .modal-content, .modal-card, .modal-box { max-width: calc(100vw - 32px) !important; max-height: calc(100dvh - 32px); overflow-y: auto; }
+    .filter-bar, .filter-controls, .search-filters { flex-wrap: wrap; }
+    .filter-tabs { max-width: 100%; overflow-x: auto; }
+    .filter-tab { flex-shrink: 0; }
+    #workspaceContent [style*="grid-template-columns: repeat(4"],
+    #workspaceContent [style*="grid-template-columns: repeat(3"] { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 600px) {
+    input, select, textarea { font-size: 16px !important; }
+    button, a { touch-action: manipulation; }
+    #workspaceContent [style*="grid-template-columns"],
+    .modal-content [style*="grid-template-columns"], .modal-box [style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+    #workspaceContent [style*="grid-column: span"], .modal-content [style*="grid-column: span"] { grid-column: 1 / -1 !important; }
+    #workspaceContent form, #workspaceContent .filter-bar { max-width: 100%; }
+    #workspaceContent .form-row, #workspaceContent .toolbar, #workspaceContent .page-header { flex-wrap: wrap; gap: 12px; }
+    #workspaceContent .filter-bar > *, #workspaceContent .filter-controls > * { min-width: 0 !important; max-width: 100%; }
+    .modal-overlay { padding: 12px !important; }
+    .modal-content, .modal-card, .modal-box { padding: 20px !important; width: calc(100vw - 24px) !important; max-width: 100% !important; }
+    .modal-content h2, .modal-content h3 { font-size: 21px !important; }
+    .hdr-container { padding: 0 12px !important; gap: 12px !important; }
+    .hdr-logo-text { font-size: 20px !important; }
+    .hdr-logo-icon { width: 36px !important; height: 36px !important; }
+    .appt-container, .breadcrumb { padding: 0 12px !important; }
+    .hero-card { padding: 20px !important; border-radius: 20px !important; gap: 24px !important; }
+    .img-wrap { height: 280px !important; }
+    .doc-name { font-size: 26px !important; }
+    .booking-slots { padding: 20px 14px !important; border-radius: 20px !important; }
+    .booking-form { padding: 16px !important; }
+    .week-tabs { display: flex; flex-wrap: wrap; width: 100% !important; }
+    .week-tab-btn { padding: 10px 12px !important; flex: 1 0 auto; }
+    .day-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 8px !important; }
+    .day-btn { padding: 12px 4px !important; min-width: 0; }
+    .slot-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+    .carousel-container { grid-template-columns: minmax(0, 1fr) !important; }
+    .floating-cta { max-width: calc(100vw - 32px); }
+    #bookingConfirmModal > div { padding: 20px !important; max-height: calc(100dvh - 24px); overflow-y: auto; }
+    #bookingConfirmModal [style*="grid-template-columns"] { grid-template-columns: minmax(0, 1fr) !important; }
+}
+@media (max-width: 1024px) {
+    #workspaceContent .header-area { flex-wrap: wrap; gap: 16px; }
+    #workspaceContent .header-area > * { min-width: 0; max-width: 100%; }
+    #workspaceContent .tab-group { flex-wrap: wrap; max-width: 100%; }
+    #workspaceContent .doc-card > div { min-width: 0; }
+    #workspaceContent .chip { max-width: 100%; overflow-wrap: anywhere; }
+}
+@media (max-width: 600px) {
+    #workspaceContent .doc-card { flex-direction: column; padding: 20px; gap: 16px; }
+    #workspaceContent .doc-card > div > div { flex-wrap: wrap; gap: 12px; }
+    #workspaceContent .doc-card > div > div > div { min-width: 0; max-width: 100%; }
+    #workspaceContent .view-toggle-container { max-width: 100%; }
+    #workspaceContent .filter-card > div > div { width: 100%; flex-wrap: wrap; }
+    #workspaceContent .filter-card select { min-width: 0 !important; width: 100%; }
+    #workspaceContent .tab-group { width: 100%; }
+    #workspaceContent .admin-card { padding: 16px; }
+    #workspaceContent #emptyState, #workspaceContent #loading { padding: 32px 12px !important; }
+    #workspaceContent .pagination { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+    .history-date-filters { flex-wrap: wrap; width: 100%; }
+    .history-date-filters > div { flex: 1 1 140px; min-width: 0; }
+    .history-date-filters input { min-width: 0; width: 100%; }
+    .appt-page .info-wrap, .appt-page .contact-info { min-width: 0; overflow-wrap: anywhere; }
+    .appt-page .detail-grid { grid-template-columns: minmax(0, 1fr); }
+    .appt-page .detail-card { min-width: 0; padding: 20px; }
+    .appt-page .name-row, .appt-page .fee-wrap { flex-wrap: wrap; gap: 12px; }
+    .appt-page .fee-wrap { padding: 20px; }
+    .appt-page .contact-item { gap: 12px; }
+    .appt-page .section-row { flex-wrap: wrap; gap: 12px; }
+}
+@media (max-width: 600px) {
+    .about-img-anim { max-width: calc(100vw - 60px); height: auto !important; }
+    .about-card { min-width: 0 !important; flex-basis: 100% !important; }
+}

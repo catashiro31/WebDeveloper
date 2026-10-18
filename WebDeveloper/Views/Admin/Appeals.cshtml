@@ -129,6 +129,9 @@
 
 @section Scripts {
 <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
 let appealPage = 0;
 const appealError = document.getElementById('appealError');
 const rejectModal = document.getElementById('rejectModal');
@@ -289,5 +292,8 @@ setInterval(() => {
         loadAppeals(false, true);
     }
 }, 15000);
+
+    page.expose({openApproveModal, closeApproveModal, submitApproveAppeal, openRejectModal, closeRejectModal, setQuickReason, handleAppealApi, submitRejectAppeal, updateCounts, loadAppeals});
+});
 </script>
 }

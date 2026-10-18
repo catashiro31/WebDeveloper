@@ -617,10 +617,8 @@
         <div id="booking-section" class="booking-slots">
             <h3 class="booking-title">Lịch khám của bác sĩ</h3>
 
-            <div class="week-tabs">
-                <button id="week0Btn" class="week-tab-btn week-tab-btn--active" onclick="setWeek(0)">Tuần này</button>
-                <button id="week1Btn" class="week-tab-btn" onclick="setWeek(1)">Tuần sau</button>
-            </div>
+            <p class="booking-range-note">Chọn lịch từ hôm nay đến 30 ngày tới.</p>
+            <div class="week-tabs" id="bookingWeeks" role="group" aria-label="Chọn tuần khám"></div>
 
             <div id="dayGrid" class="day-grid"></div>
 
@@ -802,11 +800,18 @@
         const docId = @Model.Id;
         const DAYS = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
         
-        let allDays = [];
-        for(let i = 0; i < 14; i++) {
-            let d = new Date();
-            d.setDate(d.getDate() + i);
-            allDays.push(d);
+        // Build date-only values from Vietnam time; browser timezone cannot shift a booking day.
+        const vietnamDate = new Intl.DateTimeFormat('en-CA', {timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date());
+        const firstDay = new Date(vietnamDate + 'T00:00:00Z');
+        const allDays = Array.from({length: @WebDeveloper.Helpers.BookingWindow.MaxAdvanceDays + 1}, (_, i) => {
+            const date = new Date(firstDay); date.setUTCDate(date.getUTCDate() + i); return date;
+        });
+        const weeks = document.getElementById('bookingWeeks');
+        for (let i = 0; i < Math.ceil(allDays.length / 7); i++) {
+            const button = document.createElement('button'); button.type = 'button';
+            button.id = 'week' + i + 'Btn'; button.className = 'week-tab-btn' + (i === 0 ? ' week-tab-btn--active' : '');
+            button.textContent = i === 0 ? '7 ngày đầu' : 'Tuần ' + (i + 1);
+            button.setAttribute('aria-pressed', String(i === 0)); button.onclick = () => setWeek(i); weeks.append(button);
         }
 
         let week = 0;
@@ -839,28 +844,31 @@
         function renderDays() {
             dayGrid.innerHTML = '';
             const startIdx = week * 7;
-            for(let i = 0; i < 7; i++) {
+            for(let i = 0; i < 7 && startIdx + i < allDays.length; i++) {
                 const absIdx = startIdx + i;
                 const d = allDays[absIdx];
                 const btn = document.createElement('button');
                 btn.className = 'day-btn ' + (selectedDayIdx === absIdx ? 'day-btn--active' : '');
                 btn.onclick = () => { selectedDayIdx = absIdx; renderDays(); fetchSlots(); };
-                btn.innerHTML = `<span class="day-name">${DAYS[d.getDay()]}</span><span class="day-num">${d.getDate()}/${d.getMonth()+1}</span>`;
+                btn.innerHTML = `<span class="day-name">${DAYS[d.getUTCDay()]}</span><span class="day-num">${d.getUTCDate()}/${d.getUTCMonth()+1}</span>`;
                 dayGrid.appendChild(btn);
             }
         }
 
         window.setWeek = (w) => {
+            if (!Number.isInteger(w) || w < 0 || w * 7 >= allDays.length) return;
             week = w;
             selectedDayIdx = w * 7;
-            document.getElementById('week0Btn').className = 'week-tab-btn ' + (w === 0 ? 'week-tab-btn--active' : '');
-            document.getElementById('week1Btn').className = 'week-tab-btn ' + (w === 1 ? 'week-tab-btn--active' : '');
+            weeks.querySelectorAll('button').forEach((button, i) => {
+                button.classList.toggle('week-tab-btn--active', i === w);
+                button.setAttribute('aria-pressed', String(i === w));
+            });
             renderDays();
             fetchSlots();
         };
 
         function formatDate(d) {
-            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            return d.toISOString().slice(0, 10);
         }
 
         function formatTimeSlot(time) {
@@ -868,7 +876,9 @@
             return time.replace('SLOT_', '').replace('_', ':').substring(0, 5);
         }
 
+        let slotRequest = 0;
         async function fetchSlots() {
+            const request = ++slotRequest;
             slotGrid.innerHTML = '<span class="slot-empty">Đang tìm các khung giờ trống...</span>';
             selectedSlot = null;
             updateBookingForm();
@@ -876,11 +886,13 @@
             try {
                 const dateStr = formatDate(allDays[selectedDayIdx]);
                 const res = await fetch(`/api/v1/portal/doctors/${docId}/slots?date=${dateStr}`);
+                if (!res.ok) throw new Error(await readApiMessage(res));
                 const data = await res.json();
-                
-                const isSelectedDateToday = dateStr === formatDate(new Date());
-                const nowHour = new Date().getHours();
-                const nowMin = new Date().getMinutes();
+                if (request !== slotRequest) return;
+                const now = new Date(new Date().toLocaleString('en-US', {timeZone: 'Asia/Ho_Chi_Minh'}));
+                const isSelectedDateToday = dateStr === vietnamDate;
+                const nowHour = now.getHours();
+                const nowMin = now.getMinutes();
 
                 slots = (Array.isArray(data) ? data : []).filter(s => {
                     if (s.status !== 'AVAILABLE' && s.isBooked) return false;
@@ -915,6 +927,7 @@
                     });
                 }
             } catch(e) {
+                if (request !== slotRequest) return;
                 console.error(e);
                 slotGrid.innerHTML = '<span class="slot-empty">Lỗi khi tải lịch.</span>';
             }

@@ -189,6 +189,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         
 
         let profileData = null;
@@ -313,7 +316,7 @@
             }
         }
 
-        window.toggleEditMode = function(isEdit) {
+        page.globals.toggleEditMode = function(isEdit) {
             document.getElementById('actionButtons').style.display = isEdit ? 'none' : 'flex';
             document.getElementById('editButtons').style.display = isEdit ? 'flex' : 'none';
             
@@ -329,7 +332,7 @@
             }
         };
 
-        window.saveEdit = function() {
+        page.globals.saveEdit = function() {
             const price = document.getElementById('editPrice').value;
             if (!Number.isFinite(Number(price)) || Number(price) <= 0) { showApiToast('Giá khám phải lớn hơn 0 đồng', 'error'); return; }
             const bio = document.getElementById('editBio').value;
@@ -356,7 +359,7 @@
             .finally(() => { btn.disabled = false; btn.innerText = "Lưu thay đổi"; });
         };
 
-        window.submitForm = function(e) {
+        page.globals.submitForm = function(e) {
             e.preventDefault();
             const formData = new FormData();
             formData.append('bio', document.getElementById('f_bio').value);
@@ -403,13 +406,13 @@
             .finally(() => { btn.disabled = false; btn.innerText = "Gửi hồ sơ xét duyệt"; });
         };
 
-        window.openTransferModal = () => {
+        page.globals.openTransferModal = () => {
             document.getElementById('transferModal').classList.add('active');
             loadTransferFacilities(profileData);
         };
-        window.closeTransferModal = () => document.getElementById('transferModal').classList.remove('active');
+        page.globals.closeTransferModal = () => document.getElementById('transferModal').classList.remove('active');
 
-        window.submitTransfer = function() {
+        page.globals.submitTransfer = function() {
             const fac = document.getElementById('t_facility').value;
             const reason = document.getElementById('t_reason').value;
             if (!fac || !reason) {
@@ -437,6 +440,9 @@
         };
 
         init();
-    </script>
+
+    page.expose({init, renderApproved, loadOptions, loadTransferFacilities});
+});
+</script>
 }
 

@@ -34,6 +34,7 @@
 .btn-edit:hover { background: #c7d2fe; }
 .btn-delete { background: #fee2e2; color: #ef4444; }
 .btn-delete:hover { background: #fca5a5; }
+.btn-delete:disabled { opacity: .45; cursor: not-allowed; background: #fee2e2; }
 
 /* Modal styles */
 .modal-overlay {
@@ -112,6 +113,9 @@
 
 @section Scripts {
     <script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
         let searchTimer, searchVersion = 0;
         document.getElementById('adminSearch').addEventListener('input', () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => {  loadSpecialties(); }, 250); });
 
@@ -146,7 +150,7 @@
                             </td>
                             <td>
                                 <button class="btn-action btn-edit" onclick="openModal(${s.id || s.specialtyId})">Sửa</button>
-                                <button class="btn-action btn-delete" onclick="deleteSpecialty(${s.id || s.specialtyId})">Xóa</button>
+                                <button class="btn-action btn-delete" ${s.canDelete === false ? 'disabled title="Chuyên khoa đang có bác sĩ sử dụng"' : ''} onclick="deleteSpecialty(${s.id || s.specialtyId})">Xóa</button>
                             </td>
                         </tr>
                     `).join('');
@@ -213,7 +217,7 @@
             } catch(e) { showApiToast("Không thể lưu chuyên khoa. Vui lòng thử lại.", 'error'); }
         }
 
-        window.deleteSpecialty = async (id) => {
+        page.globals.deleteSpecialty = async (id) => {
             if (!confirm('Bạn có chắc chắn muốn xóa chuyên khoa này?')) return;
             try {
                 const res = await fetch(`/api/v1/admin/specialty/${id}`, { 
@@ -231,5 +235,8 @@
         };
 
         loadSpecialties();
-    </script>
+
+    page.expose({loadSpecialties, openModal, closeModal, saveSpecialty});
+});
+</script>
 }
