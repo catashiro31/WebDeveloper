@@ -24,7 +24,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - DocBooking Doctor</title>
     <link rel="stylesheet" href="/css/utilities.css" asp-append-version="true" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <link rel="stylesheet" type="text/css" href="/lib/toastify/toastify.css" asp-append-version="true">
     <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
     <link rel="stylesheet" href="/css/role-layout.css" asp-append-version="true" />
     <style>
@@ -143,7 +143,7 @@
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script src="/lib/toastify/toastify.js" asp-append-version="true"></script>
     @await Html.PartialAsync("_AuthState")
     <script src="/js/auth-logout.js" asp-append-version="true"></script>
     <script>
@@ -156,7 +156,7 @@
         if (token) {
             // Fetch Doctor Profile to get status and specialized info
             fetch('/api/v1/doctor/profile', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(profile => {
                 const status = profile.verificationStatus || (user ? user.verificationStatus : 'PENDING');
                 const isApproved = status === 'APPROVED';
@@ -214,53 +214,21 @@
 
         function fetchOverdueCount() {
             fetch('/api/v1/doctor/appointments/overdue', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
                 const count = Array.isArray(data) ? data.length : 0;
-                if (count > 0) {
-                    const badge = document.getElementById('overdueBadge');
-                    badge.innerText = count;
-                    badge.style.display = 'inline-block';
-                    // Check if current action is overdue to color it
-                    if (window.location.pathname.toLowerCase().includes('overdue')) {
-                        badge.style.background = 'white';
-                        badge.style.color = '#5f6dfc';
-                    }
-                }
+                const badge = document.getElementById('overdueBadge');
+                badge.innerText = count;
+                badge.style.display = count > 0 ? 'inline-block' : 'none';
+                badge.removeAttribute('title');
+            })
+            .catch(() => {
+                document.getElementById('overdueBadge').title = 'Chưa cập nhật được số lịch quá hạn';
             });
         }
     </script>
     <script src="/js/api-messages.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
     @await Html.PartialAsync("_Notifications")
-    <script>
-        (function () {
-            var btn = document.getElementById('workspaceMenu');
-            var shade = document.getElementById('workspaceShade');
-            var body = document.body;
-            function openMenu() {
-                body.classList.add('workspace-menu-open');
-                if (btn) btn.setAttribute('aria-expanded', 'true');
-                var sidebar = document.getElementById('workspaceSidebar');
-                if (sidebar && !sidebar.querySelector('.workspace-menu-close')) {
-                    var closeBtn = document.createElement('button');
-                    closeBtn.className = 'workspace-menu-close';
-                    closeBtn.setAttribute('aria-label', 'Đóng menu');
-                    closeBtn.innerHTML = '✕';
-                    closeBtn.onclick = closeMenu;
-                    sidebar.insertBefore(closeBtn, sidebar.firstChild);
-                }
-            }
-            function closeMenu() { body.classList.remove('workspace-menu-open'); if (btn) btn.setAttribute('aria-expanded', 'false'); }
-            if (btn) btn.addEventListener('click', function () { body.classList.contains('workspace-menu-open') ? closeMenu() : openMenu(); });
-            if (shade) shade.addEventListener('click', closeMenu);
-            document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
-            document.addEventListener('click', function (e) {
-                var sidebar = document.getElementById('workspaceSidebar');
-                var link = e.target.closest('a[href]');
-                if (link && sidebar && sidebar.contains(link) && body.classList.contains('workspace-menu-open')) closeMenu();
-            });
-        })();
-    </script>
 </body>
 </html>

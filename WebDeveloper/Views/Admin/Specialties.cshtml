@@ -228,10 +228,10 @@ DocBookingPage.mount(page => {
                         <div style="font-weight: 600; color: #64748b;">#${s.id || s.specialtyId}</div>
                     </td>
                     <td>
-                        <div style="font-weight: 700; color: #1e293b;">${s.name || s.specialtyName}</div>
+                        <div style="font-weight: 700; color: #1e293b;">${escapeHtml(s.name || s.specialtyName)}</div>
                     </td>
                     <td style="max-width: 300px;">
-                        <div style="color: #475569; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${s.description || '-'}</div>
+                        <div style="color: #475569; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(s.description || '-')}</div>
                     </td>
                     <td>
                         <button class="btn-action btn-edit" onclick="openModal(${s.id || s.specialtyId})">Sửa</button>
@@ -260,14 +260,14 @@ DocBookingPage.mount(page => {
             if (pagi) pagi.innerHTML = html;
         }
 
-        window.setSpecPage = function(p) {
+        page.globals.setSpecPage = function(p) {
             if (p < 0) return;
             currentPage = p;
             renderSpecialtiesTable();
             document.querySelector('.admin-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
 
-        window.changeSpecPageSize = function(newSize) {
+        page.globals.changeSpecPageSize = function(newSize) {
             specPageSize = parseInt(newSize) || 4;
             currentPage = 0;
             renderSpecialtiesTable();

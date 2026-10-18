@@ -143,7 +143,9 @@ DocBookingPage.mount(page => {
             fetchHistory();
         }
 
+        let historyRequestVersion = 0;
         function fetchHistory() {
+            const version = ++historyRequestVersion;
             const start = startDateInput.value;
             const end = endDateInput.value;
             clearBtn.style.display = (start || end) ? 'inline-block' : 'none';
@@ -158,13 +160,15 @@ DocBookingPage.mount(page => {
             if (end) url += `&endDate=${end}`;
 
             fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
+                if (version !== historyRequestVersion) return;
                 const list = data.content || data || [];
                 countSpan.innerText = `Hoàn thành (${list.length})`;
                 renderHistory(list);
             })
             .catch(err => {
+                if (version !== historyRequestVersion) return;
                 container.innerHTML = `
                     <div style="text-align: center; padding: 60px;">
                         <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
@@ -194,11 +198,11 @@ DocBookingPage.mount(page => {
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div style="padding: 20px; border-radius: 20px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0;">
                         <label style="font-size: 11px; color: #6366f1; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.05em;">Bác sĩ phụ trách</label>
-                        <div style="font-weight: 800; color: #1e293b; font-size: 16px;">BS. ${detail.doctorName}</div>
+                        <div style="font-weight: 800; color: #1e293b; font-size: 16px;">BS. ${escapeHtml(detail.doctorName)}</div>
                     </div>
                     <div style="padding: 20px; border-radius: 20px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0;">
                         <label style="font-size: 11px; color: #6366f1; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.05em;">Bệnh nhân</label>
-                        <div style="font-weight: 800; color: #1e293b; font-size: 16px;">${detail.patientName}</div>
+                        <div style="font-weight: 800; color: #1e293b; font-size: 16px;">${escapeHtml(detail.patientName)}</div>
                     </div>
                 </div>
             `;
@@ -210,13 +214,13 @@ DocBookingPage.mount(page => {
                             <h4 style="margin: 0 0 16px; color: #059669; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
                                 <span style="font-size: 20px;">🩺</span> Chẩn đoán y khoa
                             </h4>
-                            <p style="margin: 0; font-size: 15px; color: #1e293b; line-height: 1.6; font-weight: 500;">${detail.diagnosis || 'Không có'}</p>
+                            <p style="margin: 0; font-size: 15px; color: #1e293b; line-height: 1.6; font-weight: 500;">${escapeHtml(detail.diagnosis || 'Không có')}</p>
                         </div>
                         <div style="padding: 24px; border-radius: 24px; background: #fcfcfe; border: 1.5px solid #eef2ff;">
                             <h4 style="margin: 0 0 16px; color: #4f46e5; font-size: 16px; font-weight: 800; display: flex; align-items: center; gap: 10px;">
                                 <span style="font-size: 20px;">📝</span> Lời dặn của bác sĩ
                             </h4>
-                            <p style="margin: 0; font-size: 15px; color: #475569; font-style: italic; line-height: 1.6;">"${detail.doctorNotes || ''}"</p>
+                            <p style="margin: 0; font-size: 15px; color: #475569; font-style: italic; line-height: 1.6;">"${escapeHtml(detail.doctorNotes || '')}"</p>
                         </div>
                 `;
                 if (detail.followUpDate) {
@@ -253,7 +257,7 @@ DocBookingPage.mount(page => {
                             <label style="font-size: 12px; color: #d97706; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Đánh giá từ bạn</label>
                             <div style="display: flex; gap: 2px;">${stars}</div>
                         </div>
-                        ${detail.comment ? `<p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.5; padding: 16px; background: rgba(255, 255, 255, 0.5); border-radius: 14px; border: 1px solid rgba(217, 119, 6, 0.1);">${detail.comment}</p>` : ''}
+                        ${detail.comment ? `<p style="margin: 0; font-size: 14px; color: #92400e; line-height: 1.5; padding: 16px; background: rgba(255, 255, 255, 0.5); border-radius: 14px; border: 1px solid rgba(217, 119, 6, 0.1);">${escapeHtml(detail.comment)}</p>` : ''}
                     </div>
                 `;
             }
@@ -263,7 +267,7 @@ DocBookingPage.mount(page => {
         page.globals.openReview = function(id) {
             reviewAppointmentId = id;
             fetch(`/api/v1/patient/history/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(d => {
                 hasExistingReview = (d.rating != null && d.comment && d.comment.trim() !== "");
                 currentRating = d.rating || 5;
@@ -348,8 +352,8 @@ DocBookingPage.mount(page => {
                         <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
                             <div style="flex: 1;">
                                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-                                    <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">BS. ${apt.doctorName}</h3>
-                                    ${apt.patientName ? `<span style="font-weight: 600; font-size: 14px; color: #64748b; background: #f1f5f9; padding: 2px 10px; border-radius: 6px;">BN: ${apt.patientName}</span>` : ''}
+                                    <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">BS. ${escapeHtml(apt.doctorName)}</h3>
+                                    ${apt.patientName ? `<span style="font-weight: 600; font-size: 14px; color: #64748b; background: #f1f5f9; padding: 2px 10px; border-radius: 6px;">BN: ${escapeHtml(apt.patientName)}</span>` : ''}
                                     <span style="padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);">Hoàn thành</span>
                                 </div>
                                 <div style="display: grid; grid-template-columns: auto 1fr; gap: 8px 20px; color: #475569; font-size: 14px;">
@@ -364,8 +368,8 @@ DocBookingPage.mount(page => {
                                     <div style="grid-column: span 2; display: flex; align-items: center; gap: 8px;">
                                         <span style="opacity: 0.7;">📍</span>
                                         <span style="color: #64748b;">
-                                            ${apt.facilityName}
-                                            ${apt.facilityAddress ? `<span style="display: block; font-size: 12px; margin-top: 2px; opacity: 0.8;">${apt.facilityAddress}${apt.facilityProvince ? `, ${apt.facilityProvince}` : ''}</span>` : ''}
+                                            ${escapeHtml(apt.facilityName)}
+                                            ${apt.facilityAddress ? `<span style="display: block; font-size: 12px; margin-top: 2px; opacity: 0.8;">${escapeHtml(apt.facilityAddress)}${apt.facilityProvince ? `, ${escapeHtml(apt.facilityProvince)}` : ''}</span>` : ''}
                                         </span>
                                     </div>
                                 </div>

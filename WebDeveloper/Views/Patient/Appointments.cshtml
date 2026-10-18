@@ -247,7 +247,7 @@ DocBookingPage.mount(page => {
                     <div class="premium-card" style="padding: 24px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${status.color};">
                         <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">BS. ${apt.doctorName}</h3>
+                                <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">BS. ${escapeHtml(apt.doctorName)}</h3>
                                 <span style="padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: ${status.bg}; color: ${status.color}; border: 1px solid ${status.border};">${status.text}</span>
                             </div>
                             
@@ -263,14 +263,14 @@ DocBookingPage.mount(page => {
                                 <div style="grid-column: span 2; display: flex; align-items: center; gap: 8px;">
                                     <span style="opacity: 0.7;">📍</span>
                                     <span style="color: #64748b;">
-                                        ${apt.facilityName}
-                                        ${apt.facilityAddress ? `<span style="display: block; font-size: 12px; margin-top: 2px; opacity: 0.8;">${apt.facilityAddress}${apt.facilityProvince ? `, ${apt.facilityProvince}` : ''}</span>` : ''}
+                                        ${escapeHtml(apt.facilityName)}
+                                        ${apt.facilityAddress ? `<span style="display: block; font-size: 12px; margin-top: 2px; opacity: 0.8;">${escapeHtml(apt.facilityAddress)}${apt.facilityProvince ? `, ${escapeHtml(apt.facilityProvince)}` : ''}</span>` : ''}
                                     </span>
                                 </div>
                                 ${apt.reason ? `
                                     <div style="grid-column: span 2; display: flex; align-items: flex-start; gap: 8px; background: #f8fafc; padding: 10px 14px; border-radius: 10px; margin-top: 4px;">
                                         <span style="opacity: 0.7;">📝</span>
-                                        <span style="font-size: 13px; line-height: 1.5;">${apt.reason}</span>
+                                        <span style="font-size: 13px; line-height: 1.5;">${escapeHtml(apt.reason)}</span>
                                     </div>
                                 ` : ''}
                             </div>

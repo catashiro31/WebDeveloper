@@ -25,7 +25,7 @@ for (const [role,pages] of Object.entries({Admin:['Dashboard','Users','Doctors',
 }
 const context=await browser.newContext({baseURL:process.env.AUDIT_BASE_URL || 'http://127.0.0.1:5011'});const page=await context.newPage();
 page.on('pageerror',e=>failures.push('JS '+page.url()+': '+e.message));
-for(const url of ['/','/Portal/Doctors','/Portal/Facilities','/Portal/DoctorDetail?id='+f.doctorId,'/Home/About','/Home/Contact','/Auth/Login','/Auth/Register']){
+for(const url of ['/','/Portal/Doctors','/Portal/Facilities','/Portal/DoctorDetail?id='+f.doctorId,'/Home/About','/Home/Contact','/Auth/Login','/Auth/Register','/Auth/ForgotPassword','/Auth/ResetPassword','/Auth/VerifyAccount','/Auth/ResendVerification','/Auth/Appeal']){
  await page.goto(url);await page.waitForTimeout(250);
  for(const width of widths){await page.setViewportSize({width,height:900});await page.waitForTimeout(40);const sw=await page.evaluate(()=>document.documentElement.scrollWidth);if(sw>width+2)failures.push('OVERFLOW '+url+' '+width+' '+sw);}
  console.log('VISITED',url);

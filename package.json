@@ -2,10 +2,12 @@
   "name": "docbooking-assets",
   "private": true,
   "scripts": {
-    "build:css": "tailwindcss -i WebDeveloper/Styles/utilities.css -o WebDeveloper/wwwroot/css/utilities.css --minify"
+    "build:css": "tailwindcss -i WebDeveloper/Styles/utilities.css -o WebDeveloper/wwwroot/css/utilities.css --minify",
+    "build:assets": "npm run build:css && node scripts/copy-vendor.cjs"
   },
   "devDependencies": {
     "@tailwindcss/cli": "4.3.3",
-    "tailwindcss": "4.3.3"
+    "tailwindcss": "4.3.3",
+    "toastify-js": "1.12.0"
   }
 }

@@ -46,9 +46,9 @@ const baseURL=process.env.AUDIT_BASE_URL || 'http://127.0.0.1:5011';
  const saved=page.waitForResponse(r=>r.url().endsWith('/api/v1/admin/specialty')&&r.request().method()==='POST');
  await page.locator('button[onclick="saveSpecialty()" ]').click();assert.equal((await saved).status(),200);
  const row=page.locator('#tableBody tr').filter({hasText:temporaryName});await row.waitFor();
- page.once('dialog',dialog=>dialog.accept());
+ // Deletion now uses an explicit in-page confirmation dialog.
  const deleted=page.waitForResponse(r=>r.url().includes('/api/v1/admin/specialty/')&&r.request().method()==='DELETE');
- await row.locator('.btn-delete').click();assert.equal((await deleted).status(),200);await row.waitFor({state:'detached'});
+ await row.locator('.btn-delete').click();await page.locator('#confirmDeleteBtn').click();assert.equal((await deleted).status(),200);await row.waitFor({state:'detached'});
  console.log('PASS: create/save/delete form handlers after AJAX navigation on mobile.');
 
  // Tablet/phone drawer remains reachable and closes after selecting a destination.

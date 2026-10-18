@@ -80,7 +80,6 @@ input:not([type=checkbox]):not([type=radio]), select, textarea { max-width: 100%
 
     /* Modal as bottom sheet on mobile */
     .modal-overlay {
-        display: flex !important;
         align-items: flex-end !important;
         padding: 0 !important;
     }

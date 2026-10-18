@@ -1,3 +1,11 @@
+// Encode text/attributes for HTML templates. Pass dynamic handler arguments via
+// data attributes, not JavaScript string literals (HTML entities are decoded).
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[char]);
+}
+
 // Notifications must not prevent a successful save from refreshing the UI when
 // an external notification script is unavailable.
 function showApiToast(message, type = 'success') {

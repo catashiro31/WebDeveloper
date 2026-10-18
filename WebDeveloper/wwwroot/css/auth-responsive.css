@@ -1,0 +1,21 @@
+/* Standalone authentication pages share the same viewport constraints. */
+*, *::before, *::after { box-sizing: border-box; }
+.login-left, .reg-left, .form-panel { min-width: 0; }
+.forgot-container { min-height: 100dvh; height: auto; }
+.form-panel { padding-block: 32px; }
+@media (max-width: 1024px) {
+    .login-right, .reg-right, .forgot-container .image-panel { display: none; }
+    .login-left, .reg-left, .form-panel { width: 100%; min-height: 100dvh; padding: 24px; }
+    .login-form-container { max-width: 460px; padding: 32px; }
+}
+@media (max-width: 480px) {
+    .login-left, .reg-left, .form-panel { padding: 20px 16px; }
+    .login-form-container { padding: 24px 20px; border-radius: 20px; }
+    .login-title, .title { font-size: 26px; }
+    .login-back-link { margin-bottom: 24px; }
+    input, select, textarea { font-size: 16px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal-delayed { opacity: 1; }
+}

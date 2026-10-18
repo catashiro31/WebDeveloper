@@ -81,6 +81,13 @@
             document.body.classList.remove('workspace-menu-open');
             menu.setAttribute('aria-expanded', 'false');
         }
+        const closeButton = document.createElement('button');
+        closeButton.type = 'button';
+        closeButton.className = 'workspace-menu-close';
+        closeButton.setAttribute('aria-label', 'Đóng menu');
+        closeButton.textContent = '✕';
+        closeButton.addEventListener('click', () => { closeMenu(); menu.focus(); });
+        sidebar.prepend(closeButton);
         menu.addEventListener('click', () => {
             const open = document.body.classList.toggle('workspace-menu-open');
             menu.setAttribute('aria-expanded', String(open));

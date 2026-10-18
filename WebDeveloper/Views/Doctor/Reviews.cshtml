@@ -52,7 +52,7 @@ DocBookingPage.mount(page => {
         function fetchReviews() {
             if (user && user.verificationStatus !== 'APPROVED') return;
             fetch('/api/v1/doctor/reviews?page=0&size=50', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
                 let reviews = [];
                 if (data && Array.isArray(data.content)) reviews = data.content;

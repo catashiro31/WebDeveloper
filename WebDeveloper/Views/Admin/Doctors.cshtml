@@ -405,7 +405,7 @@ DocBookingPage.mount(page => {
             if (facId) url += (url.includes('?') ? '&' : '?') + 'facilityId=' + encodeURIComponent(facId);
 
             fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
                 if (version !== searchVersion) return;
                 document.getElementById('loading').style.display = 'none';
@@ -454,10 +454,10 @@ DocBookingPage.mount(page => {
                             <div style="flex: 1;">
                                 <div class="doc-card-top" style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <div>
-                                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">BS. ${name}</h3>
+                                        <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">BS. ${escapeHtml(name)}</h3>
                                         <div style="margin-top: 4px;">
                                             <span class="chip">📧 ${email}</span>
-                                            <span class="chip">🏥 ${spec}</span>
+                                            <span class="chip">🏥 ${escapeHtml(spec)}</span>
                                             ${fac ? `<span class="chip">📍 ${fac}</span>` : ''}
                                             <span class="chip" style="color: #f59e0b; font-weight: 700;">⭐ ${doc.reviewCount > 0 ? Number(doc.ratingAverage || 0).toFixed(1) + ' (' + doc.reviewCount + ' đánh giá)' : 'Chưa có đánh giá'}</span>
                                             <span style="padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: ${badge.bg}; color: ${badge.color}; display: inline-block; margin-top: 4px;">${badge.label}</span>
@@ -467,7 +467,7 @@ DocBookingPage.mount(page => {
                                 </div>
                                 ${doc.verificationStatus === 'PENDING' ? `
                                 <div class="doc-card-actions" style="display: flex; gap: 12px; margin-top: 20px;">
-                                    <button onclick="openApproveDoctorModal(${doc.doctorId || doc.id}, '${escapeHtml(name)}', '${escapeHtml(spec)}')" style="background: #1063ff; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Phê duyệt ngay</button>
+                                    <button data-name="${escapeHtml(name)}" data-specialty="${escapeHtml(spec)}" onclick="openApproveDoctorModal(${doc.doctorId || doc.id}, this.dataset.name, this.dataset.specialty)" style="background: #1063ff; color: white; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Phê duyệt ngay</button>
                                     <button onclick="openRejectModal(${doc.doctorId || doc.id})" style="background: #fee2e2; color: #ef4444; border: none; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer;">Từ chối</button>
                                 </div>
                                 ` : ''}
@@ -481,7 +481,13 @@ DocBookingPage.mount(page => {
 
                 renderPagination();
             })
-            .catch(() => Toastify({ text: "Lỗi tải dữ liệu", style: {background: "#ef4444"} }).showToast());
+            .catch(() => {
+                if (version !== searchVersion) return;
+                document.getElementById('loading').style.display = 'none';
+                const container = document.getElementById('doctorsContainer');
+                container.style.display = 'block';
+                container.innerHTML = '<div role="alert" style="padding:24px;color:#dc2626">Không thể tải danh sách bác sĩ. <button type="button" onclick="fetchData()">Thử lại</button></div>';
+            });
         }
 
         page.globals.viewDetail = function(id) {
@@ -490,7 +496,7 @@ DocBookingPage.mount(page => {
             document.getElementById('detailContent').style.display = 'none';
 
             fetch(`/api/v1/admin/doctor/${id}`, { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
                 document.getElementById('detailLoading').style.display = 'none';
                 document.getElementById('detailContent').style.display = 'block';

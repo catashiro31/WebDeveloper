@@ -318,7 +318,7 @@ DocBookingPage.mount(page => {
             if (pagi) pagi.style.display = 'none';
             
             fetch('/api/v1/doctor/appointment?page=0&size=200', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
                 allAppointments = data.content || data || [];
                 renderAppointments();
@@ -383,7 +383,7 @@ DocBookingPage.mount(page => {
                                         ${(apt.patientName || 'P').charAt(0)}
                                     </div>
                                     <div>
-                                        <h4 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">${apt.patientName}</h4>
+                                        <h4 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">${escapeHtml(apt.patientName)}</h4>
                                         <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                                             <span style="padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: ${sStyle.bg}; color: ${sStyle.col};">${getStatusText(apt.bookingStatus)}</span>
                                         </div>
@@ -392,19 +392,19 @@ DocBookingPage.mount(page => {
                                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; color: #64748b; font-size: 13px; font-weight: 500;">
                                     <div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">📅</span> ${apt.dateWorking}</div>
                                     <div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">⏰</span> ${formatSlotLabel(apt.timeSlot || apt.startTime)}</div>
-                                    ${apt.patientPhoneNumber ? `<div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">📱</span> ${apt.patientPhoneNumber}</div>` : ''}
+                                    ${apt.patientPhoneNumber ? `<div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">📱</span> ${escapeHtml(apt.patientPhoneNumber)}</div>` : ''}
                                     ${apt.patientGender ? `<div style="display: flex; align-items: center; gap: 8px;"><span style="opacity: 0.7;">👤</span> ${apt.patientGender === 'MALE' ? 'Nam' : (apt.patientGender === 'FEMALE' ? 'Nữ' : 'Khác')}</div>` : ''}
                                 </div>
                                 ${apt.reason ? `
                                     <div style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #edf2f7; font-size: 13px; color: #475569; line-height: 1.5;">
                                         <strong style="color: #64748b; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.5px;">Lý do khám</strong>
-                                        ${apt.reason}
+                                        ${escapeHtml(apt.reason)}
                                     </div>
                                 ` : ''}
                                 ${apt.cancellationReason ? `
                                     <div style="margin-top: 12px; padding: 12px 16px; background: #fef2f2; border-radius: 12px; border: 1px solid #fee2e2; font-size: 13px; color: #991b1b; line-height: 1.5;">
                                         <strong style="color: #b91c1c; font-size: 11px; text-transform: uppercase; display: block; margin-bottom: 4px; letter-spacing: 0.5px;">Lý do ${apt.cancelledBy === 'PATIENT' ? 'bệnh nhân hủy' : 'từ chối'}</strong>
-                                        ${apt.cancellationReason}
+                                        ${escapeHtml(apt.cancellationReason)}
                                     </div>
                                 ` : ''}
                             </div>
@@ -433,7 +433,7 @@ DocBookingPage.mount(page => {
             pagi.innerHTML = phtml;
         }
 
-        window.setDoctorAptPage = function(p) {
+        page.globals.setDoctorAptPage = function(p) {
             currentAptPage = p;
             renderAppointments();
             window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -76,7 +76,7 @@ DocBookingPage.mount(page => {
         function fetchOverdue() {
             if (user && user.verificationStatus !== 'APPROVED') return;
             fetch('/api/v1/doctor/appointments/overdue', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
                 overdueList = Array.isArray(data) ? data : [];
                 
@@ -103,15 +103,15 @@ DocBookingPage.mount(page => {
                             <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
                                 <div style="flex: 1;">
                                     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                                        <span style="font-weight: 700; font-size: 17px; color: #0f172a;">${apt.patientName}</span>
+                                        <span style="font-weight: 700; font-size: 17px; color: #0f172a;">${escapeHtml(apt.patientName)}</span>
                                         <span style="padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #fef3c7; color: #d97706;">Quá hạn</span>
                                     </div>
                                     <div style="color: #64748b; font-size: 14px; display: flex; flex-wrap: wrap; gap: 16px; font-weight: 500;">
                                         <span style="display: flex; align-items: center; gap: 6px;">📅 ${apt.dateWorking}</span>
                                         <span style="display: flex; align-items: center; gap: 6px;">⏰ ${apt.timeSlot ? apt.timeSlot.replace('SLOT_','').replace('_',':') : ''}</span>
-                                        ${apt.patientPhoneNumber ? `<span style="display: flex; align-items: center; gap: 6px;">📱 ${apt.patientPhoneNumber}</span>` : ''}
+                                        ${apt.patientPhoneNumber ? `<span style="display: flex; align-items: center; gap: 6px;">📱 ${escapeHtml(apt.patientPhoneNumber)}</span>` : ''}
                                     </div>
-                                    ${apt.reason ? `<div style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; font-size: 14px; color: #475569;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; display: block;">Lý do khám:</strong> ${apt.reason}</div>` : ''}
+                                    ${apt.reason ? `<div style="margin-top: 16px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; font-size: 14px; color: #475569;"><strong style="color: #64748b; font-size: 12px; text-transform: uppercase; margin-bottom: 4px; display: block;">Lý do khám:</strong> ${escapeHtml(apt.reason)}</div>` : ''}
                                 </div>
                                 <div style="display: flex; gap: 12px;">
                                     <button onclick="openOverdueModal(${apt.appointmentId || apt.id}, 'COMPLETED')" style="padding: 12px 20px; border-radius: 12px; border: none; background: #10b981; color: white; cursor: pointer; font-weight: 600; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transition: all 0.2s;" onmouseenter="this.style.background='#059669'" onmouseleave="this.style.background='#10b981'">Đã khám</button>

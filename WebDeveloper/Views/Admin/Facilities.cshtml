@@ -332,6 +332,7 @@ DocBookingPage.mount(page => {
                 renderFacilitiesPage();
             })
             .catch(() => {
+                if (version !== searchVersion) return;
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('loadError').style.display = 'block';
             });
@@ -357,7 +358,7 @@ DocBookingPage.mount(page => {
                 html += `
                     <div class="facility-card">
                         ${fac.imageUrl 
-                            ? `<img src="${fac.imageUrl}" alt="${name}" class="facility-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />`
+                            ? `<img src="${fac.imageUrl}" alt="${escapeHtml(name)}" class="facility-image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" />`
                             : ``
                         }
                         <div class="facility-placeholder" style="display: ${fac.imageUrl ? 'none' : 'flex'}">
@@ -374,15 +375,15 @@ DocBookingPage.mount(page => {
                         
                         <div class="facility-content">
                             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
-                                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">${name}</h3>
+                                <h3 style="margin: 0; font-size: 18px; font-weight: 800; color: #1e293b;">${escapeHtml(name)}</h3>
                                 <span class="facility-verify-badge ${verified ? 'verified' : ''}">${verified ? 'Đã xác minh' : 'Chờ xác minh'}</span>
                             </div>
                             <div style="font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px; margin-bottom: 12px;">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                                ${address}
+                                ${escapeHtml(address)}
                             </div>
                             <p style="font-size: 14px; color: #475569; line-height: 1.5; margin-bottom: 24px; flex: 1;">
-                                ${fac.description || 'Không có mô tả thông tin cho cơ sở y tế này.'}
+                                ${escapeHtml(fac.description || 'Không có mô tả thông tin cho cơ sở y tế này.')}
                             </p>
                             
                             ${fac.licenseUrl ? `
@@ -395,8 +396,8 @@ DocBookingPage.mount(page => {
                             
                             <div class="card-actions">
                                 ${!verified ? `<button type="button" class="btn-verify-quick" onclick="verifyFacility(${id})">Xác minh nhanh</button>` : ''}
-                                <button type="button" class="btn-card-action" onclick='openModal(${JSON.stringify(fac).replace(/'/g, "&apos;")})'>Chỉnh sửa</button>
-                                <button type="button" class="btn-card-action" style="color: #ef4444;" onclick='openDeleteFacilityModal(${id}, "${escapeHtml(name)}")'>Gỡ bỏ</button>
+                                <button type="button" class="btn-card-action" data-facility="${escapeHtml(JSON.stringify(fac))}" onclick="openModal(JSON.parse(this.dataset.facility))">Chỉnh sửa</button>
+                                <button type="button" class="btn-card-action" style="color: #ef4444;" data-name="${escapeHtml(name)}" onclick="openDeleteFacilityModal(${id}, this.dataset.name)">Gỡ bỏ</button>
                             </div>
                         </div>
                     </div>
@@ -427,14 +428,14 @@ DocBookingPage.mount(page => {
             if (pagi) pagi.innerHTML = phtml;
         }
 
-        window.setFacilityPage = function(p) {
+        page.globals.setFacilityPage = function(p) {
             if (p < 0) return;
             currentFacPage = p;
             renderFacilitiesPage();
             document.getElementById('facilitiesContainer')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
 
-        window.changeFacilityPageSize = function(newSize) {
+        page.globals.changeFacilityPageSize = function(newSize) {
             facPageSize = parseInt(newSize) || 3;
             currentFacPage = 0;
             renderFacilitiesPage();

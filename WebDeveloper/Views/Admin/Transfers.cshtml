@@ -102,7 +102,7 @@ DocBookingPage.mount(page => {
             fetch(`/api/v1/admin/transfers?status=${currentStatus}&page=${currentPage}&size=10`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-            .then(res => res.json())
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
                 document.getElementById('loading').style.display = 'none';
                 const list = data.content || [];
@@ -130,7 +130,7 @@ DocBookingPage.mount(page => {
                         ${currentStatus !== 'PENDING' ? `<td>${req.processedAt ? new Date(req.processedAt).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' }) : 'Chưa ghi nhận'}</td>` : ''}
                         ${currentStatus === 'PENDING' ? `
                         <td>
-                            <button onclick='openModal(${JSON.stringify(req).replace(/'/g, "&apos;")})' style="border: none; background: #e8faf3; color: #0ea47a; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer;">Xử lý</button>
+                            <button data-request="${escapeHtml(JSON.stringify(req))}" onclick="openModal(JSON.parse(this.dataset.request))" style="border: none; background: #e8faf3; color: #0ea47a; padding: 6px 12px; border-radius: 6px; font-weight: 600; cursor: pointer;">Xử lý</button>
                         </td>` : ''}
                     </tr>`;
                 });

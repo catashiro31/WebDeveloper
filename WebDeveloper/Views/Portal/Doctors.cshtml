@@ -957,7 +957,7 @@
             toShow.forEach(s => {
                 const id = s.id || s.specialtyId;
                 const name = s.name || s.specialtyName;
-                elSpecList.innerHTML += `<button class="spec-item ${state.specId === id ? 'active' : ''}" onclick="setSpec(${id})">${name}</button>`;
+                elSpecList.innerHTML += `<button class="spec-item ${state.specId === id ? 'active' : ''}" onclick="setSpec(${id})">${escapeHtml(name)}</button>`;
             });
 
             if(isSpecExpanded) elSpecList.classList.add('expanded');
@@ -990,7 +990,7 @@
                 toShow.forEach(f => {
                     const id = f.id || f.facilityId;
                     const name = f.name || f.facilityName;
-                    elFacList.innerHTML += `<button class="spec-item ${state.facilityId === id ? 'active' : ''}" onclick="setFac(${id})">${name}</button>`;
+                    elFacList.innerHTML += `<button class="spec-item ${state.facilityId === id ? 'active' : ''}" onclick="setFac(${id})">${escapeHtml(name)}</button>`;
                 });
             }
 
@@ -1137,9 +1137,9 @@
                         const fee = doc.fee || doc.price || doc.consultationFee || 0;
                         const isPlaceholder = !photo || photo.includes("placeholder") || photo.includes("dicebear");
                         
-                        let avatarHtml = isPlaceholder ? 
-                            `<div class="initials-avatar">${getInitials(name)}</div>` : 
-                            `<img src="${photo}" alt="${name}" class="avatar" onerror="this.style.display='none'; this.parentElement.innerHTML='<div class=\\'initials-avatar\\'>${getInitials(name)}</div>';" />`;
+                        const initials = `<div class="initials-avatar">${escapeHtml(getInitials(name))}</div>`;
+                        const avatarHtml = isPlaceholder ? initials :
+                            `<img src="${escapeHtml(photo)}" alt="${escapeHtml(name)}" class="avatar" onerror="this.hidden=true; this.nextElementSibling.hidden=false;" /><div class="initials-avatar" hidden>${escapeHtml(getInitials(name))}</div>`;
 
                         return `
                         <a href="/Portal/DoctorDetail?id=${doc.doctorId || doc.id}" class="doc-card" style="grid-column: span 1;">
@@ -1153,12 +1153,12 @@
                                         ${doc.available !== false ? 'Đang hoạt động' : 'Tạm nghỉ'}
                                     </span>
                                 </div>
-                                <h3 class="doc-name">${name}</h3>
-                                <p class="doc-spec">${doc.specialtyName || doc.specialty || doc.specialization}</p>
+                                <h3 class="doc-name">${escapeHtml(name)}</h3>
+                                <p class="doc-spec">${escapeHtml(doc.specialtyName || doc.specialty || doc.specialization)}</p>
                                 
                                 <div class="doc-facility">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7"/><path d="M4 21V4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v17"/></svg>
-                                    <span class="doc-facility-text">${doc.facilityName || doc.facility || 'Phòng khám riêng'}${doc.province ? ` • ${doc.province}` : ''}</span>
+                                    <span class="doc-facility-text">${escapeHtml(doc.facilityName || doc.facility || 'Phòng khám riêng')}${doc.province ? ` • ${escapeHtml(doc.province)}` : ''}</span>
                                 </div>
 
                                 <div class="card-bottom-wrap">

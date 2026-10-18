@@ -190,7 +190,7 @@
             const container = document.getElementById('facilitiesContainer');
             
             fetch('/api/v1/portal/facilities')
-                .then(res => res.json())
+                .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
                 .then(data => {
                     const list = data.content || data || [];
                     const facilities = Array.isArray(list) ? list : [];
@@ -216,7 +216,7 @@
                         ` : '';
 
                         const imgHtml = hasImage ? `
-                            <img src="${fac.imageUrl}" alt="${name}" class="facility-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                            <img src="${escapeHtml(fac.imageUrl)}" alt="${escapeHtml(name)}" class="facility-img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
                             <div class="facility-fallback" style="display: none;">
                                 <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="2" width="16" height="20" rx="3" fill="#6366f1" fill-opacity="0.1"/><rect x="4" y="2" width="16" height="20" rx="3" stroke="#6366f1" stroke-width="2" stroke-dasharray="4 2"/><rect x="8" y="7" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/><rect x="8" y="11" width="8" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/><rect x="8" y="15" width="4" height="2" rx="1" fill="#6366f1" fill-opacity="0.2"/><circle cx="18" cy="18" r="5" fill="#6366f1"/><path d="M18 15.5V20.5M15.5 18H20.5" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
                             </div>
@@ -244,12 +244,12 @@
                                 </div>
                                 <div class="facility-body">
                                     <div class="facility-title-row">
-                                        <h3>${name}</h3>
+                                        <h3>${escapeHtml(name)}</h3>
                                         ${verifiedHtml}
                                     </div>
                                     <p class="facility-address">
                                         <span>📍</span>
-                                        <span>${address}</span>
+                                        <span>${escapeHtml(address)}</span>
                                     </p>
                                     <p class="facility-desc">${fac.description || ''}</p>
                                     ${mapHtml}

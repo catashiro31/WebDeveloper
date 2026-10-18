@@ -285,11 +285,11 @@ DocBookingPage.mount(page => {
                 return `
                     <tr style="${isHidden ? 'background: #fcfcfd; opacity: 0.8;' : ''}">
                         <td>
-                            <div style="font-weight: 700; color: #1e293b;">${r.patientName || 'N/A'}</div>
+                            <div style="font-weight: 700; color: #1e293b;">${escapeHtml(r.patientName || 'N/A')}</div>
                             <div style="font-size: 12px; color: #64748b; margin-top: 2px;">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('vi-VN') : ''}</div>
                         </td>
                         <td>
-                            <div style="font-weight: 700; color: #1e293b;">BS. ${r.doctorName || 'N/A'}</div>
+                            <div style="font-weight: 700; color: #1e293b;">BS. ${escapeHtml(r.doctorName || 'N/A')}</div>
                         </td>
                         <td>
                             <div style="color: #f59e0b; font-weight: 800; font-size: 15px;">★ ${r.rating}</div>
@@ -305,7 +305,7 @@ DocBookingPage.mount(page => {
                                     ? '<span class="badge-status badge-hidden">● Đã ẩn</span>' 
                                     : '<span class="badge-status badge-visible">● Đang hiển thị</span>'}
                             </div>
-                            <button class="btn-action ${isHidden ? 'btn-unhide' : 'btn-hide'}" onclick='openToggleReviewModal(${id}, ${isHidden}, "${escapeHtml(r.comment || "")}")'>
+                            <button class="btn-action ${isHidden ? 'btn-unhide' : 'btn-hide'}" data-comment="${escapeHtml(r.comment)}" onclick="openToggleReviewModal(${id}, ${isHidden}, this.dataset.comment)">
                                 ${isHidden ? '👁️ Hiện lại' : '🚫 Ẩn'}
                             </button>
                         </td>

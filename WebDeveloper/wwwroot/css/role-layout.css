@@ -161,6 +161,10 @@
     .role-shell > aside, .workspace-spinner { transition: none !important; animation: none !important; }
 }
 
+.workspace-menu-close { display: none; }
+.nav-link.active #overdueBadge { background: white !important; color: #5f6dfc; }
+@media (max-width: 1024px) { .workspace-menu-close { display: flex; } }
+
 /* ── Persistent layout must NOT create a transformed containing block for fixed dialogs. ── */
 .role-shell > main { animation: none !important; opacity: 1 !important; transform: none !important; }
 @media (max-width: 1024px) {
