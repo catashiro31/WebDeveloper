@@ -110,7 +110,10 @@ namespace WebDeveloper.Services
             if (maxPrice.HasValue)
                 query = query.Where(d => d.Price <= maxPrice.Value);
 
-            if (sortBy == "rating") query = query.OrderByDescending(d => d.RatingAverage);
+            if (sortBy == "rating") query = query
+                .OrderByDescending(d => d.ReviewCount > 0 ? (d.RatingAverage ?? 0) : 0)
+                .ThenByDescending(d => d.ReviewCount)
+                .ThenBy(d => d.DoctorId);
             else if (sortBy == "priceAsc") query = query.OrderBy(d => d.Price);
             else if (sortBy == "priceDesc") query = query.OrderByDescending(d => d.Price);
             else if (sortBy == "experience") query = query.OrderByDescending(d => d.ExperienceYears);

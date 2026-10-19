@@ -7,6 +7,7 @@
     var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
 }
 
+<link rel="stylesheet" href="/css/featured-doctors.css" asp-append-version="true" />
 <style>
     
     body { font-family: var(--font-app); }
@@ -197,8 +198,12 @@
             </a>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            @if(topDoctors != null)
+        <div class="featured-controls" aria-label="Lướt danh sách chuyên gia">
+            <button id="featuredPrevious" type="button" aria-label="Chuyên gia trước" aria-controls="featuredDoctors">←</button>
+            <button id="featuredNext" type="button" aria-label="Chuyên gia tiếp theo" aria-controls="featuredDoctors">→</button>
+        </div>
+        <div class="featured-track" id="featuredDoctors" role="region" aria-label="Bác sĩ được đánh giá cao" tabindex="0">
+            @if(topDoctors?.Any() == true)
             {
                 foreach(var doc in topDoctors)
                 {
@@ -226,12 +231,16 @@
                                 </div>
                             </div>
                             <h3 class="text-xl font-extrabold tracking-tight group-hover:text-indigo-600 transition-colors mb-4 line-clamp-2">BS. @doc.DoctorName</h3>
-                            <button class="mt-auto w-full py-4 bg-slate-50 border-none cursor-pointer rounded-2xl text-slate-900 font-bold text-sm group-hover:bg-indigo-600 group-hover:text-white transition-all shrink-0">
+                            <span class="text-center mt-auto w-full py-4 bg-slate-50 border-none cursor-pointer rounded-2xl text-slate-900 font-bold text-sm group-hover:bg-indigo-600 group-hover:text-white transition-all shrink-0">
                                 Đặt lịch khám ngay
-                            </button>
+                            </span>
                         </div>
                     </a>
                 }
+            }
+            else
+            {
+                <p>Chưa có bác sĩ được đánh giá. <a href="/Portal/Doctors">Xem danh sách bác sĩ</a></p>
             }
         </div>
     </section>
@@ -288,3 +297,7 @@
     </section>
 
 </div>
+
+@section Scripts {
+    <script src="/js/featured-doctors.js" asp-append-version="true"></script>
+}

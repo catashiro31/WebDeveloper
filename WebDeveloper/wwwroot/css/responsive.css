@@ -233,4 +233,5 @@ input:not([type=checkbox]):not([type=radio]), select, textarea { max-width: 100%
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition: none !important; animation: none !important; }
+    .reveal, .reveal-delayed { opacity: 1 !important; transform: none !important; }
 }

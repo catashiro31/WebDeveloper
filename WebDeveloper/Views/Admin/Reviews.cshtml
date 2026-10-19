@@ -49,16 +49,9 @@
 .premium-table td { padding: 18px 20px; border-bottom: 1px solid #f1f5f9; font-size: 14px; vertical-align: top; }
 .premium-table tr:hover { background: #fafbfc; }
 
-.badge-status {
-    display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px;
-    border-radius: 8px; font-size: 12px; font-weight: 700;
-}
-.badge-visible { background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; }
-.badge-hidden { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
-.badge-toxic {
-    background: #fef2f2; color: #dc2626; border: 1px solid #fecaca;
-    font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 6px; display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
-}
+.badge-status { display: inline-block; white-space: nowrap; font-size: 12px; font-weight: 700; }
+.badge-visible { color: #059669; }
+.badge-hidden { color: #64748b; }
 
 .btn-action {
     padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 13px;
@@ -238,6 +231,11 @@ DocBookingPage.mount(page => {
                 rawReviews = data.content || [];
                 state.totalPages = data.totalPages || 1;
                 state.totalElements = data.totalElements != null ? data.totalElements : rawReviews.length;
+                if (state.page >= state.totalPages) {
+                    state.page = Math.max(0, state.totalPages - 1);
+                    loadReviews();
+                    return;
+                }
                 applyFilter();
             } catch (err) {
                 if (version !== reviewRequestVersion) return;
@@ -409,19 +407,7 @@ DocBookingPage.mount(page => {
                 info.innerHTML = `Hiển thị <strong>${fromItem} - ${toItem}</strong> trên tổng số <strong>${state.totalElements}</strong> đánh giá (Trang ${state.page + 1}/${Math.max(1, state.totalPages)})`;
             }
 
-            const total = Math.max(1, state.totalPages);
-            let html = `<button type="button" ${state.page === 0 ? 'disabled' : ''} onclick="changePage(${state.page - 1})">← Trước</button>`;
-            
-            for(let i = 0; i < total; i++) {
-                if (total <= 7 || (i >= state.page - 2 && i <= state.page + 2) || i === 0 || i === total - 1) {
-                    html += `<button type="button" class="${state.page === i ? 'active' : ''}" onclick="changePage(${i})">${i + 1}</button>`;
-                } else if (i === state.page - 3 || i === state.page + 3) {
-                    html += `<span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; color: #94a3b8; font-weight: 700;">...</span>`;
-                }
-            }
-            
-            html += `<button type="button" ${state.page >= total - 1 ? 'disabled' : ''} onclick="changePage(${state.page + 1})">Sau →</button>`;
-            pagi.innerHTML = html;
+            renderAdminPagination(pagi, state.page, Math.max(1, state.totalPages), page.globals.changePage);
         }
 
         page.globals.changePage = (p) => {

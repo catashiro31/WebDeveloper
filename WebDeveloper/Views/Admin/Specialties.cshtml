@@ -247,17 +247,7 @@ DocBookingPage.mount(page => {
                 info.innerHTML = `Hiển thị <strong>${start + 1} - ${toItem}</strong> trên tổng số <strong>${specialties.length}</strong> chuyên khoa (Trang ${currentPage + 1}/${totalPages})`;
             }
 
-            let html = `<button type="button" class="btn-action" ${currentPage === 0 ? 'disabled' : ''} onclick="setSpecPage(${currentPage - 1})">← Trước</button>`;
-            for (let i = 0; i < totalPages; i++) {
-                if (totalPages <= 7 || (i >= currentPage - 2 && i <= currentPage + 2) || i === 0 || i === totalPages - 1) {
-                    const isActive = i === currentPage;
-                    html += `<button type="button" class="btn-action" style="${isActive ? 'background: #6366f1; color: white; border-color: #6366f1; font-weight: 800;' : ''}" onclick="setSpecPage(${i})">${i + 1}</button>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += `<span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; color: #94a3b8; font-weight: 700;">...</span>`;
-                }
-            }
-            html += `<button type="button" class="btn-action" ${currentPage >= totalPages - 1 ? 'disabled' : ''} onclick="setSpecPage(${currentPage + 1})">Sau →</button>`;
-            if (pagi) pagi.innerHTML = html;
+            if (pagi) renderAdminPagination(pagi, currentPage, totalPages, page.globals.setSpecPage);
         }
 
         page.globals.setSpecPage = function(p) {

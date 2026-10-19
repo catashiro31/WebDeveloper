@@ -63,3 +63,19 @@ không sửa dữ liệu thật. Dùng các biến Chromium/Playwright như ph�
 
 `build:assets` biên dịch utility CSS và sao chép Toastify cùng giấy phép từ phiên
 bản npm cố định. Asset đầu ra được commit, nên máy chạy .NET không cần Node.
+
+## Phân trang, danh sách chuyên gia và header
+
+Sau khi tạo database AuditRegression cô lập, nạp `featured-fixtures.sql` vào
+**database test đó** (không dùng production). Script thêm 8 bác sĩ mẫu, gồm một
+bác sĩ chưa được đánh giá để kiểm tra thứ tự xếp hạng. Sau đó khởi động ứng dụng
+với database này và chạy:
+
+```sh
+AUDIT_BASE_URL=http://127.0.0.1:5013 node tests/AuditRegression/pagination-browser.cjs
+```
+
+Kiểm tra chuyển trang đầu/cuối/quay lại ở bốn trang Admin sau điều hướng AJAX,
+trạng thái đánh giá không đóng khung, hai cột bác sĩ ở 768/820/1024px, bỏ bộ chọn
+số bác sĩ/trang, menu cả ba vai trò không lặp thông tin, header có mục đang chọn,
+bộ lọc đóng/mở, tối đa 6 chuyên gia có đánh giá và carousel hiện 3/2/1 thẻ.

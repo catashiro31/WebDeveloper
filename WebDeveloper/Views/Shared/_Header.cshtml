@@ -165,10 +165,11 @@
 .hdr-hamburger.open span:nth-child(2) { opacity: 0; }
 .hdr-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 .hdr-overlay { display: none; }
+.hdr-nav a.active { color: #6366f1; font-weight: 800; background: #eef2ff; border-radius: 10px; }
 
 .hdr-drawer-header { display: none; }
 
-@@media (max-width: 900px) {
+@@media (max-width: 1024px) {
   .hdr-container { padding: 0 20px; }
   .hdr-mobile-toggle { display: block; z-index: 202; }
   .hdr-overlay { display: block; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 10000; opacity: 0; visibility: hidden; transition: 0.3s; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
@@ -199,6 +200,7 @@
   .hdr-auth { flex-direction: column; gap: 8px; width: 100%; margin-top: 8px; }
   .hdr-btn-login, .hdr-btn-register { width: 100%; text-align: center; }
   .hdr-user { width: 100%; margin-top: 8px; }
+  .hdr-dd-header { display: none; }
   .hdr-user-btn { width: 100%; justify-content: space-between; border-radius: 12px; }
   .hdr-dropdown {
     position: static !important; width: 100% !important;
@@ -362,6 +364,14 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    const path = location.pathname.toLowerCase().replace(/\/$/, '') || '/';
+    document.querySelectorAll('.hdr-nav a').forEach(link => {
+      const href = new URL(link.href).pathname.toLowerCase();
+      const selected = href === '/' ? (path === '/' || path === '/home' || path === '/home/index') :
+        href === '/portal/doctors' ? path.startsWith('/portal/doctor') : path === href;
+      link.classList.toggle('active', selected);
+      if (selected) link.setAttribute('aria-current', 'page');
+    });
     // Scroll Effect
     const header = document.getElementById('mainHeader');
     window.addEventListener('scroll', () => {

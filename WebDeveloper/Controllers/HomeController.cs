@@ -17,12 +17,12 @@ namespace WebDeveloper.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var doctors = await _publicService.GetDoctors(null, null, null, null, null, null, "rating", 0, 8);
+            var doctors = await _publicService.GetDoctors(null, null, null, null, null, null, "rating", 0, 6);
             var specialties = await _publicService.GetAllSpecialties();
             var facilities = await _publicService.GetAllFacilities();
             var stats = await _publicService.GetPortalStats();
 
-            ViewBag.TopDoctors = doctors.Content;
+            ViewBag.TopDoctors = doctors.Content.Where(d => d.TotalReviews > 0).ToList();
             ViewBag.Specialties = specialties;
             ViewBag.Facilities = facilities;
             ViewBag.Stats = stats;

@@ -82,6 +82,7 @@
 .spec-item.active { background: #eef2ff; color: #6366f1; }
 
 .doctors-content-col {
+  width: 100%;
   flex: 1;
   min-width: 0;
   display: flex;
@@ -103,34 +104,6 @@
   font-weight: 700;
   color: #334155;
   font-family: var(--font-app);
-}
-
-.doctors-page-size-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13.5px;
-  color: #64748b;
-  font-weight: 600;
-  font-family: var(--font-app);
-}
-
-.page-size-select {
-  padding: 8px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: #fff;
-  color: #1e293b;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: var(--font-app);
-  outline: none;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.page-size-select:focus {
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .grid-doctors { flex: 1; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 32px; }
@@ -478,10 +451,12 @@
 
 /* ===== RESPONSIVE & MOBILE BOTTOM SHEET ===== */
 @@media (max-width: 1024px) {
+  .doctors-toolbar { display: none; }
   .hero-wrapper { padding: 16px 20px; }
   .hero { padding: 36px 28px; border-radius: 24px; }
   .hero-title { font-size: 28px; }
   .search-wrap { width: 100%; }
+  .grid-doctors { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
   .main { flex-direction: column; padding: 0 20px; margin: 20px auto 60px; }
   .mobile-filter-bar { display: flex; }
 
@@ -516,12 +491,16 @@
     overflow-y: auto;
     box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
     transform: translateY(105%);
+    visibility: hidden;
+    pointer-events: none;
     transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
     padding: 20px 20px 40px;
     box-sizing: border-box;
     top: auto;
   }
   .sidebar.open {
+    visibility: visible;
+    pointer-events: auto;
     transform: translateY(0);
   }
 
@@ -562,7 +541,7 @@
   }
 }
 
-@@media (max-width: 768px) {
+@@media (max-width: 640px) {
   .hero-wrapper { padding: 12px 14px; }
   .hero { padding: 24px 18px; border-radius: 20px; }
   .hero-title { font-size: 22px; }
@@ -669,14 +648,6 @@
   }
   .doctors-count-summary {
     font-size: 13.5px;
-  }
-  .doctors-page-size-wrap {
-    font-size: 12px;
-  }
-  .page-size-select {
-    padding: 6px 10px;
-    font-size: 12px;
-    border-radius: 10px;
   }
   .pagination-wrapper {
     margin-top: 28px;
@@ -798,20 +769,12 @@
 
         <!-- DOCTORS CONTENT COLUMN -->
         <main class="doctors-content-col">
-            <!-- TOOLBAR: Count summary + Page size selector -->
+            <!-- Results summary -->
             <div class="doctors-toolbar" id="doctorsToolbar">
                 <div class="doctors-count-summary" id="doctorsCountSummary">
                     Đang tìm kiếm bác sĩ...
                 </div>
-                <div class="doctors-page-size-wrap">
-                    <label for="pageSizeSelect">Hiển thị:</label>
-                    <select id="pageSizeSelect" class="page-size-select" onchange="changePageSize(this.value)">
-                        <option value="3" selected>3 bác sĩ / trang</option>
-                        <option value="6">6 bác sĩ / trang</option>
-                        <option value="9">9 bác sĩ / trang</option>
-                        <option value="12">12 bác sĩ / trang</option>
-                    </select>
-                </div>
+
             </div>
 
             <!-- DOCTORS GRID -->
@@ -840,7 +803,7 @@
             minPrice: 0,
             maxPrice: priceLimit,
             page: 0,
-            size: 3,
+            size: 6,
             totalPages: 0,
             totalElements: 0,
             facSearch: ''
@@ -880,8 +843,6 @@
         const elTrack = document.getElementById('rangeTrack');
         const elGrid = document.getElementById('doctorsGrid');
         const elPagi = document.getElementById('pagination');
-        const elPageSize = document.getElementById('pageSizeSelect');
-        if (elPageSize) elPageSize.value = state.size;
 
         // Init values
         elSearch.value = state.search;
@@ -1113,9 +1074,6 @@
                 state.totalPages = data.totalPages || 0;
                 state.totalElements = data.totalElements || 0;
 
-                // Sync page size selector if changed externally
-                if (elPageSize) elPageSize.value = state.size;
-
                 // Update summary count
                 updateSummaryCounts();
 
@@ -1301,11 +1259,7 @@
             }
         };
 
-        window.changePageSize = (newSize) => {
-            state.size = parseInt(newSize) || 3;
-            state.page = 0;
-            triggerFetch();
-        };
+
 
         // Add pulse animation
         const style = document.createElement('style');
@@ -1335,9 +1289,6 @@
         };
 
         // Update mobile UI after fetch
-        const _originalFetch = fetchDoctors;
-        const elMobileCount = document.getElementById('mobileResultCount');
-        const elMobileFilterCount = document.getElementById('mobileFilterCount');
 
         function updateMobileFilterCount() {
             let count = 0;
@@ -1359,19 +1310,6 @@
         // Hook into triggerFetch to update mobile UI
         const _origTrigger = triggerFetch;
         triggerFetch = function() { updateMobileFilterCount(); _origTrigger(); };
-
-        // Patch result count display
-        const origFetchDoctors = fetchDoctors;
-        fetchDoctors = async function() {
-            await origFetchDoctors();
-            // Update result count text
-            const total = state.totalPages * state.size;
-            if (elMobileCount) {
-                const grid = document.getElementById('doctorsGrid');
-                const cards = grid ? grid.querySelectorAll('.doc-card').length : 0;
-                elMobileCount.textContent = cards > 0 ? `${cards} bác sĩ được tìm thấy` : 'Không tìm thấy bác sĩ';
-            }
-        };
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') closeFilterSheet();
