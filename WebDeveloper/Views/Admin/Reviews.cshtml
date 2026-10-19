@@ -112,7 +112,7 @@
 
 <div class="page-header">
     <h2 class="page-title">Đánh giá hệ thống</h2>
-    <p class="page-desc">Naive Bayes gợi ý bài cần xem xét. Admin quyết định ẩn nội dung; số sao vẫn được tính.</p>
+
 </div>
 
 <!-- Modal Xác nhận Ẩn/Hiện Đánh giá -->
@@ -158,25 +158,15 @@
             <button class="tab-btn warning-tab" onclick="setTab('profane', this)">⚠️ Nghi vấn thô tục</button>
             <button class="tab-btn warning-tab" onclick="setTab('spam', this)">Nghi vấn spam</button>
             <button class="tab-btn warning-tab" onclick="setTab('advertising', this)">Nghi vấn quảng cáo</button>
-        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-            <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: #64748b; font-weight: 600;">
-                <label for="reviewPageSizeSelect">Hiển thị:</label>
-                <select id="reviewPageSizeSelect" onchange="changeReviewPageSize(this.value)" style="padding: 7px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; background: #fff; font-size: 13px; font-weight: 600; color: #1e293b; outline: none; cursor: pointer;">
-                    <option value="3">3 / trang</option>
-                    <option value="5" selected>5 / trang</option>
-                    <option value="10">10 / trang</option>
-                    <option value="20">20 / trang</option>
-                </select>
-            </div>
-            <div class="search-box">
-                <span style="color: #94a3b8; margin-right: 8px;">🔍</span>
-                <input type="text" id="searchKeyword" placeholder="Tìm theo tên hoặc nội dung..." oninput="handleSearch()" />
-            </div>
+        </div>
+        <div class="search-box">
+            <span style="color: #94a3b8; margin-right: 8px;">🔍</span>
+            <input type="text" id="searchKeyword" placeholder="Tìm theo tên hoặc nội dung..." oninput="handleSearch()" />
         </div>
     </div>
 
-    <div class="table-scroll">
-        <table class="premium-table">
+    <div class="table-scroll" style="overflow-x: auto;">
+        <table class="premium-table" style="min-width: 700px;">
             <thead>
                 <tr>
                     <th style="width: 22%;">Khách hàng</th>
@@ -192,8 +182,8 @@
         </table>
     </div>
     <div id="reviewPaginationWrapper" style="display: none; flex-direction: column; align-items: center; gap: 12px; margin-top: 28px;">
-        <div class="pagination" id="pagination"></div>
-        <div id="reviewPaginationInfo" style="font-size: 13px; color: #64748b; font-weight: 600;"></div>
+        <div class="pagination" id="pagination" style="justify-content: center;"></div>
+        <div id="reviewPaginationInfo" style="font-size: 13px; color: #64748b; font-weight: 600; text-align: center;"></div>
     </div>
 </div>
 

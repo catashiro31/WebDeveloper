@@ -194,30 +194,34 @@
 
 <!-- Thanh lọc nằm ngang gọn gàng -->
 <div class="filter-card">
-    <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center; width: 100%;">
-        <div class="filter-item-wrap" style="display: flex; align-items: center; gap: 8px;">
-            <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">🏥 Chuyên khoa:</label>
-            <select id="filterSpecialty" class="filter-select" style="min-width: 170px;">
+    <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; width: 100%;">
+        <div class="filter-item-wrap" style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px;">
+            <label style="font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">🏥 Chuyên khoa</label>
+            <select id="filterSpecialty" class="filter-select" style="min-width: 160px;">
                 <option value="">Tất cả chuyên khoa</option>
             </select>
         </div>
 
-        <div class="filter-item-wrap" style="display: flex; align-items: center; gap: 8px;">
-            <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">📍 Cơ sở y tế:</label>
-            <select id="filterFacility" class="filter-select" style="min-width: 170px;">
+        <div class="filter-item-wrap" style="display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 160px;">
+            <label style="font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">📍 Cơ sở y tế</label>
+            <select id="filterFacility" class="filter-select" style="min-width: 160px;">
                 <option value="">Tất cả cơ sở</option>
             </select>
         </div>
 
-        <div class="filter-item-wrap" style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-            <label style="font-size: 13px; font-weight: 700; color: #64748b; white-space: nowrap;">📅 Ngày khám từ:</label>
-            <input type="date" id="filterWorkDateFrom" class="filter-select" style="padding: 7px 10px;" />
-            <span style="font-size: 13px; font-weight: 700; color: #94a3b8;">đến</span>
-            <input type="date" id="filterWorkDateTo" class="filter-select" style="padding: 7px 10px;" />
+        <div class="filter-item-wrap" style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">📅 Từ ngày</label>
+            <input type="date" id="filterWorkDateFrom" class="filter-select" style="padding: 8px 12px;" />
         </div>
 
-        <div class="filter-btn-reset-wrap" style="margin-left: auto;">
-            <button id="resetFilterBtn" onclick="resetFilters()" class="filter-btn-reset">
+        <div class="filter-item-wrap" style="display: flex; flex-direction: column; gap: 5px;">
+            <label style="font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">📅 Đến ngày</label>
+            <input type="date" id="filterWorkDateTo" class="filter-select" style="padding: 8px 12px;" />
+        </div>
+
+        <div class="filter-btn-reset-wrap" style="display: flex; flex-direction: column; gap: 5px; justify-content: flex-end;">
+            <label style="font-size: 12px; font-weight: 700; color: transparent; text-transform: uppercase; letter-spacing: 0.05em; user-select: none;">reset</label>
+            <button id="resetFilterBtn" onclick="resetFilters()" class="filter-btn-reset" style="display: flex; align-items: center; gap: 6px;">
                 🔄 Đặt lại
             </button>
         </div>
