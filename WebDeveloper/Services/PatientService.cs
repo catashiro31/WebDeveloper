@@ -190,8 +190,6 @@ namespace WebDeveloper.Services
 
                 var schedule = await _db.DoctorSchedules
                     .Include(s => s.Doctor).ThenInclude(d => d.User)
-                    .Include(s => s.Doctor).ThenInclude(d => d.Specialty)
-                    .Include(s => s.Facility)
                     .FirstOrDefaultAsync(s => s.ScheduleId == req.ScheduleId)
                     ?? throw new InvalidOperationException("Ca khám không tồn tại");
 
@@ -246,17 +244,10 @@ namespace WebDeveloper.Services
                 schedule.SlotStatus = SlotStatus.BOOKED;
                 schedule.Version = (schedule.Version ?? 0) + 1;
 
-                var bookedFacility = await _db.Facilities.FindAsync(schedule.FacilityId ?? schedule.Doctor.FacilityId);
                 var appointment = new Appointment
                 {
                     PatientId = req.PatientId,
                     ScheduleId = req.ScheduleId,
-                    BookedPrice = schedule.Doctor.Price,
-                    BookedSpecialtyId = schedule.Doctor.SpecialtyId,
-                    BookedSpecialtyName = (await _db.Specialties.FindAsync(schedule.Doctor.SpecialtyId))!.SpecialtyName,
-                    BookedFacilityId = bookedFacility?.FacilityId,
-                    BookedFacilityName = bookedFacility?.FacilityName,
-                    BookedFacilityAddress = bookedFacility?.Address,
                     Reason = req.Reason,
                     BookingStatus = BookingStatus.PENDING,
                     CreatedAt = DateTime.UtcNow
@@ -362,11 +353,9 @@ namespace WebDeveloper.Services
                 AppointmentId = a.Id,
                 PatientName = a.Patient.FullName,
                 DoctorName = a.Schedule.Doctor.User.FullName,
-                SpecialtyName = a.BookedSpecialtyName ?? a.Schedule.Doctor.Specialty.SpecialtyName,
-                BookedPrice = a.BookedPrice,
-                IsLegacySnapshot = a.IsLegacySnapshot,
-                FacilityName = a.BookedFacilityName ?? a.Schedule.Doctor.Facility.FacilityName,
-                Address = a.BookedSpecialtyId.HasValue ? a.BookedFacilityAddress : a.Schedule.Doctor.Facility.Address,
+                SpecialtyName = a.Schedule.Doctor.Specialty.SpecialtyName,
+                FacilityName = a.Schedule.Doctor.Facility.FacilityName,
+                Address = a.Schedule.Doctor.Facility.Address,
                 DateWorking = a.Schedule.DateWorking,
                 TimeSlot = a.Schedule.TimeSlot.GetDisplayValue(),
                 BookingStatus = a.BookingStatus.ToString(),
@@ -400,11 +389,9 @@ namespace WebDeveloper.Services
                 AppointmentId = a.Id,
                 PatientName = a.Patient.FullName,
                 DoctorName = a.Schedule.Doctor.User.FullName,
-                SpecialtyName = a.BookedSpecialtyName ?? a.Schedule.Doctor.Specialty.SpecialtyName,
-                BookedPrice = a.BookedPrice,
-                IsLegacySnapshot = a.IsLegacySnapshot,
-                FacilityName = a.BookedFacilityName ?? a.Schedule.Doctor.Facility.FacilityName,
-                Address = a.BookedSpecialtyId.HasValue ? a.BookedFacilityAddress : a.Schedule.Doctor.Facility.Address,
+                SpecialtyName = a.Schedule.Doctor.Specialty.SpecialtyName,
+                FacilityName = a.Schedule.Doctor.Facility.FacilityName,
+                Address = a.Schedule.Doctor.Facility.Address,
                 DateWorking = a.Schedule.DateWorking,
                 TimeSlot = a.Schedule.TimeSlot.GetDisplayValue(),
                 BookingStatus = a.BookingStatus.ToString(),

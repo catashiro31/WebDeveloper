@@ -125,7 +125,6 @@ builder.Services.AddScoped<EmailOutboxProcessor>();
 if (builder.Configuration.GetValue<bool>("EmailOutbox:Enabled", true))
     builder.Services.AddHostedService<EmailOutboxWorker>();
 builder.Services.AddScoped<IDoctorService, DoctorService>();
-builder.Services.AddScoped<ProfessionalProfileService>();
 builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IPublicService, PublicService>();

@@ -57,8 +57,6 @@ await db.SaveChangesAsync();
 DoctorSchedule Slot(DoctorDetail d, int day, TimeSlot time = TimeSlot.SLOT_09_00) => new() {
     Doctor = d, Facility = facility, DateWorking = today.AddDays(day), TimeSlot = time, SlotStatus = SlotStatus.AVAILABLE };
 Appointment Appointment(DoctorSchedule s, BookingStatus status, DateTime? created = null) => new() {
-    BookedPrice = s.Doctor.Price, BookedSpecialtyId = spec.SpecialtyId, BookedSpecialtyName = spec.SpecialtyName,
-    BookedFacilityId = facility.FacilityId, BookedFacilityName = facility.FacilityName,
     Patient = profile, Schedule = s, BookingStatus = status, CreatedAt = created ?? DateTime.UtcNow, Reason = "Audit regression fixture" };
 async Task Book(int scheduleId)
 {
@@ -203,76 +201,6 @@ await using (var requestDb = new ApplicationDbContext(new DbContextOptionsBuilde
     Check(reads.Count == 1, "Repeated current-user access executed redundant SQL");
 }
 Console.WriteLine("PASS: middleware/helper/service/layout current-user lookup shares one SQL query per request.");
-// Professional changes preserve the approved profile and immutable booking data.
-var professional = new ProfessionalProfileService(db, new FakeFiles());
-doctor.CertificateUrl = "https://example.test/old-certificate.pdf";
-doctor.Degree = "Bác sĩ"; await db.SaveChangesAsync();
-ProfessionalUpdateRequest Request(string degree = "Thạc sĩ") => new() {
-    Degree = degree, PracticeStartYear = 2010, UseExistingCertificate = true,
-    Reason = "Đối chiếu hồ sơ chuyên môn", ExpectedVersion = doctor.ProfessionalVersion };
-var requestId = await professional.Submit(doctorUser, doctor.DoctorId, Request(), false);
-Check(doctor.Degree == "Bác sĩ" && doctor.VerificationStatus == VerificationStatus.APPROVED && doctor.PracticeStartYear == null, "Pending request changed public profile");
-await Reject(() => professional.Submit(doctorUser, doctor.DoctorId, Request(), false), "chờ duyệt");
-await Reject(() => professional.Decide(admin, requestId, new(false, "")), "lý do");
-doctor.Price = 175000; await db.SaveChangesAsync(); // An immediate price change must survive approval.
-await professional.Decide(admin, requestId, new(true, "Minh chứng hợp lệ"));
-Check(doctor.Degree == "Thạc sĩ" && doctor.PracticeStartYear == 2010 && doctor.Price == 175000, "Approval overwrote independent price change");
-var approved = await db.ProfessionalUpdates.FindAsync(requestId);
-Check(approved!.ReviewedByUserId == admin.UserId && approved.ReviewedAt != null && approved.Status == "APPROVED", "Missing approval audit");
-await Reject(() => professional.Decide(admin, requestId, new(true, null)), "đã được xử lý");
-var stale = await professional.Submit(doctorUser, doctor.DoctorId, Request("Tiến sĩ"), false);
-await professional.Submit(admin, doctor.DoctorId, new() { PracticeStartYear = 2011, Reason = "Admin bổ sung năm hành nghề" }, true);
-await Reject(() => professional.Decide(admin, stale, new(true, null)), "đã thay đổi");
-await professional.Decide(admin, stale, new(false, "Hồ sơ đã được bổ sung; vui lòng gửi lại"));
-Check(doctor.PracticeStartYear == 2011 && doctor.CertificateUrl.EndsWith("old-certificate.pdf"), "Direct legacy update damaged existing documents");
-var noProof = Request("Tiến sĩ"); noProof.UseExistingCertificate = false;
-await Reject(() => professional.Submit(doctorUser, doctor.DoctorId, noProof, false), "minh chứng");
-var invalidYear = Request("Tiến sĩ"); invalidYear.PracticeStartYear = VietnamTime.Now.Year + 1;
-await Reject(() => professional.Submit(doctorUser, doctor.DoctorId, invalidYear, false), "Năm bắt đầu");
-try { await professional.Submit(patient, doctor.DoctorId, Request(), true); throw new Exception("Patient performed admin edit"); }
-catch (UnauthorizedAccessException) { assertions++; }
-var secondSpecialty = new Specialty { SpecialtyName = "New specialty " + key, IsActive = true };
-db.Specialties.Add(secondSpecialty); await db.SaveChangesAsync();
-var switchRequest = new ProfessionalUpdateRequest { SpecialtyId = secondSpecialty.SpecialtyId,
-    UseExistingCertificate = true, Reason = "Chuyển chuyên khoa sau đối chiếu" };
-var switchId = await professional.Submit(doctorUser, doctor.DoctorId, switchRequest, false);
-await Reject(() => professional.Decide(admin, switchId, new(true, null)), "còn lịch");
-foreach(var a in await db.Appointments.Where(a => a.Schedule.DoctorId == doctor.DoctorId &&
-    (a.BookingStatus == BookingStatus.PENDING || a.BookingStatus == BookingStatus.CONFIRMED)).ToListAsync())
-    a.BookingStatus = BookingStatus.CANCELLED;
-await db.SaveChangesAsync();
-await professional.Decide(admin, switchId, new(true, null));
-Check(doctor.SpecialtyId == secondSpecialty.SpecialtyId && past.BookedSpecialtyId == spec.SpecialtyId, "Specialty switch rewrote booking history");
-var snapshotSlot = Slot(doctor, 25); db.Add(snapshotSlot); await db.SaveChangesAsync();
-await Book(snapshotSlot.ScheduleId);
-var snapshotBooking = await db.Appointments.SingleAsync(a => a.ScheduleId == snapshotSlot.ScheduleId);
-Check(snapshotBooking.BookedPrice == 175000 && snapshotBooking.BookedSpecialtyId == secondSpecialty.SpecialtyId && !snapshotBooking.IsLegacySnapshot, "New booking snapshot incorrect");
-await professional.Submit(admin, doctor.DoctorId, new() { Price = 220000, Reason = "Cập nhật giá cho các lịch đặt mới" }, true);
-var laterSlot = Slot(doctor, 26); db.Add(laterSlot); await db.SaveChangesAsync(); await Book(laterSlot.ScheduleId);
-Check(snapshotBooking.BookedPrice == 175000 && (await db.Appointments.SingleAsync(a => a.ScheduleId == laterSlot.ScheduleId)).BookedPrice == 220000, "Price change rewrote prior booking");
-Check(await db.Notifications.AnyAsync(n => n.UserId == doctorUser.UserId && n.Url == "/Doctor/ProfessionalUpdates"), "Missing professional decision notification");
-// A pair of concurrent admin decisions must have exactly one winner.
-var concurrentId = await professional.Submit(doctorUser, doctor.DoctorId, Request("Tiến sĩ"), false);
-async Task<bool> DecideFresh(bool approve)
-{
-    await using var fresh = new ApplicationDbContext(options);
-    try { await new ProfessionalProfileService(fresh, new FakeFiles()).Decide(admin, concurrentId, new(approve, "Đã đối chiếu minh chứng")); return true; }
-    catch (InvalidOperationException ex) when (ex.Message.Contains("đã được xử lý")) { return false; }
-}
-var decisions = await Task.WhenAll(DecideFresh(true), DecideFresh(false));
-Check(decisions.Count(success => success) == 1, "Concurrent decisions both applied");
-await db.Entry(doctor).ReloadAsync();
-var uploaded = new FormFile(new MemoryStream(new byte[] { 1, 2, 3 }), 0, 3, "certificateFile", "certificate.pdf") {
-    Headers = new HeaderDictionary(), ContentType = "application/pdf" };
-var certificateId = await professional.Submit(doctorUser, doctor.DoctorId, new() {
-    CertificateFile = uploaded, Reason = "Bổ sung chứng chỉ hành nghề mới" }, false);
-Check(doctor.CertificateUrl.EndsWith("old-certificate.pdf"), "Pending certificate replaced approved document");
-await professional.Decide(admin, certificateId, new(true, "Đã đối chiếu chứng chỉ"));
-Check(doctor.CertificateUrl.EndsWith("new-proof.pdf") &&
-    (await db.ProfessionalUpdates.FindAsync(certificateId))!.BeforeJson.Contains("old-certificate.pdf"), "Certificate history lost");
-await Reject(() => doctors.ChangeProfile(doctorUser, new ChangeProfileRequest { FacilityVerified = true }), "quản trị viên");
-Console.WriteLine("PASS: professional approval/rejection, legacy admin edits, evidence, ownership, stale decisions, specialty guards and immutable booking snapshots.");
-
 await File.WriteAllTextAsync("/tmp/audit-browser-fixtures.json", System.Text.Json.JsonSerializer.Serialize(new {
     admin = admin.Email, patient = patient.Email, doctor = doctorUser.Email, noResultId = noResult.Id, resultId = past.Id,
     specialtyId = spec.SpecialtyId, doctorId = doctor.DoctorId, lastDate = today.AddDays(30).ToString("yyyy-MM-dd"), allCount = await db.Appointments.CountAsync()
@@ -298,16 +226,4 @@ sealed class ReadCounter : DbCommandInterceptor
         Count++;
         return ValueTask.FromResult(result);
     }
-}
-
-
-sealed class FakeFiles : IFileUploadService
-{
-    public Task<string?> UploadFileAsync(IFormFile? file) => Task.FromResult<string?>("https://example.test/new-proof.pdf");
-    public void ValidateFile(IFormFile? file, string fieldName, params string[] supportedTypes)
-    {
-        if (file == null || file.Length == 0 || file.Length > 5 * 1024 * 1024 || !supportedTypes.Contains(file.ContentType))
-            throw new InvalidOperationException("Invalid evidence");
-    }
-    public WebDeveloper.Models.DTOs.Upload.CloudinarySignatureResponse GenerateUploadSignature() => throw new NotSupportedException();
 }

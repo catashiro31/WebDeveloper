@@ -35,8 +35,6 @@ namespace WebDeveloper.Models.DTOs.Admin
 
     public class AppointmentAdminResponse
     {
-        public double? BookedPrice { get; set; }
-        public bool IsLegacySnapshot { get; set; }
         public int AppointmentId { get; set; }
         public int? PatientId { get; set; }
         public string? PatientName { get; set; }

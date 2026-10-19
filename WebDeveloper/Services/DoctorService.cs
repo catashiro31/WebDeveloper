@@ -59,8 +59,7 @@ namespace WebDeveloper.Services
                 AvatarUrl = doctor.User.AvatarUrl,
                 Bio = doctor.Bio,
                 Degree = doctor.Degree,
-                ExperienceYears = doctor.PracticeStartYear.HasValue ? VietnamTime.Now.Year - doctor.PracticeStartYear.Value : doctor.ExperienceYears,
-                PracticeStartYear = doctor.PracticeStartYear,
+                ExperienceYears = doctor.ExperienceYears,
                 Price = doctor.Price,
                 SpecialtyId = doctor.SpecialtyId,
                 SpecialtyName = doctor.Specialty?.SpecialtyName,
@@ -156,15 +155,7 @@ namespace WebDeveloper.Services
                 existingDoctor.FacilityId = facility.FacilityId;
                 existingDoctor.Bio = req.Bio;
                 existingDoctor.Degree = req.Degree;
-                if (req.PracticeStartYear.HasValue)
-                {
-                    existingDoctor.PracticeStartYear = req.PracticeStartYear.Value;
-                    existingDoctor.ExperienceYears = VietnamTime.Now.Year - req.PracticeStartYear.Value;
-                }
-                else
-                {
-                    existingDoctor.ExperienceYears = req.ExperienceYears;
-                }
+                existingDoctor.ExperienceYears = req.ExperienceYears;
                 existingDoctor.Price = req.Price;
                 existingDoctor.VerificationStatus = VerificationStatus.PENDING;
                 
@@ -185,8 +176,7 @@ namespace WebDeveloper.Services
                     FacilityId = facility.FacilityId,
                     Bio = req.Bio,
                     Degree = req.Degree,
-                    PracticeStartYear = req.PracticeStartYear,
-                    ExperienceYears = req.PracticeStartYear.HasValue ? VietnamTime.Now.Year - req.PracticeStartYear.Value : req.ExperienceYears,
+                    ExperienceYears = req.ExperienceYears,
                     Price = req.Price,
                     VerificationStatus = VerificationStatus.PENDING,
                     IdCardUrl = await _fileUpload.UploadFileAsync(req.IdCardImage),
@@ -209,11 +199,6 @@ namespace WebDeveloper.Services
 
         public async Task<DoctorProfileResponse> ChangeProfile(User user, ChangeProfileRequest req)
         {
-            if (req.FacilityName != null || req.FacilityAddress != null || req.FacilityDescription != null ||
-                req.FacilityMapUrl != null || req.FacilityVerified != null)
-                throw new InvalidOperationException("Thông tin và xác minh cơ sở y tế do quản trị viên quản lý. Chuyển cơ sở phải gửi yêu cầu chuyển công tác.");
-            await using var transaction = await _db.Database.BeginTransactionAsync();
-            await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-user.UserId})");
             var doctor = await _db.DoctorDetails
                 .Include(d => d.Facility)
                 .Include(d => d.User)
@@ -229,8 +214,22 @@ namespace WebDeveloper.Services
                 doctor.Price = req.Price;
             }
 
+            var facility = doctor.Facility;
+            if (facility != null)
+            {
+                if (!string.IsNullOrWhiteSpace(req.FacilityName))
+                    facility.FacilityName = req.FacilityName;
+                if (!string.IsNullOrWhiteSpace(req.FacilityAddress))
+                    facility.Address = req.FacilityAddress;
+                if (!string.IsNullOrWhiteSpace(req.FacilityDescription))
+                    facility.Description = req.FacilityDescription;
+                if (!string.IsNullOrWhiteSpace(req.FacilityMapUrl))
+                    facility.MapUrl = req.FacilityMapUrl;
+                if (req.FacilityVerified != null)
+                    facility.IsVerified = req.FacilityVerified.Value;
+            }
+
             await _db.SaveChangesAsync();
-            await transaction.CommitAsync();
             return await GetProfile(user);
         }
 
@@ -494,9 +493,7 @@ namespace WebDeveloper.Services
                     Reason = a.Reason,
                     BookingStatus = a.BookingStatus.ToString(),
                     CreatedAt = a.CreatedAt,
-                    SpecialtyName = a.BookedSpecialtyName ?? a.Schedule.Doctor.Specialty.SpecialtyName,
-                    BookedPrice = a.BookedPrice,
-                    IsLegacySnapshot = a.IsLegacySnapshot,
+                    SpecialtyName = a.Schedule.Doctor.Specialty.SpecialtyName,
                     FollowUpDate = result?.FollowUpDate,
                     Diagnosis = result?.Diagnosis,
                     DoctorNotes = result?.DoctorNotes,

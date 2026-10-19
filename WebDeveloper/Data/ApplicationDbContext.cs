@@ -8,7 +8,6 @@ namespace WebDeveloper.Data
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options) { }
 
-        public DbSet<ProfessionalUpdate> ProfessionalUpdates => Set<ProfessionalUpdate>();
         public DbSet<AccountAppeal> AccountAppeals => Set<AccountAppeal>();
         public DbSet<EmailOutbox> EmailOutbox => Set<EmailOutbox>();
         public DbSet<User> Users => Set<User>();
@@ -28,16 +27,6 @@ namespace WebDeveloper.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.HasPostgresExtension("unaccent");
-
-            modelBuilder.Entity<ProfessionalUpdate>().HasOne(x => x.Doctor).WithMany()
-                .HasForeignKey(x => x.DoctorId).OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<ProfessionalUpdate>().HasOne(x => x.SubmittedByUser).WithMany()
-                .HasForeignKey(x => x.SubmittedByUserId).OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<ProfessionalUpdate>().HasOne(x => x.ReviewedByUser).WithMany()
-                .HasForeignKey(x => x.ReviewedByUserId).OnDelete(DeleteBehavior.Restrict);
-            modelBuilder.Entity<ProfessionalUpdate>().HasIndex(x => x.DoctorId).IsUnique()
-                .HasFilter("\"Status\" = 'PENDING'");
-            modelBuilder.Entity<ProfessionalUpdate>().HasIndex(x => new { x.Status, x.CreatedAt });
 
             // Store enums as strings (matching Java @Enumerated(EnumType.STRING))
             modelBuilder.Entity<User>()

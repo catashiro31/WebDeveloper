@@ -199,7 +199,6 @@ DocBookingPage.mount(page => {
                     <div style="padding: 20px; border-radius: 20px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0;">
                         <label style="font-size: 11px; color: #6366f1; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.05em;">Bác sĩ phụ trách</label>
                         <div style="font-weight: 800; color: #1e293b; font-size: 16px;">BS. ${escapeHtml(detail.doctorName)}</div>
-                        <p style="font-size:13px;color:#64748b;">${escapeHtml(detail.specialtyName || '')} · ${escapeHtml(detail.facilityName || '')}<br>${escapeHtml(detail.address || '')}<br>Giá khám: ${detail.bookedPrice == null ? 'Chưa có dữ liệu' : Number(detail.bookedPrice).toLocaleString('vi-VN') + ' đ'}${detail.isLegacySnapshot ? ' (giá ghi nhận khi nâng cấp)' : ''}</p>
                     </div>
                     <div style="padding: 20px; border-radius: 20px; background: linear-gradient(135deg, #f8fafc, #f1f5f9); border: 1px solid #e2e8f0;">
                         <label style="font-size: 11px; color: #6366f1; font-weight: 800; text-transform: uppercase; display: block; margin-bottom: 6px; letter-spacing: 0.05em;">Bệnh nhân</label>
@@ -359,7 +358,6 @@ DocBookingPage.mount(page => {
                             <div style="flex: 1;">
                                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
                                     <h3 style="margin: 0; font-size: 17px; font-weight: 700; color: #1e293b;">BS. ${escapeHtml(apt.doctorName)}</h3>
-                                <p style="font-size:13px;color:#64748b;margin:8px 0;">Chuyên khoa: ${escapeHtml(apt.specialtyName || 'Chưa cập nhật')} · Giá khám: ${apt.bookedPrice == null ? 'Chưa có dữ liệu' : Number(apt.bookedPrice).toLocaleString('vi-VN') + ' đ'}${apt.isLegacySnapshot ? ' (giá ghi nhận khi nâng cấp)' : ''}</p>
                                     ${apt.patientName ? `<span style="font-weight: 600; font-size: 14px; color: #64748b; background: #f1f5f9; padding: 2px 10px; border-radius: 6px;">BN: ${escapeHtml(apt.patientName)}</span>` : ''}
                                     <span style="padding: 4px 12px; border-radius: 8px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);">Hoàn thành</span>
                                 </div>
