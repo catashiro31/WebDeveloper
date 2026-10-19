@@ -82,6 +82,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
 
     public class DoctorProfileResponse
     {
+        public int? PracticeStartYear { get; set; }
         public string? FullName { get; set; }
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
@@ -110,6 +111,8 @@ namespace WebDeveloper.Models.DTOs.Doctor
 
     public class DoctorAppointmentResponse
     {
+        public double? BookedPrice { get; set; }
+        public bool IsLegacySnapshot { get; set; }
         public string? SpecialtyName { get; set; }
         public int AppointmentId { get; set; }
         public string? PatientName { get; set; }

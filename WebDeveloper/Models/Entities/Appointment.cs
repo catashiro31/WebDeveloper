@@ -27,6 +27,14 @@ namespace WebDeveloper.Models.Entities
         [ForeignKey("ScheduleId")]
         public DoctorSchedule Schedule { get; set; } = null!;
 
+        public double? BookedPrice { get; set; }
+        public int? BookedSpecialtyId { get; set; }
+        public string? BookedSpecialtyName { get; set; }
+        public int? BookedFacilityId { get; set; }
+        public string? BookedFacilityName { get; set; }
+        public string? BookedFacilityAddress { get; set; }
+        public bool IsLegacySnapshot { get; set; }
+
         [Column("reason")]
         public string? Reason { get; set; }
 

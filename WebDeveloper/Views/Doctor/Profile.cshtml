@@ -40,7 +40,8 @@
             <p id="profileDegreeSpecialty" style="margin: 0; color: #64748b; font-size: 15px; font-weight: 500;"></p>
         </div>
         <div style="text-align: right; min-width: 380px;">
-            <div id="actionButtons" style="display: flex; gap: 10px; justify-content: flex-end;">
+            <div id="actionButtons" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end;">
+                <a href="/Doctor/ProfessionalUpdates" class="floating-input" style="width:auto;text-decoration:none">Yêu cầu cập nhật chuyên môn</a>
                 <button id="transferBtn" onclick="openTransferModal()" style="padding: 12px 20px; background: white; color: #0ea47a; border: 2px solid #0ea47a; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s;">Chuyển công tác</button>
                 <button onclick="toggleEditMode(true)" style="padding: 12px 24px; background: linear-gradient(135deg, #0ea47a, #059669); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; box-shadow: 0 8px 16px rgba(14,164,122,0.2);">Chỉnh sửa tiểu sử & giá</button>
             </div>
@@ -245,7 +246,7 @@ DocBookingPage.mount(page => {
             document.getElementById('viewSpecialty').innerText = data.specialty?.specialtyName || data.specialtyName || '';
             document.getElementById('viewFacility').innerText = data.facility?.facilityName || data.facilityName || '';
             document.getElementById('viewAddress').innerText = data.facilityAddress || data.facility?.address || 'Chưa cập nhật';
-            document.getElementById('viewExp').innerText = `${data.experienceYears} năm thực hành`;
+            document.getElementById('viewExp').innerText = data.practiceStartYear ? `Từ năm ${data.practiceStartYear} (${data.experienceYears} năm)` : `${data.experienceYears ?? 0} năm thực hành (hồ sơ cũ)`;
             
             document.getElementById('viewPrice').innerText = Number(data.price || 0).toLocaleString('vi-VN');
             document.getElementById('viewBio').innerText = data.bio || '';

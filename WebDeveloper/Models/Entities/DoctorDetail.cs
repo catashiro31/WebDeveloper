@@ -35,11 +35,14 @@ namespace WebDeveloper.Models.Entities
         public string? Bio { get; set; }
 
         [Column("degree")]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string? Degree { get; set; }
 
         [Column("experience_years")]
         public int? ExperienceYears { get; set; }
+
+        public int? PracticeStartYear { get; set; }
+        public int ProfessionalVersion { get; set; }
 
         [Column("price")]
         public double? Price { get; set; }

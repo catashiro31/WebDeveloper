@@ -59,7 +59,8 @@ namespace WebDeveloper.Services
                 AvatarUrl = doctor.User.AvatarUrl,
                 Bio = doctor.Bio,
                 Degree = doctor.Degree,
-                ExperienceYears = doctor.ExperienceYears,
+                ExperienceYears = doctor.PracticeStartYear.HasValue ? VietnamTime.Now.Year - doctor.PracticeStartYear.Value : doctor.ExperienceYears,
+                PracticeStartYear = doctor.PracticeStartYear,
                 Price = doctor.Price,
                 SpecialtyId = doctor.SpecialtyId,
                 SpecialtyName = doctor.Specialty?.SpecialtyName,
@@ -199,6 +200,11 @@ namespace WebDeveloper.Services
 
         public async Task<DoctorProfileResponse> ChangeProfile(User user, ChangeProfileRequest req)
         {
+            if (req.FacilityName != null || req.FacilityAddress != null || req.FacilityDescription != null ||
+                req.FacilityMapUrl != null || req.FacilityVerified != null)
+                throw new InvalidOperationException("Thông tin và xác minh cơ sở y tế do quản trị viên quản lý. Chuyển cơ sở phải gửi yêu cầu chuyển công tác.");
+            await using var transaction = await _db.Database.BeginTransactionAsync();
+            await _db.Database.ExecuteSqlInterpolatedAsync($"SELECT pg_advisory_xact_lock({-user.UserId})");
             var doctor = await _db.DoctorDetails
                 .Include(d => d.Facility)
                 .Include(d => d.User)
@@ -214,22 +220,8 @@ namespace WebDeveloper.Services
                 doctor.Price = req.Price;
             }
 
-            var facility = doctor.Facility;
-            if (facility != null)
-            {
-                if (!string.IsNullOrWhiteSpace(req.FacilityName))
-                    facility.FacilityName = req.FacilityName;
-                if (!string.IsNullOrWhiteSpace(req.FacilityAddress))
-                    facility.Address = req.FacilityAddress;
-                if (!string.IsNullOrWhiteSpace(req.FacilityDescription))
-                    facility.Description = req.FacilityDescription;
-                if (!string.IsNullOrWhiteSpace(req.FacilityMapUrl))
-                    facility.MapUrl = req.FacilityMapUrl;
-                if (req.FacilityVerified != null)
-                    facility.IsVerified = req.FacilityVerified.Value;
-            }
-
             await _db.SaveChangesAsync();
+            await transaction.CommitAsync();
             return await GetProfile(user);
         }
 
@@ -493,7 +485,9 @@ namespace WebDeveloper.Services
                     Reason = a.Reason,
                     BookingStatus = a.BookingStatus.ToString(),
                     CreatedAt = a.CreatedAt,
-                    SpecialtyName = a.Schedule.Doctor.Specialty.SpecialtyName,
+                    SpecialtyName = a.BookedSpecialtyName ?? a.Schedule.Doctor.Specialty.SpecialtyName,
+                    BookedPrice = a.BookedPrice,
+                    IsLegacySnapshot = a.IsLegacySnapshot,
                     FollowUpDate = result?.FollowUpDate,
                     Diagnosis = result?.Diagnosis,
                     DoctorNotes = result?.DoctorNotes,

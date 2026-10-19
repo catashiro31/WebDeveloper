@@ -102,7 +102,7 @@ namespace WebDeveloper.Services
                 .ThenBy(d => d.DoctorId);
             else if (sortBy == "priceAsc") query = query.OrderBy(d => d.Price);
             else if (sortBy == "priceDesc") query = query.OrderByDescending(d => d.Price);
-            else if (sortBy == "experience") query = query.OrderByDescending(d => d.ExperienceYears);
+            else if (sortBy == "experience") query = query.OrderByDescending(d => d.PracticeStartYear.HasValue ? VietnamTime.Now.Year - d.PracticeStartYear.Value : d.ExperienceYears);
             else query = query.OrderBy(d => d.DoctorId);
 
             var total = await query.CountAsync();
@@ -121,7 +121,7 @@ namespace WebDeveloper.Services
                 RatingAverage = d.ReviewCount > 0 ? d.RatingAverage : null,
                 TotalReviews = d.ReviewCount,
                 Price = d.Price,
-                Experience = d.ExperienceYears
+                Experience = d.PracticeStartYear.HasValue ? VietnamTime.Now.Year - d.PracticeStartYear.Value : d.ExperienceYears
             }).ToList();
 
             return PagedResult<DoctorCardResponse>.Create(dtos, page, size, total);
@@ -146,7 +146,7 @@ namespace WebDeveloper.Services
                 SpecialtyName = d.Specialty?.SpecialtyName,
                 SpecialtyId = d.SpecialtyId,
                 Degree = d.Degree,
-                ExperienceYears = d.ExperienceYears,
+                ExperienceYears = d.PracticeStartYear.HasValue ? VietnamTime.Now.Year - d.PracticeStartYear.Value : d.ExperienceYears,
                 Price = d.Price,
                 Bio = d.Bio,
                 FacilityName = d.Facility?.FacilityName,

@@ -71,7 +71,7 @@ namespace WebDeveloper.Services
                 NoShowRate = Rate(noShows, apps.Count),
                 // No payments or historical fee snapshots exist; never present this as collected revenue.
                 EstimatedRevenue = apps.Where(a => a.BookingStatus == BookingStatus.COMPLETED)
-                    .Sum(a => (decimal)(a.Schedule.Doctor.Price ?? 0)),
+                    .Sum(a => (decimal)(a.BookedPrice ?? 0)),
                 DoctorPerformance = apps.GroupBy(a => a.Schedule.DoctorId).Select(g => new DoctorPerformanceResponse
                 {
                     DoctorId = g.Key,
@@ -156,7 +156,7 @@ namespace WebDeveloper.Services
                 SpecialtyName = d.Specialty?.SpecialtyName,
                 FacilityName = d.Facility?.FacilityName,
                 d.Degree,
-                d.ExperienceYears
+                ExperienceYears = d.PracticeStartYear.HasValue ? VietnamTime.Now.Year - d.PracticeStartYear.Value : d.ExperienceYears
             }).Cast<object>().ToList();
         }
 
@@ -184,7 +184,7 @@ namespace WebDeveloper.Services
                 FacilityVerified = d.Facility?.IsVerified,
                 d.Price,
                 d.Degree,
-                d.ExperienceYears,
+                ExperienceYears = d.PracticeStartYear.HasValue ? VietnamTime.Now.Year - d.PracticeStartYear.Value : d.ExperienceYears,
                 d.Bio,
                 d.IdCardUrl,
                 d.CertificateUrl,
@@ -277,7 +277,7 @@ namespace WebDeveloper.Services
             var s = await _db.Specialties.FindAsync(id)
                 ?? throw new InvalidOperationException("Không tìm thấy chuyên khoa");
 
-            if (await _db.DoctorDetails.AnyAsync(d => d.SpecialtyId == id))
+            if (await _db.DoctorDetails.AnyAsync(d => d.SpecialtyId == id) || await _db.Appointments.AnyAsync(a => a.BookedSpecialtyId == id))
                 throw new InvalidOperationException("Không thể xóa chuyên khoa đang có bác sĩ");
 
             s.IsActive = false;
@@ -366,7 +366,7 @@ namespace WebDeveloper.Services
             var f = await _db.Facilities.FindAsync(id)
                 ?? throw new InvalidOperationException("Không tìm thấy");
             
-            if (await _db.DoctorDetails.AnyAsync(d => d.FacilityId == id))
+            if (await _db.DoctorDetails.AnyAsync(d => d.FacilityId == id) || await _db.Appointments.AnyAsync(a => a.BookedFacilityId == id))
                 throw new InvalidOperationException("Không thể xóa cơ sở đang có bác sĩ");
             
             f.IsActive = false;
@@ -513,8 +513,8 @@ namespace WebDeveloper.Services
             if (dateTo.HasValue) query = query.Where(a => a.CreatedAt < dateTo.Value.AddDays(1).ToDateTime(TimeOnly.MinValue));
             if (status.HasValue) query = query.Where(a => a.BookingStatus == status.Value);
             if (doctorId.HasValue) query = query.Where(a => a.Schedule.DoctorId == doctorId.Value);
-            if (facilityId.HasValue) query = query.Where(a => a.Schedule.Doctor.FacilityId == facilityId.Value);
-            if (specialtyId.HasValue) query = query.Where(a => a.Schedule.Doctor.SpecialtyId == specialtyId.Value);
+            if (facilityId.HasValue) query = query.Where(a => (a.BookedFacilityId ?? a.Schedule.FacilityId ?? a.Schedule.Doctor.FacilityId) == facilityId.Value);
+            if (specialtyId.HasValue) query = query.Where(a => (a.BookedSpecialtyId ?? a.Schedule.Doctor.SpecialtyId) == specialtyId.Value);
             if (appointmentDate.HasValue) query = query.Where(a => a.Schedule.DateWorking == appointmentDate.Value);
             if (workDateFrom.HasValue) query = query.Where(a => a.Schedule.DateWorking >= workDateFrom.Value);
             if (workDateTo.HasValue) query = query.Where(a => a.Schedule.DateWorking <= workDateTo.Value);
@@ -530,8 +530,10 @@ namespace WebDeveloper.Services
                 PatientEmail = a.Patient.User.Email,
                 DoctorId = a.Schedule.DoctorId,
                 DoctorName = a.Schedule.Doctor.User.FullName,
-                SpecialtyName = a.Schedule.Doctor.Specialty.SpecialtyName,
-                FacilityName = a.Schedule.Doctor.Facility.FacilityName,
+                SpecialtyName = a.BookedSpecialtyName ?? a.Schedule.Doctor.Specialty.SpecialtyName,
+                BookedPrice = a.BookedPrice,
+                IsLegacySnapshot = a.IsLegacySnapshot,
+                FacilityName = a.BookedFacilityName ?? a.Schedule.Doctor.Facility.FacilityName,
                 DateWorking = a.Schedule.DateWorking,
                 TimeSlot = a.Schedule.TimeSlot.GetDisplayValue(),
                 Reason = a.Reason,

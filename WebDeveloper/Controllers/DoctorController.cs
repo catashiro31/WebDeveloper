@@ -31,6 +31,8 @@ namespace WebDeveloper.Controllers
             return View();
         }
 
+        public IActionResult ProfessionalUpdates() => View();
+
         public IActionResult Profile()
         {
             return View();

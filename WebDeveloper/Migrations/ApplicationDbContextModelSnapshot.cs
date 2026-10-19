@@ -73,6 +73,24 @@ namespace WebDeveloper.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("BookedFacilityAddress")
+                        .HasColumnType("text");
+
+                    b.Property<int?>("BookedFacilityId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BookedFacilityName")
+                        .HasColumnType("text");
+
+                    b.Property<double?>("BookedPrice")
+                        .HasColumnType("double precision");
+
+                    b.Property<int?>("BookedSpecialtyId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BookedSpecialtyName")
+                        .HasColumnType("text");
+
                     b.Property<string>("BookingStatus")
                         .IsRequired()
                         .HasColumnType("text")
@@ -89,6 +107,9 @@ namespace WebDeveloper.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
+
+                    b.Property<bool>("IsLegacySnapshot")
+                        .HasColumnType("boolean");
 
                     b.Property<int>("PatientId")
                         .HasColumnType("integer")
@@ -135,8 +156,8 @@ namespace WebDeveloper.Migrations
                         .HasColumnName("certificate_url");
 
                     b.Property<string>("Degree")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("degree");
 
                     b.Property<int?>("ExperienceYears")
@@ -151,9 +172,15 @@ namespace WebDeveloper.Migrations
                         .HasColumnType("text")
                         .HasColumnName("id_card_url");
 
+                    b.Property<int?>("PracticeStartYear")
+                        .HasColumnType("integer");
+
                     b.Property<double?>("Price")
                         .HasColumnType("double precision")
                         .HasColumnName("price");
+
+                    b.Property<int>("ProfessionalVersion")
+                        .HasColumnType("integer");
 
                     b.Property<double?>("RatingAverage")
                         .HasColumnType("double precision")
@@ -535,6 +562,78 @@ namespace WebDeveloper.Migrations
                     b.ToTable("patient_profiles");
                 });
 
+            modelBuilder.Entity("WebDeveloper.Models.Entities.ProfessionalUpdate", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("AppliedBeforeJson")
+                        .HasColumnType("text");
+
+                    b.Property<bool>("AppliedDirectly")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("BaseVersion")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BeforeJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DecisionReason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<int>("DoctorId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("EvidenceUrl")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ProposedJson")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("ReviewedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("SubmittedByUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DoctorId")
+                        .IsUnique()
+                        .HasFilter("\"Status\" = 'PENDING'");
+
+                    b.HasIndex("ReviewedByUserId");
+
+                    b.HasIndex("SubmittedByUserId");
+
+                    b.HasIndex("Status", "CreatedAt");
+
+                    b.ToTable("professional_updates");
+                });
+
             modelBuilder.Entity("WebDeveloper.Models.Entities.Review", b =>
                 {
                     b.Property<int>("ReviewId")
@@ -844,6 +943,32 @@ namespace WebDeveloper.Migrations
                         .IsRequired();
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WebDeveloper.Models.Entities.ProfessionalUpdate", b =>
+                {
+                    b.HasOne("WebDeveloper.Models.Entities.DoctorDetail", "Doctor")
+                        .WithMany()
+                        .HasForeignKey("DoctorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebDeveloper.Models.Entities.User", "ReviewedByUser")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("WebDeveloper.Models.Entities.User", "SubmittedByUser")
+                        .WithMany()
+                        .HasForeignKey("SubmittedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Doctor");
+
+                    b.Navigation("ReviewedByUser");
+
+                    b.Navigation("SubmittedByUser");
                 });
 
             modelBuilder.Entity("WebDeveloper.Models.Entities.Review", b =>

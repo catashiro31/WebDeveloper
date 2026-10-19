@@ -15,7 +15,7 @@ public class AdminCatalogController(ApplicationDbContext db) : ControllerBase
     public async Task<IActionResult> Specialties(string? search)
     {
         return Ok(await db.ActiveSpecialties(search)
-            .OrderBy(s => s.SpecialtyName).Select(s => new { id = s.SpecialtyId, name = s.SpecialtyName, s.Description, canDelete = !db.DoctorDetails.Any(d => d.SpecialtyId == s.SpecialtyId) }).ToListAsync());
+            .OrderBy(s => s.SpecialtyName).Select(s => new { id = s.SpecialtyId, name = s.SpecialtyName, s.Description, canDelete = !db.DoctorDetails.Any(d => d.SpecialtyId == s.SpecialtyId) && !db.Appointments.Any(a => a.BookedSpecialtyId == s.SpecialtyId) }).ToListAsync());
     }
 
     [HttpGet("facilities")]

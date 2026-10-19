@@ -51,6 +51,8 @@ namespace WebDeveloper.Models.DTOs.Patient
 
     public class AppointmentResponse
     {
+        public double? BookedPrice { get; set; }
+        public bool IsLegacySnapshot { get; set; }
         public int AppointmentId { get; set; }
         public string? PatientName { get; set; }
         public string? DoctorName { get; set; }

@@ -1,0 +1,73 @@
+@{ var admin = ViewData["ProfessionalAdmin"] as bool? == true; }
+<style>
+.professional-page { max-width:1100px; margin:auto; color:#1e293b; }
+.professional-page h1 { font-size:26px; margin:0 0 12px; }
+.professional-page h2 { font-size:20px; margin:0 0 18px; }
+.professional-page .pro-card { background:white; border:1px solid #e2e8f0; border-radius:20px; padding:24px; margin-bottom:22px; }
+.professional-page .pro-note { color:#64748b; line-height:1.6; font-size:14px; }
+.professional-page .pro-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+.professional-page label { display:grid; gap:8px; font-size:14px; font-weight:600; }
+.professional-page input:not([type=checkbox]), .professional-page select, .professional-page textarea { width:100%; border:1px solid #cbd5e1; border-radius:10px; padding:11px; font:inherit; background:white; }
+.professional-page input[type=checkbox] { width:18px; height:18px; }
+.professional-page .pro-check { display:flex; align-items:center; gap:10px; margin:16px 0; }
+.professional-page button, .professional-page .pro-link { padding:11px 16px; border:1px solid #cbd5e1; border-radius:10px; background:#fff; color:#334155; cursor:pointer; font:inherit; text-decoration:none; }
+.professional-page button.primary { background:#6366f1; color:white; border-color:#6366f1; }
+.professional-page button.danger { background:#fff1f2; color:#be123c; }
+.professional-page button:disabled { opacity:.5; cursor:not-allowed; }
+.professional-page .pro-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; }
+.professional-page .pro-current { padding:16px; background:#f8fafc; border-radius:12px; margin:16px 0; overflow-wrap:anywhere; }
+.professional-page .pro-compare { width:100%; border-collapse:collapse; margin:16px 0; table-layout:fixed; }
+.professional-page .pro-compare th,.professional-page .pro-compare td { text-align:left; padding:12px; border-bottom:1px solid #e2e8f0; overflow-wrap:anywhere; vertical-align:top; }
+.professional-page .pro-status { color:#4f46e5; font-weight:700; }
+.professional-page summary { cursor:pointer; font-weight:700; line-height:1.6; }
+.professional-page [hidden] { display:none !important; }
+@@media(max-width:640px) { .professional-page .pro-grid { grid-template-columns:1fr; } .professional-page .pro-card { padding:16px; } .professional-page .pro-compare th,.professional-page .pro-compare td { padding:8px 4px; font-size:12px; } }
+</style>
+<div class="professional-page" id="professionalPage" data-admin="@(admin ? "true" : "false")">
+    <h1>@(admin ? "Duyệt và cập nhật chuyên môn" : "Yêu cầu cập nhật thông tin chuyên môn")</h1>
+    <p class="pro-note">Hồ sơ đã duyệt vẫn được công khai và bác sĩ tiếp tục hoạt động trong lúc chờ xét duyệt. Chuyển chuyên khoa chỉ thực hiện sau khi xử lý hết lịch chờ xác nhận và lịch đã xác nhận.</p>
+    <p id="proMessage" role="status" aria-live="polite"></p>
+    <button type="button" id="proRetry" hidden>Thử tải lại</button>
+    @if (admin)
+    {
+        <div class="pro-card"><label>Chọn bác sĩ để bổ sung/chỉnh sửa hoặc xem lịch sử<select id="proDoctor"><option value="">Tất cả bác sĩ — danh sách yêu cầu</option></select></label>
+        <p class="pro-note">Hồ sơ cũ vẫn giữ CCCD và chứng chỉ hiện có. Có thể bổ sung năm bắt đầu hành nghề và minh chứng khi đã đối chiếu; không cần yêu cầu tất cả bác sĩ nộp lại hồ sơ.</p></div>
+    }
+    <section class="pro-card" id="proEditor" hidden>
+        <h2>@(admin ? "Chỉnh sửa trực tiếp có lưu lịch sử" : "Thông tin muốn thay đổi")</h2>
+        <div id="proCurrent" class="pro-current"></div>
+        <p id="proEligibility" class="pro-note"></p>
+        <form id="proForm">
+            <fieldset id="proFields" disabled style="border:0;padding:0;margin:0;min-width:0">
+                <div class="pro-grid">
+                    <label>Học vị / bằng cấp<select id="proDegree" name="degree">
+                        <option value="">Chưa cập nhật — giữ nguyên</option>
+                        @foreach (var degree in WebDeveloper.Helpers.DoctorDegree.Options) { <option value="@degree">@degree</option> }
+                        <option value="Khác">Khác</option>
+                    </select></label>
+                    <label id="proOtherWrap" hidden>Mô tả học vị khác<input id="proDegreeOther" maxlength="94" /></label>
+                    <label>Năm bắt đầu hành nghề<input id="proYear" name="practiceStartYear" type="number" min="1900" max="@WebDeveloper.Helpers.VietnamTime.Now.Year" placeholder="Chưa có thông tin — để trống để giữ nguyên" /></label>
+                    <label>Chuyên khoa<select id="proSpecialty" name="specialtyId" required></select></label>
+                    <label>Minh chứng cho thay đổi (PDF, JPG, PNG; tối đa 5 MB)<input id="proEvidence" name="evidenceFile" type="file" accept="application/pdf,image/jpeg,image/png" /></label>
+                    <label>Thay chứng chỉ hành nghề (không bắt buộc)<input id="proCertificate" name="certificateFile" type="file" accept="application/pdf,image/jpeg,image/png" /></label>
+                    @if (admin)
+                    {
+                        <label>Giá khám cho lịch đặt mới (đồng)<input id="proPrice" name="price" type="number" min="1" max="1000000000" step="1" /></label>
+                        <label>Giới thiệu<textarea id="proBio" name="bio" maxlength="10000" rows="3"></textarea></label>
+                    }
+                </div>
+                <label class="pro-check"><input id="proExisting" name="useExistingCertificate" type="checkbox" value="true" /> Dùng chứng chỉ hiện có làm minh chứng cho yêu cầu này</label>
+                <p class="pro-note">@(admin ? "Admin có thể bổ sung thông tin cho hồ sơ cũ mà chưa có minh chứng mới, nhưng phải ghi rõ lý do. Mỗi lần lưu đều ghi người sửa, thời điểm và thông báo cho bác sĩ." : "Đính kèm minh chứng hoặc chọn chứng chỉ hiện có để admin đối chiếu. Để trống các tệp nếu không muốn thay chứng chỉ.")</p>
+                <label>Lý do / nội dung đề nghị (10–1000 ký tự)<textarea id="proReason" name="reason" required minlength="10" maxlength="1000" rows="3"></textarea></label>
+                <div class="pro-actions"><button class="primary" id="proSubmit" type="submit">@(admin ? "Lưu trực tiếp và ghi lịch sử" : "Gửi yêu cầu xét duyệt")</button></div>
+            </fieldset>
+        </form>
+    </section>
+    <section class="pro-card">
+        <div class="pro-grid"><h2>@(admin ? "Yêu cầu và lịch sử xử lý" : "Lịch sử yêu cầu của bạn")</h2>
+            @if (admin) { <label>Trạng thái<select id="proStatus"><option value="PENDING">Chờ duyệt</option><option value="">Tất cả</option><option value="APPROVED">Đã duyệt / chỉnh trực tiếp</option><option value="REJECTED">Đã từ chối</option></select></label> }
+        </div>
+        <div id="proHistory" aria-live="polite">Đang tải…</div>
+        <div id="proPagination" class="pro-actions"></div>
+    </section>
+</div>
