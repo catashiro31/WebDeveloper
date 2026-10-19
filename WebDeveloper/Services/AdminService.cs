@@ -242,7 +242,7 @@ namespace WebDeveloper.Services
         // === Danh mục chuyên khoa: kiểm tra tên trùng, chỉnh sửa và vô hiệu hóa bản ghi. ===
         public async Task<string> AddSpecialty(SpecialtyRequest req)
         {
-            if (await _db.Specialties.AnyAsync(s => s.SpecialtyName.ToLower() == req.SpecialtyName.ToLower()))
+            if (await _db.Specialties.AnyAsync(s => s.IsActive == true && s.SpecialtyName.Trim().ToLower() == req.SpecialtyName.Trim().ToLower()))
                 throw new InvalidOperationException("Chuyên khoa đã tồn tại!");
 
             _db.Specialties.Add(new Specialty
@@ -260,7 +260,10 @@ namespace WebDeveloper.Services
             var s = await _db.Specialties.FindAsync(id)
                 ?? throw new InvalidOperationException("Không tìm thấy chuyên khoa");
 
-            if (await _db.Specialties.AnyAsync(sp => sp.SpecialtyName.ToLower() == req.SpecialtyName.ToLower() && sp.SpecialtyId != id))
+            if (s.IsActive != true)
+                throw new InvalidOperationException("Chuyên khoa đã bị xóa. Vui lòng tải lại danh sách.");
+
+            if (await _db.Specialties.AnyAsync(sp => sp.IsActive == true && sp.SpecialtyName.Trim().ToLower() == req.SpecialtyName.Trim().ToLower() && sp.SpecialtyId != id))
                 throw new InvalidOperationException("Tên chuyên khoa đã được sử dụng");
 
             s.SpecialtyName = req.SpecialtyName.Trim();
@@ -279,13 +282,13 @@ namespace WebDeveloper.Services
 
             s.IsActive = false;
             await _db.SaveChangesAsync();
-            return "Đã xóa chuyên ngành";
+            return "Đã xóa chuyên khoa";
         }
 
         // === Cơ sở y tế: xác thực hồ sơ/tệp giấy phép trước khi cập nhật danh mục. ===
         public async Task<string> AddFacility(FacilityRequest req)
         {
-            if (await _db.Facilities.AnyAsync(f => f.FacilityName!.ToLower() == req.FacilityName.ToLower()))
+            if (await _db.Facilities.AnyAsync(f => f.IsActive && f.FacilityName!.Trim().ToLower() == req.FacilityName.Trim().ToLower()))
                 throw new InvalidOperationException("Cơ sở y tế đã tồn tại!");
 
             if (req.LicenseFile == null || req.LicenseFile.Length == 0)
@@ -321,7 +324,10 @@ namespace WebDeveloper.Services
             var f = await _db.Facilities.FindAsync(id)
                 ?? throw new InvalidOperationException("Không tìm thấy cơ sở y tế");
 
-            if (await _db.Facilities.AnyAsync(fac => fac.FacilityName!.ToLower() == req.FacilityName.ToLower() && fac.FacilityId != id))
+            if (!f.IsActive)
+                throw new InvalidOperationException("Cơ sở y tế đã bị xóa. Vui lòng tải lại danh sách.");
+
+            if (await _db.Facilities.AnyAsync(fac => fac.IsActive && fac.FacilityName!.Trim().ToLower() == req.FacilityName.Trim().ToLower() && fac.FacilityId != id))
                 throw new InvalidOperationException("Tên cơ sở đã được sử dụng");
 
             f.FacilityName = req.FacilityName.Trim();

@@ -94,6 +94,9 @@ namespace WebDeveloper.Services
             if (profile.UserId != user.UserId)
                 throw new InvalidOperationException("Bạn không có quyền sửa hồ sơ này!");
 
+            if (!profile.IsActive)
+                throw new InvalidOperationException("Hồ sơ đã bị xóa. Vui lòng tải lại danh sách.");
+
             req.Relationship = PatientRelationship.Validate(req.Relationship, profile.Relationship);
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));

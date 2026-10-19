@@ -115,6 +115,9 @@ namespace WebDeveloper.Services
             if (req.FacilityId == null && string.IsNullOrWhiteSpace(req.NewFacilityName))
                 throw new InvalidOperationException("Vui lòng chọn cơ sở y tế có sẵn hoặc tạo mới!");
 
+            if (!await _db.Specialties.AnyAsync(s => s.SpecialtyId == req.SpecialtyId && s.IsActive == true))
+                throw new InvalidOperationException("Chuyên khoa không tồn tại hoặc đã bị xóa. Vui lòng chọn chuyên khoa khác.");
+
             Facility facility;
             if (req.FacilityId != null)
             {
@@ -128,12 +131,12 @@ namespace WebDeveloper.Services
             {
                 _fileUpload.ValidateFile(req.FacilityLicensePdf, "Giấy phép hoạt động", "application/pdf");
                 
-                if (await _db.Facilities.AnyAsync(f => f.FacilityName!.ToLower() == req.NewFacilityName!.ToLower()))
+                if (await _db.Facilities.AnyAsync(f => f.IsActive && f.FacilityName!.Trim().ToLower() == req.NewFacilityName!.Trim().ToLower()))
                     throw new InvalidOperationException("Tên cơ sở y tế này đã tồn tại!");
 
                 facility = new Facility
                 {
-                    FacilityName = req.NewFacilityName,
+                    FacilityName = req.NewFacilityName!.Trim(),
                     Address = req.FacilityAddress,
                     Description = req.FacilityDescription,
                     MapUrl = req.FacilityMapUrl,
