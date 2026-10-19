@@ -832,14 +832,14 @@
             <div id="bookingForm" class="booking-form" style="display: none;">
                 <div id="authPrompt" style="display: none;">
                     <p style="color: #6366f1; margin: 0; font-size: 14px; font-weight: 700; text-align: center;">
-                        👉 Đăng nhập để đặt lịch khám cho bản thân
+                        👉 Đăng nhập để đặt lịch khám cho bản thân hoặc người thân
                     </p>
                 </div>
                 <div id="patientForm" style="display: none;">
                     <div style="margin-bottom: 20px;">
-                        <label>Bệnh nhân</label>
-                        <input type="hidden" id="patientSelect" />
-                        <p id="patientName" role="status">Đang tải hồ sơ bản thân...</p>
+                        <label for="patientSelect">Bệnh nhân</label>
+                        <select id="patientSelect" disabled onchange="updateBookingForm()"></select>
+                        <p id="patientName" role="status">Đang tải hồ sơ khám...</p>
                     </div>
                     <div>
                         <label>Lý do khám * <small style="font-weight: 500; color: #64748b;">(10 - 500 ký tự)</small></label>
@@ -1169,13 +1169,21 @@
                     });
                     if (!res.ok) throw new Error(await readApiMessage(res));
                     const rels = await res.json();
+                    patientSelect.replaceChildren();
+                    rels.forEach(r => {
+                        patientSelect.add(new Option(`${r.fullName} (${r.relationship === 'SELF' ? 'Bản thân' : r.relationship})`, r.patientId || r.id));
+                    });
                     const self = rels.find(r => r.relationship === 'SELF');
-                    if (!self) throw new Error('Không tìm thấy hồ sơ bản thân. Vui lòng cập nhật hồ sơ hoặc liên hệ hỗ trợ.');
-                    patientSelect.value = self.patientId || self.id;
-                    document.getElementById('patientName').textContent = `${self.fullName} (Bản thân)`;
+                    if (self) patientSelect.value = self.patientId || self.id;
+                    else patientSelect.selectedIndex = -1;
+                    patientSelect.disabled = rels.length === 0;
+                    document.getElementById('patientName').textContent = rels.length === 0
+                        ? 'Chưa có hồ sơ khám. Vui lòng bổ sung hồ sơ.'
+                        : self ? '' : 'Vui lòng chọn người khám trong danh sách.';
                 } catch(e) {
-                    patientSelect.value = '';
-                    document.getElementById('patientName').textContent = 'Không thể tải hồ sơ bản thân. Vui lòng tải lại trang.';
+                    patientSelect.replaceChildren();
+                    patientSelect.disabled = true;
+                    document.getElementById('patientName').textContent = 'Không thể tải hồ sơ khám. Vui lòng tải lại trang.';
                     showApiToast(e.message, 'error');
                 }
                 updateBookingForm();
@@ -1220,7 +1228,7 @@
             }
 
             if (!patientSelect.value) {
-                showApiToast('Chưa tải được hồ sơ bản thân. Vui lòng tải lại trang.', 'error');
+                showApiToast('Vui lòng chọn hồ sơ người khám.', 'error');
                 return;
             }
             const reason = reasonInput.value.trim();
@@ -1242,7 +1250,7 @@
             const timeStr = formatTimeSlot(selectedSlot.timeSlot || selectedSlot.startTime || selectedSlot.time);
             document.getElementById('confirmTimeSlot').textContent = `${timeStr} - ${dateStr}`;
 
-            document.getElementById('confirmPatientName').textContent = document.getElementById('patientName').textContent;
+            document.getElementById('confirmPatientName').textContent = patientSelect.selectedOptions[0].textContent;
             document.getElementById('confirmReasonText').textContent = reason;
 
             const modal = document.getElementById('bookingConfirmModal');
@@ -1252,7 +1260,7 @@
         window.submitFinalBooking = async () => {
             if (!selectedSlot) return;
             if (!patientSelect.value) {
-                showApiToast('Chưa tải được hồ sơ bản thân. Vui lòng tải lại trang.', 'error');
+                showApiToast('Vui lòng chọn hồ sơ người khám.', 'error');
                 return;
             }
             const reason = reasonInput.value.trim();
