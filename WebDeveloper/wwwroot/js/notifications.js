@@ -71,9 +71,9 @@
                         const url = new URL(item.url, location.origin);
                         if (url.origin === location.origin && item.url.startsWith('/') && !item.url.startsWith('//')) location.assign(url.href);
                         else navigating = false;
-                    } catch (error) { navigating = false; status.textContent = error.message; }
+                    } catch (error) { navigating = false; status.textContent = vietnameseApiMessage(error.message); }
                 }
-                button.onclick = () => markRead().catch(error => { status.textContent = error.message; });
+                button.onclick = () => markRead().catch(error => { status.textContent = vietnameseApiMessage(error.message); });
                 button.ondblclick = event => { event.preventDefault(); openNotification(); };
                 button.onpointerup = event => {
                     if (event.pointerType !== 'touch') return;
@@ -88,7 +88,7 @@
             }
             status.textContent = list.children.length ? '' : 'Bạn chưa có thông báo.';
             more.hidden = !data.hasMore; retry.hidden = true;
-        } catch (error) { if (!countOnly) { status.textContent = error.message; retry.hidden = false; } }
+        } catch (error) { if (!countOnly) { status.textContent = vietnameseApiMessage(error.message); retry.hidden = false; } }
         finally { loading = false; }
     }
     bell.onclick = () => { panel.hidden = !panel.hidden; bell.setAttribute('aria-expanded', String(!panel.hidden)); if (!panel.hidden) load(); };
@@ -159,7 +159,7 @@
             const deleted = deleteRead ? (await response.json()).deleted : 0;
             await load();
             if (deleteRead) status.textContent = `Đã xóa ${deleted} thông báo đã đọc.` + (list.children.length ? '' : ' Không còn thông báo.');
-        } catch (error) { status.textContent = error.message; }
+        } catch (error) { status.textContent = vietnameseApiMessage(error.message); }
         finally { actionPending = false; all.disabled = removeRead.disabled = false; }
     }
     all.onclick = () => openConfirmModal(false);

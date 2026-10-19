@@ -90,7 +90,7 @@ namespace WebDeveloper.Services
             if (existingDoctor != null)
             {
                 if (existingDoctor.VerificationStatus == VerificationStatus.PENDING)
-                    throw new InvalidOperationException("Hồ sơ của bạn đang trong quá trình xét duyệt. Vui lòng chờ phản hồi từ Admin!");
+                    throw new InvalidOperationException("Hồ sơ của bạn đang trong quá trình xét duyệt. Vui lòng chờ phản hồi từ quản trị viên!");
                 if (existingDoctor.VerificationStatus == VerificationStatus.APPROVED)
                     throw new InvalidOperationException("Hồ sơ bác sĩ của bạn đã được duyệt và đang hoạt động. Bạn không cần nộp lại hồ sơ xác minh!");
                 
@@ -162,7 +162,7 @@ namespace WebDeveloper.Services
                     existingDoctor.CertificateUrl = await _fileUpload.UploadFileAsync(req.CertificatePdf);
 
                 await _db.SaveChangesAsync();
-                return "Đã gửi lại hồ sơ xác minh bác sĩ. Vui lòng chờ Admin duyệt!";
+                return "Đã gửi lại hồ sơ xác minh bác sĩ. Vui lòng chờ quản trị viên duyệt!";
             }
             else
             {
@@ -190,7 +190,7 @@ namespace WebDeveloper.Services
                 }
 
                 await _db.SaveChangesAsync();
-                return "Hồ sơ của bạn đã được gửi và đang chờ Admin duyệt!";
+                return "Hồ sơ của bạn đã được gửi và đang chờ quản trị viên duyệt!";
             }
         }
 

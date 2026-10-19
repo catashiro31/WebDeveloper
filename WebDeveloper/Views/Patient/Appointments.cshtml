@@ -122,8 +122,8 @@ DocBookingPage.mount(page => {
             fetch('/api/v1/patient/appointments?page=0&size=100', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
-            .then(res => {
-                if (!res.ok) throw new Error("Failed to load");
+            .then(async res => {
+                if (!res.ok) throw new Error(await readApiMessage(res));
                 return res.json();
             })
             .then(data => {

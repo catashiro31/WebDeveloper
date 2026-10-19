@@ -421,7 +421,7 @@
                     `;
                     if (data.appeal) {
                         const statusMap = {
-                            'PENDING': { label: '⏳ Phiếu đang chờ Admin duyệt', color: '#b45309' },
+                            'PENDING': { label: '⏳ Phiếu đang chờ quản trị viên duyệt', color: '#b45309' },
                             'APPROVED': { label: '✓ Phiếu đã được duyệt mở khóa', color: '#15803d' },
                             'REJECTED': { label: '✕ Phiếu đã bị từ chối', color: '#b91c1c' }
                         };
@@ -429,7 +429,7 @@
                         html += `
                             <div style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,0.12);">
                                 <div><strong>Trạng thái phiếu:</strong> <span style="font-weight: 700; color: ${st.color};">${st.label}</span></div>
-                                ${data.appeal.adminReason ? `<div style="margin-top: 6px;"><strong>Phản hồi từ Admin:</strong> ${escapeHtml(data.appeal.adminReason)}</div>` : ''}
+                                ${data.appeal.adminReason ? `<div style="margin-top: 6px;"><strong>Phản hồi từ quản trị viên:</strong> ${escapeHtml(data.appeal.adminReason)}</div>` : ''}
                             </div>
                         `;
                         const alertType = data.appeal.status === 'APPROVED' ? 'success' : (data.appeal.status === 'REJECTED' ? 'error' : 'warning');

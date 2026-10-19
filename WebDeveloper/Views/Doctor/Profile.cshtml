@@ -168,7 +168,7 @@
 <div id="transferModal" class="modal-overlay" onclick="closeTransferModal()">
     <div class="modal-content" style="max-width: 500px; padding: 32px; background: white; border-radius: 24px;" onclick="event.stopPropagation()">
         <h2 style="margin: 0 0 8px; font-size: 20px; font-weight: 800;">Yêu cầu chuyển công tác</h2>
-        <p style="margin: 0 0 24px; font-size: 14px; color: #64748b;">Thông tin sẽ được Admin xét duyệt.</p>
+        <p style="margin: 0 0 24px; font-size: 14px; color: #64748b;">Thông tin sẽ được quản trị viên xét duyệt.</p>
 
         <label style="display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px;">Cơ sở y tế mới</label>
         <select id="t_facility" class="floating-input" style="margin-bottom: 20px;"></select>
@@ -311,7 +311,7 @@ DocBookingPage.mount(page => {
                 if (choices.length === 0) throw new Error('Chưa có cơ sở y tế khác để chuyển công tác.');
                 select.disabled = submit.disabled = false;
             } catch (error) {
-                document.getElementById('transferCatalogMessage').textContent = error.message;
+                document.getElementById('transferCatalogMessage').textContent = vietnameseApiMessage(error.message);
                 document.getElementById('transferCatalogError').style.display = 'block';
             }
         }

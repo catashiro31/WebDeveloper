@@ -832,15 +832,14 @@
             <div id="bookingForm" class="booking-form" style="display: none;">
                 <div id="authPrompt" style="display: none;">
                     <p style="color: #6366f1; margin: 0; font-size: 14px; font-weight: 700; text-align: center;">
-                        👉 Đăng nhập để chọn hồ sơ và nhập lý do khám
+                        👉 Đăng nhập để đặt lịch khám cho bản thân
                     </p>
                 </div>
                 <div id="patientForm" style="display: none;">
                     <div style="margin-bottom: 20px;">
                         <label>Bệnh nhân</label>
-                        <select id="patientSelect">
-                            <option value="">-- Chọn hồ sơ --</option>
-                        </select>
+                        <input type="hidden" id="patientSelect" />
+                        <p id="patientName" role="status">Đang tải hồ sơ bản thân...</p>
                     </div>
                     <div>
                         <label>Lý do khám * <small style="font-weight: 500; color: #64748b;">(10 - 500 ký tự)</small></label>
@@ -1168,20 +1167,18 @@
                     const res = await fetch('/api/v1/patient/relatives', {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    if (res.ok) {
-                        const rels = await res.json();
-                        rels.forEach(r => {
-                            const opt = document.createElement('option');
-                            const val = r.patientId || r.id;
-                            opt.value = val;
-                            opt.textContent = `${r.fullName} (${r.relationship === 'SELF' ? 'Bản thân' : r.relationship})`;
-                            patientSelect.appendChild(opt);
-                            if (r.relationship === 'SELF') {
-                                patientSelect.value = val;
-                            }
-                        });
-                    }
-                } catch(e) {}
+                    if (!res.ok) throw new Error(await readApiMessage(res));
+                    const rels = await res.json();
+                    const self = rels.find(r => r.relationship === 'SELF');
+                    if (!self) throw new Error('Không tìm thấy hồ sơ bản thân. Vui lòng cập nhật hồ sơ hoặc liên hệ hỗ trợ.');
+                    patientSelect.value = self.patientId || self.id;
+                    document.getElementById('patientName').textContent = `${self.fullName} (Bản thân)`;
+                } catch(e) {
+                    patientSelect.value = '';
+                    document.getElementById('patientName').textContent = 'Không thể tải hồ sơ bản thân. Vui lòng tải lại trang.';
+                    showApiToast(e.message, 'error');
+                }
+                updateBookingForm();
             }
         }
 
@@ -1205,7 +1202,7 @@
             } else {
                 authPrompt.style.display = 'none';
                 patientForm.style.display = 'block';
-                bookBtn.disabled = false;
+                bookBtn.disabled = !patientSelect.value;
                 bookBtn.innerText = 'Xác nhận đặt lịch';
             }
         }
@@ -1222,6 +1219,10 @@
                 return;
             }
 
+            if (!patientSelect.value) {
+                showApiToast('Chưa tải được hồ sơ bản thân. Vui lòng tải lại trang.', 'error');
+                return;
+            }
             const reason = reasonInput.value.trim();
             if (window.Validation) {
                 const reasonCheck = window.Validation.validateReason(reason);
@@ -1241,12 +1242,7 @@
             const timeStr = formatTimeSlot(selectedSlot.timeSlot || selectedSlot.startTime || selectedSlot.time);
             document.getElementById('confirmTimeSlot').textContent = `${timeStr} - ${dateStr}`;
 
-            let pName = 'Bản thân';
-            if (patientSelect.value) {
-                const opt = patientSelect.options[patientSelect.selectedIndex];
-                if (opt && opt.text && opt.value) pName = opt.text;
-            }
-            document.getElementById('confirmPatientName').textContent = pName;
+            document.getElementById('confirmPatientName').textContent = document.getElementById('patientName').textContent;
             document.getElementById('confirmReasonText').textContent = reason;
 
             const modal = document.getElementById('bookingConfirmModal');
@@ -1255,6 +1251,10 @@
 
         window.submitFinalBooking = async () => {
             if (!selectedSlot) return;
+            if (!patientSelect.value) {
+                showApiToast('Chưa tải được hồ sơ bản thân. Vui lòng tải lại trang.', 'error');
+                return;
+            }
             const reason = reasonInput.value.trim();
             if (window.Validation) {
                 const reasonCheck = window.Validation.validateReason(reason);
@@ -1273,7 +1273,7 @@
             try {
                 const req = {
                     scheduleId: selectedSlot.scheduleId || selectedSlot.id,
-                    patientId: patientSelect.value || null,
+                    patientId: Number(patientSelect.value),
                     reason: reason
                 };
 

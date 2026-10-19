@@ -108,7 +108,13 @@
 
             <div class="floating-label-input">
                 <label>Mối quan hệ *</label>
-                <input type="text" id="relationship" placeholder="VD: Bố, Mẹ, Con, Vợ..." required />
+                <select id="relationship" required>
+                    <option value="">Chọn mối quan hệ</option>
+                    @foreach (var relationship in WebDeveloper.Helpers.PatientRelationship.Options)
+                    {
+                        <option value="@relationship">@relationship</option>
+                    }
+                </select>
             </div>
 
             <div class="floating-label-input">
@@ -218,14 +224,14 @@ DocBookingPage.mount(page => {
                                 </div>
                                 <div>
                                     <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #1e293b;">${escapeHtml(r.fullName)}</h3>
-                                    <span style="font-size: 12px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em;">${escapeHtml(r.relationship)}</span>
+                                    <span style="font-size: 12px; font-weight: 700; color: #6366f1; text-transform: uppercase; letter-spacing: 0.05em;">${escapeHtml(r.relationship === 'SELF' ? 'Bản thân' : r.relationship)}</span>
                                 </div>
                             </div>
                             <div style="display: flex; gap: 8px;">
                                 <button onclick="openModal(${r.patientId || r.id})" style="background: #f1f5f9; border: none; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #64748b; transition: all 0.2s;" onmouseenter="this.style.background='#e2e8f0'" onmouseleave="this.style.background='#f1f5f9'">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                 </button>
-                                <button data-name="${escapeHtml(r.fullName)}" data-relationship="${escapeHtml(r.relationship)}" onclick="openDeleteRelativeModal(${r.patientId || r.id}, this.dataset.name, this.dataset.relationship)" style="background: #fee2e2; border: none; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #ef4444; transition: all 0.2s;" onmouseenter="this.style.background='#fca5a5'; this.style.color='white'" onmouseleave="this.style.background='#fee2e2'; this.style.color='#ef4444'">
+                                <button data-name="${escapeHtml(r.fullName)}" data-relationship="${escapeHtml(r.relationship === 'SELF' ? 'Bản thân' : r.relationship)}" onclick="openDeleteRelativeModal(${r.patientId || r.id}, this.dataset.name, this.dataset.relationship)" style="background: #fee2e2; border: none; width: 32px; height: 32px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #ef4444; transition: all 0.2s;" onmouseenter="this.style.background='#fca5a5'; this.style.color='white'" onmouseleave="this.style.background='#fee2e2'; this.style.color='#ef4444'">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                                 </button>
                             </div>
@@ -241,6 +247,9 @@ DocBookingPage.mount(page => {
 
         page.globals.openModal = function(id = null) {
             form.reset();
+            const relationshipSelect = document.getElementById('relationship');
+            relationshipSelect.querySelectorAll('[data-existing]').forEach(option => option.remove());
+            relationshipSelect.disabled = false;
             document.getElementById('relativeId').value = '';
             
             if (id) {
@@ -252,7 +261,13 @@ DocBookingPage.mount(page => {
                     document.getElementById('phoneNumber').value = r.phoneNumber || '';
                     document.getElementById('dateOfBirth').value = r.dateOfBirth ? r.dateOfBirth.substring(0, 10) : '';
                     document.getElementById('gender').value = r.gender || '';
-                    document.getElementById('relationship').value = r.relationship || '';
+                    if (r.relationship && !Array.from(relationshipSelect.options).some(option => option.value === r.relationship)) {
+                        const option = new Option(r.relationship === 'SELF' ? 'Bản thân' : r.relationship, r.relationship);
+                        option.dataset.existing = 'true';
+                        relationshipSelect.add(option);
+                    }
+                    relationshipSelect.value = r.relationship || '';
+                    relationshipSelect.disabled = r.relationship === 'SELF';
                     document.getElementById('address').value = r.address || '';
                 }
             } else {

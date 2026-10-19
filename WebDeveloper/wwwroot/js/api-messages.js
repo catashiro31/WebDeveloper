@@ -8,7 +8,20 @@ function escapeHtml(value) {
 
 // Notifications must not prevent a successful save from refreshing the UI when
 // an external notification script is unavailable.
+function vietnameseApiMessage(message, fallback = 'Yêu cầu không thành công. Vui lòng thử lại.') {
+    if (typeof message !== 'string' || !message.trim()) return fallback;
+    const text = message.trim();
+    if (/Failed to fetch|NetworkError|Network request failed|Load failed/i.test(text))
+        return 'Không thể kết nối đến máy chủ. Vui lòng thử lại.';
+    if (/validation errors|could not be converted|is not valid|is invalid|field is required|must be a number/i.test(text))
+        return 'Thông tin chưa hợp lệ. Vui lòng kiểm tra lại các trường đã nhập.';
+    // Never expose framework/proxy messages in English or raw HTML to users.
+    if (/<[^>]+>/.test(text) || !/[À-ỹĐđ]/.test(text)) return fallback;
+    return text.slice(0, 300).replace(/\bAdmin\b/gi, 'quản trị viên');
+}
+
 function showApiToast(message, type = 'success') {
+    message = vietnameseApiMessage(message, type === 'success' ? 'Thao tác thành công.' : 'Yêu cầu không thành công. Vui lòng thử lại.');
     const background = type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#10b981';
     if (typeof Toastify === 'function') {
         try {
@@ -51,6 +64,16 @@ async function fetchApiList(url) {
 
 // Read useful API errors without showing a JSON object or proxy HTML in the UI.
 async function readApiMessage(response, fallback = 'Yêu cầu không thành công. Vui lòng thử lại.') {
+    const statusMessages = {
+        401: 'Phiên đăng nhập đã hết hạn hoặc bạn chưa đăng nhập. Vui lòng đăng nhập lại.',
+        403: 'Bạn không có quyền thực hiện thao tác này.',
+        404: 'Không tìm thấy thông tin được yêu cầu.',
+        429: 'Bạn thao tác quá nhanh. Vui lòng chờ một lát rồi thử lại.',
+        500: 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.',
+        502: 'Máy chủ tạm thời không khả dụng. Vui lòng thử lại sau.',
+        503: 'Máy chủ tạm thời không khả dụng. Vui lòng thử lại sau.'
+    };
+    fallback = statusMessages[response.status] || fallback;
     if (response.status === 413) {
         return 'Tệp tải lên vượt giới hạn máy chủ. Vui lòng chọn tệp nhỏ hơn.';
     }
@@ -68,18 +91,38 @@ async function readApiMessage(response, fallback = 'Yêu cầu không thành cô
     if (contentType.includes('json') || /^[\s]*[\[{]/.test(body)) {
         try {
             const data = JSON.parse(body);
-            if (typeof data === 'string') return data.slice(0, 300) || fallback;
+            if (typeof data === 'string') return vietnameseApiMessage(data, fallback);
             const validationError = data.errors && Object.values(data.errors)
                 .flat().find(value => typeof value === 'string' && value.trim());
-            const message = data.detail || data.message || data.Message || validationError || data.title;
-            return typeof message === 'string' && message.trim() ? message.slice(0, 300) : fallback;
+            const message = validationError || data.detail || data.message || data.Message || data.error || data.title;
+            return vietnameseApiMessage(message, fallback);
         } catch (_) {
             return fallback;
         }
     }
 
     if (contentType.includes('html') || /<[^>]+>/.test(body)) return fallback;
-    return body.trim().slice(0, 300) || fallback;
+    return vietnameseApiMessage(body, fallback);
+}
+
+// Capture native form validation too, regardless of the browser's language.
+document.addEventListener('invalid', event => {
+    const field = event.target;
+    if (!field.validity || !field.setCustomValidity) return;
+    field.setCustomValidity('');
+    const validity = field.validity;
+    let message = 'Thông tin chưa hợp lệ. Vui lòng kiểm tra lại.';
+    if (validity.valueMissing) message = field.tagName === 'SELECT' ? 'Vui lòng chọn một mục trong danh sách.' : 'Vui lòng điền thông tin này.';
+    else if (validity.typeMismatch && field.type === 'email') message = 'Địa chỉ email không đúng định dạng.';
+    else if (validity.tooShort) message = `Vui lòng nhập ít nhất ${field.minLength} ký tự.`;
+    else if (validity.tooLong) message = `Vui lòng nhập tối đa ${field.maxLength} ký tự.`;
+    else if (validity.rangeUnderflow) message = `Giá trị phải lớn hơn hoặc bằng ${field.min}.`;
+    else if (validity.rangeOverflow) message = `Giá trị phải nhỏ hơn hoặc bằng ${field.max}.`;
+    else if (validity.badInput || validity.stepMismatch) message = 'Vui lòng nhập giá trị số hợp lệ.';
+    field.setCustomValidity(message);
+}, true);
+for (const eventName of ['input', 'change']) {
+    document.addEventListener(eventName, event => event.target.setCustomValidity?.(''), true);
 }
 
 // ==========================================

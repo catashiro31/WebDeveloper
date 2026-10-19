@@ -21,7 +21,7 @@ async function logoutApp() {
         window.location.replace('/Auth/Login');
     } catch (_) {
         logoutApp.pending = false;
-        alert('Không thể đăng xuất lúc này. Vui lòng thử lại.');
+        showApiToast('Không thể đăng xuất lúc này. Vui lòng thử lại.', 'error');
     }
 }
 

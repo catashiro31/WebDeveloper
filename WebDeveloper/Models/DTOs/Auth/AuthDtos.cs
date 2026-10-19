@@ -8,7 +8,7 @@ namespace WebDeveloper.Models.DTOs.Auth
         [EmailAddress(ErrorMessage = "Định dạng Email không hợp lệ")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Password không được để trống")]
+        [Required(ErrorMessage = "Mật khẩu không được để trống")]
         public string Password { get; set; } = string.Empty;
     }
 
@@ -70,7 +70,7 @@ namespace WebDeveloper.Models.DTOs.Auth
         [Required(ErrorMessage = "Email không được để trống")]
         public string Email { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Code không được để trống")]
+        [Required(ErrorMessage = "Mã xác thực không được để trống")]
         public string Code { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Mật khẩu mới không được để trống")]

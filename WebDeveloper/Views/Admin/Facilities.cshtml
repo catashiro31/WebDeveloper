@@ -541,9 +541,7 @@ DocBookingPage.mount(page => {
                 } else if (res.status === 413) {
                     showFacilityError('Tổng dung lượng tệp vượt giới hạn máy chủ. Vui lòng chọn tệp nhỏ hơn.');
                 } else {
-                    const error = res.headers.get('content-type')?.includes('json')
-                        ? await res.json().catch(() => null) : null;
-                    showFacilityError(error?.detail || error?.message || error?.title || 'Không thể lưu cơ sở y tế. Vui lòng thử lại.');
+                    showFacilityError(await readApiMessage(res, 'Không thể lưu cơ sở y tế. Vui lòng thử lại.'));
                 }
             })
             .catch(() => showFacilityError("Lỗi mạng. Vui lòng thử lại."))

@@ -223,7 +223,7 @@ async function submitRejectAppeal() {
         await handleAppealApi(id, false, reason);
         closeRejectModal();
     } catch (err) {
-        rejectValidationMsg.textContent = err.message || 'Lỗi khi từ chối yêu cầu';
+        rejectValidationMsg.textContent = vietnameseApiMessage(err.message, 'Không thể từ chối yêu cầu. Vui lòng thử lại.');
     } finally {
         btn.disabled = false;
         btn.textContent = 'Xác nhận từ chối';
@@ -280,7 +280,7 @@ async function loadAppeals(isBackground = false) {
             }); list.append(card);
         });
     } catch(error) { 
-        if (!isBackground) appealError.textContent = error.message; 
+        if (!isBackground) appealError.textContent = vietnameseApiMessage(error.message);
     }
 }
 document.getElementById('appealFilter').onchange = () => { appealPage = 0; loadAppeals(); };

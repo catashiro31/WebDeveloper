@@ -88,7 +88,7 @@ namespace WebDeveloper.Controllers.Api
                 };
                 Response.Cookies.Append("refreshToken", res.RefreshToken, refreshCookieOptions);
 
-                return Ok(new { Message = "Token refreshed successfully" });
+                return Ok(new { Message = "Đã gia hạn phiên đăng nhập thành công." });
             }
             catch (Exception ex)
             {

@@ -56,6 +56,7 @@ namespace WebDeveloper.Services
 
         public async Task<string> AddRelative(User user, RelativeRequest req)
         {
+            req.Relationship = PatientRelationship.Validate(req.Relationship);
             var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
             if (req.DateOfBirth > today)
                 throw new InvalidOperationException("Ngày sinh không được ở tương lai!");
@@ -92,6 +93,8 @@ namespace WebDeveloper.Services
 
             if (profile.UserId != user.UserId)
                 throw new InvalidOperationException("Bạn không có quyền sửa hồ sơ này!");
+
+            req.Relationship = PatientRelationship.Validate(req.Relationship, profile.Relationship);
 
             var today = DateOnly.FromDateTime(DateTime.UtcNow.AddHours(7));
             if (req.DateOfBirth > today)
