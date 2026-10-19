@@ -15,6 +15,8 @@ namespace WebDeveloper.Models.DTOs.Doctor
         [Range(0, int.MaxValue, ErrorMessage = "Kinh nghiệm không được là số âm")]
         public int ExperienceYears { get; set; }
 
+        public int? PracticeStartYear { get; set; }
+
         [Required(ErrorMessage = "Vui lòng nhập giá khám")]
         [Range(1, double.MaxValue, ErrorMessage = "Giá khám phải lớn hơn 0 đồng")]
         public double Price { get; set; }
@@ -22,6 +24,11 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public IFormFile? IdCardImage { get; set; }
 
         public IFormFile? CertificatePdf { get; set; }
+
+        public string? LicenseNumber { get; set; }
+        public string? LicenseIssuer { get; set; }
+        public string? LicenseIssueDate { get; set; }
+        public string? LicenseScope { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn chuyên khoa")]
         public int SpecialtyId { get; set; }

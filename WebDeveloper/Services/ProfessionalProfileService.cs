@@ -40,7 +40,17 @@ public class ProfessionalProfileService(ApplicationDbContext db, IFileUploadServ
         return new { d.DoctorId, doctorName = d.User.FullName, currentProfile = Snapshot(d),
             version = d.ProfessionalVersion, verificationStatus = d.VerificationStatus.ToString(), d.IdCardUrl,
             activeAppointments = await ActiveAppointments(doctorId).CountAsync(),
-            hasPending = await db.ProfessionalUpdates.AnyAsync(r => r.DoctorId == doctorId && r.Status == "PENDING") };
+            hasPending = await db.ProfessionalUpdates.AnyAsync(r => r.DoctorId == doctorId && r.Status == "PENDING"),
+            savedDocuments = GetSavedDocuments(d) };
+    }
+    private static List<object> GetSavedDocuments(DoctorDetail d)
+    {
+        var list = new List<object>();
+        if (!string.IsNullOrWhiteSpace(d.CertificateUrl))
+            list.Add(new { type = "LICENSE", label = "Giấy phép / Chứng chỉ hành nghề đang lưu", url = d.CertificateUrl });
+        if (!string.IsNullOrWhiteSpace(d.IdCardUrl))
+            list.Add(new { type = "ID_CARD", label = "Căn cước công dân (CCCD)", url = d.IdCardUrl });
+        return list;
     }
     private IQueryable<Appointment> ActiveAppointments(int doctorId) => db.Appointments.Where(a => a.Schedule.DoctorId == doctorId &&
         (a.BookingStatus == BookingStatus.PENDING || a.BookingStatus == BookingStatus.CONFIRMED));
@@ -98,12 +108,27 @@ public class ProfessionalProfileService(ApplicationDbContext db, IFileUploadServ
             throw new InvalidOperationException("Giá khám phải từ 1 đến 1.000.000.000 đồng.");
         string? evidence = null, certificate = before.CertificateUrl;
         if (req.EvidenceFile != null) evidence = await Upload(req.EvidenceFile, "Minh chứng");
-        if (req.CertificateFile != null) certificate = await Upload(req.CertificateFile, "Chứng chỉ hành nghề");
+        if (req.CertificateFile != null) certificate = await Upload(req.CertificateFile, "Giấy phép / Chứng chỉ hành nghề");
+        if (!string.IsNullOrWhiteSpace(req.SelectedSavedDocumentUrl)) evidence ??= req.SelectedSavedDocumentUrl;
         if (req.UseExistingCertificate && !string.IsNullOrWhiteSpace(before.CertificateUrl)) evidence ??= before.CertificateUrl;
         evidence ??= req.CertificateFile == null ? null : certificate;
-        if (!direct && evidence == null) throw new InvalidOperationException("Vui lòng đính kèm minh chứng hoặc chọn chứng chỉ hiện có.");
-        var proposed = new ProfessionalSnapshot(degree, year, before.LegacyExperienceYears, specialtyId,
-            specialty.SpecialtyName, certificate, req.Price ?? before.Price, req.Bio ?? before.Bio);
+        if (!direct && evidence == null) throw new InvalidOperationException("Vui lòng đính kèm minh chứng hoặc chọn giấy tờ đã lưu.");
+
+        List<DiplomaItemDto>? diplomas = null;
+        if (!string.IsNullOrWhiteSpace(req.DiplomasJson))
+        {
+            try { diplomas = JsonSerializer.Deserialize<List<DiplomaItemDto>>(req.DiplomasJson, Json); }
+            catch { /* ignore malformed json */ }
+        }
+
+        var proposed = new ProfessionalSnapshot(
+            degree, year, before.LegacyExperienceYears, specialtyId,
+            specialty.SpecialtyName, certificate, req.Price ?? before.Price, req.Bio ?? before.Bio,
+            req.LicenseNumber ?? before.LicenseNumber, req.LicenseIssuer ?? before.LicenseIssuer,
+            req.LicenseIssueDate ?? before.LicenseIssueDate, req.LicenseScope ?? before.LicenseScope,
+            diplomas ?? before.Diplomas,
+            req.SelectedSavedDocumentLabel,
+            req.SelectedSavedDocumentUrl ?? (req.UseExistingCertificate ? before.CertificateUrl : null));
         if (proposed == before) throw new InvalidOperationException("Chưa có thông tin nào thay đổi.");
         var update = new ProfessionalUpdate { DoctorId = doctorId, SubmittedByUserId = actor.UserId,
             BaseVersion = d.ProfessionalVersion, BeforeJson = Write(before), ProposedJson = Write(proposed),

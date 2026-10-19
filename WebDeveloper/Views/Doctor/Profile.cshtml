@@ -116,52 +116,129 @@
     </div>
 
     <form id="profileForm" onsubmit="submitForm(event)">
-        <div class="section-card">
-            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Tiểu sử *</label>
-            <textarea id="f_bio" class="floating-input" style="min-height: 100px;" required></textarea>
-            
-            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Bằng cấp *</label>
-            <select id="f_degree" class="floating-input" required onchange="document.getElementById('f_degreeOther').hidden = this.value !== 'Khác';">
-                <option value="">Chọn học vị/bằng cấp</option>
-                @foreach (var degree in WebDeveloper.Helpers.DoctorDegree.Options) { <option value="@degree">@degree</option> }
-                <option value="Khác">Khác</option>
-            </select>
-            <input id="f_degreeOther" hidden maxlength="94" class="floating-input" placeholder="Mô tả bằng cấp khác (ít nhất 3 chữ cái)" />
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+        <!-- Phần 1: Học vị & Bằng cấp chuyên môn -->
+        <div class="section-card" style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1.5px solid #f1f5f9;">
+                <span style="font-size: 20px;">🎓</span>
                 <div>
-                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Năm KN *</label>
-                    <input type="number" id="f_exp" class="floating-input" required min="0" />
-                </div>
-                <div>
-                    <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Giá khám (VNĐ) *</label>
-                    <input type="number" id="f_price" class="floating-input" required min="1" />
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;">1. Học vị & Năm bắt đầu hành nghề</h3>
+                    <p style="margin: 2px 0 0; font-size: 12.5px; color: #64748b;">Học vị đào tạo và thời điểm chính thức bắt đầu công tác</p>
                 </div>
             </div>
 
-            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Chuyên khoa *</label>
-            <select id="f_specialty" class="floating-input" required></select>
+            <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Học vị đào tạo *</label>
+            <select id="f_degree" class="floating-input" required onchange="document.getElementById('f_degreeOther').hidden = this.value !== 'Khác';">
+                <option value="">Chọn học vị (sau đại học / đại học)</option>
+                <option value="Bác sĩ">Bác sĩ</option>
+                <option value="Thạc sĩ">Thạc sĩ</option>
+                <option value="Tiến sĩ">Tiến sĩ</option>
+                <option value="Bác sĩ chuyên khoa I">Bác sĩ chuyên khoa I</option>
+                <option value="Bác sĩ chuyên khoa II">Bác sĩ chuyên khoa II</option>
+                <option value="Khác">Khác (Bác sĩ nội trú...)</option>
+            </select>
+            <input id="f_degreeOther" hidden maxlength="94" class="floating-input" style="margin-top: 8px;" placeholder="Mô tả học vị khác (ít nhất 3 chữ cái)" />
 
-            <label style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin: 16px 0 6px; text-transform: uppercase;">Cơ sở y tế *</label>
-            <select id="f_facility" class="floating-input" required></select>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
+                <div>
+                    <label style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">
+                        <span>Năm bắt đầu hành nghề *</span>
+                        <span id="f_expCalcBadge" style="color: #0ea47a; font-weight: 800;"></span>
+                    </label>
+                    <input type="number" id="f_startYear" class="floating-input" required min="1900" max="@WebDeveloper.Helpers.VietnamTime.Now.Year" placeholder="Ví dụ: 2016" oninput="updateProfileExpCalc(this.value)" />
+                    <input type="hidden" id="f_exp" value="0" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Giá khám tư vấn (VNĐ) *</label>
+                    <input type="number" id="f_price" class="floating-input" required min="1" step="1000" placeholder="Ví dụ: 300000" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Phần 2: Giấy phép / Chứng chỉ hành nghề -->
+        <div class="section-card" style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1.5px solid #f1f5f9;">
+                <span style="font-size: 20px;">📜</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;">2. Giấy phép / Chứng chỉ hành nghề</h3>
+                    <p style="margin: 2px 0 0; font-size: 12.5px; color: #64748b;">Thông tin pháp lý bắt buộc theo quy định của Bộ Y tế</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Số giấy phép / Số CCHN</label>
+                    <input type="text" id="f_licenseNumber" class="floating-input" placeholder="Ví dụ: 012345/BYT-CCHN" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Nơi cấp giấy phép</label>
+                    <input type="text" id="f_licenseIssuer" class="floating-input" placeholder="Ví dụ: Sở Y tế Hà Nội" />
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Ngày cấp giấy phép</label>
+                    <input type="date" id="f_licenseIssueDate" class="floating-input" />
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Phạm vi hoạt động chuyên môn</label>
+                    <input type="text" id="f_licenseScope" class="floating-input" placeholder="Ví dụ: Khám bệnh, chữa bệnh Nội khoa" />
+                </div>
+            </div>
+
+            <div style="margin-top: 16px;">
+                <label id="certificateLabel" style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Tệp Giấy phép / Chứng chỉ hành nghề * (PDF/Ảnh &le; 5MB)</label>
+                <input type="file" id="f_certificate" class="floating-input" accept="application/pdf,image/jpeg,image/png" required style="padding: 10px;" />
+            </div>
+        </div>
+
+        <!-- Phần 3: Chuyên môn đăng ký khám trên web & Nơi công tác -->
+        <div class="section-card" style="margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1.5px solid #f1f5f9;">
+                <span style="font-size: 20px;">🏥</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;">3. Chuyên khoa khám & Nơi công tác</h3>
+                    <p style="margin: 2px 0 0; font-size: 12.5px; color: #64748b;">Chuyên khoa phục vụ bệnh nhân đặt lịch trên hệ thống</p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Chuyên khoa đăng ký *</label>
+                    <select id="f_specialty" class="floating-input" required></select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Cơ sở y tế công tác *</label>
+                    <select id="f_facility" class="floating-input" required></select>
+                </div>
+            </div>
+
             <div id="catalogLoadError" role="alert" style="display: none; margin-top: 12px; color: #b91c1c;">
                 <p id="catalogLoadMessage"></p>
                 <button type="button" onclick="loadOptions()" class="floating-input" style="width: auto; cursor: pointer;">Tải lại danh sách</button>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
-                <div>
-                    <label id="idCardLabel" style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Ảnh CCCD *</label>
-                    <input type="file" id="f_idCard" class="floating-input" accept="image/jpeg,image/png" required style="padding: 10px;" />
-                </div>
-                <div>
-                    <label id="certificateLabel" style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Chứng chỉ hành nghề *</label>
-                    <input type="file" id="f_certificate" class="floating-input" accept="application/pdf" required style="padding: 10px;" />
-                </div>
+            <div style="margin-top: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Tiểu sử & Giới thiệu bác sĩ *</label>
+                <textarea id="f_bio" class="floating-input" style="min-height: 90px;" placeholder="Giới thiệu về quá trình đào tạo, chuyên môn và kinh nghiệm..." required></textarea>
             </div>
         </div>
 
-        <button type="submit" id="submitFormBtn" style="width: 100%; padding: 14px; border-radius: 12px; border: none; background: #0ea47a; color: white; font-weight: 700; font-size: 15px; cursor: pointer; box-shadow: 0 4px 14px rgba(14,164,122,0.3);">Gửi hồ sơ xét duyệt</button>
+        <!-- Phần 4: Giấy tờ xác thực nhân thân -->
+        <div class="section-card" style="margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1.5px solid #f1f5f9;">
+                <span style="font-size: 20px;">🪪</span>
+                <div>
+                    <h3 style="margin: 0; font-size: 15px; font-weight: 800; color: #0f172a;">4. Xác thực nhân thân</h3>
+                    <p style="margin: 2px 0 0; font-size: 12.5px; color: #64748b;">Ảnh Căn cước công dân đối chiếu danh tính</p>
+                </div>
+            </div>
+
+            <label id="idCardLabel" style="display: block; font-size: 12px; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase;">Ảnh CCCD * (JPG/PNG &le; 5MB)</label>
+            <input type="file" id="f_idCard" class="floating-input" accept="image/jpeg,image/png" required style="padding: 10px;" />
+        </div>
+
+        <button type="submit" id="submitFormBtn" style="width: 100%; padding: 15px; border-radius: 14px; border: none; background: linear-gradient(135deg, #0ea47a, #059669); color: white; font-weight: 800; font-size: 15px; cursor: pointer; box-shadow: 0 4px 14px rgba(14,164,122,0.35); transition: all 0.2s;">🚀 Gửi hồ sơ xác minh bác sĩ</button>
     </form>
 </div>
 
@@ -360,12 +437,40 @@ DocBookingPage.mount(page => {
             .finally(() => { btn.disabled = false; btn.innerText = "Lưu thay đổi"; });
         };
 
+        window.updateProfileExpCalc = function(year) {
+            const yr = parseInt(year, 10);
+            const currentYear = @WebDeveloper.Helpers.VietnamTime.Now.Year;
+            const badge = document.getElementById('f_expCalcBadge');
+            const expInput = document.getElementById('f_exp');
+            if (yr && yr >= 1900 && yr <= currentYear) {
+                const diff = currentYear - yr;
+                badge.textContent = `~${diff} năm KN`;
+                expInput.value = diff;
+            } else {
+                badge.textContent = '';
+                expInput.value = 0;
+            }
+        };
+
         page.globals.submitForm = function(e) {
             e.preventDefault();
             const formData = new FormData();
             formData.append('bio', document.getElementById('f_bio').value);
             formData.append('degree', (document.getElementById('f_degree').value === 'Khác' ? 'Khác: ' + document.getElementById('f_degreeOther').value.trim() : document.getElementById('f_degree').value));
-            formData.append('experienceYears', document.getElementById('f_exp').value);
+            
+            const startYearVal = document.getElementById('f_startYear').value;
+            if (startYearVal) formData.append('practiceStartYear', startYearVal);
+            formData.append('experienceYears', document.getElementById('f_exp').value || '0');
+            
+            const licNum = document.getElementById('f_licenseNumber').value.trim();
+            if (licNum) formData.append('licenseNumber', licNum);
+            const licIssuer = document.getElementById('f_licenseIssuer').value.trim();
+            if (licIssuer) formData.append('licenseIssuer', licIssuer);
+            const licDate = document.getElementById('f_licenseIssueDate').value;
+            if (licDate) formData.append('licenseIssueDate', licDate);
+            const licScope = document.getElementById('f_licenseScope').value.trim();
+            if (licScope) formData.append('licenseScope', licScope);
+
             formData.append('price', document.getElementById('f_price').value);
             formData.append('specialtyId', document.getElementById('f_specialty').value);
             formData.append('facilityId', document.getElementById('f_facility').value);
@@ -380,7 +485,10 @@ DocBookingPage.mount(page => {
                 showApiToast('Ảnh CCCD phải là JPG/PNG và không quá 5 MB.', 'error');
                 return;
             }
-            if (certFile && (certFile.size > 5 * 1024 * 1024 || certFile.type !== 'application/pdf')) {
+            if (certFile && (certFile.size > 5 * 1024 * 1024 || !['application/pdf', 'image/jpeg', 'image/png'].includes(certFile.type))) {
+                showApiToast('Chứng chỉ phải là PDF hoặc ảnh JPG/PNG và không quá 5 MB.', 'error');
+                return;
+            }
                 showApiToast('Chứng chỉ phải là PDF và không quá 5 MB.', 'error');
                 return;
             }

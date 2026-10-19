@@ -6,7 +6,7 @@
 
 <style>
 /* ============================================================
-   DOCTOR PROFESSIONAL UPDATES — PREMIUM STYLING
+   DOCTOR PROFESSIONAL UPDATES — SEPARATED CREDENTIALS & PROOFS
    ============================================================ */
 .dpu-container {
     max-width: 1100px;
@@ -15,7 +15,7 @@
     color: #1e293b;
 }
 
-/* Page Header */
+/* Header */
 .dpu-header {
     margin-bottom: 24px;
 }
@@ -149,6 +149,20 @@
     color: #64748b;
     font-weight: 500;
 }
+.dpu-legacy-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #fef3c7;
+    color: #92400e;
+    border: 1px solid #fde68a;
+    margin-top: 3px;
+    width: fit-content;
+}
+
+/* File link */
 .dpu-file-link {
     display: inline-flex;
     align-items: center;
@@ -272,38 +286,58 @@
     margin: 0 0 20px;
 }
 
-/* Form Styles */
+/* Section Block inside Form */
+.dpu-form-section {
+    background: #f8fafc;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 24px;
+    margin-bottom: 22px;
+}
+.dpu-section-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.dpu-section-desc {
+    font-size: 12.5px;
+    color: #64748b;
+    margin: 0 0 16px;
+}
+
+/* Inputs */
 .dpu-form-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
+    gap: 16px;
 }
 .dpu-form-group {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 .dpu-form-group.full-width {
     grid-column: 1 / -1;
 }
 .dpu-label {
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 700;
     color: #334155;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
-.dpu-label-required {
-    color: #ef4444;
-}
 .dpu-input, .dpu-select, .dpu-textarea {
     width: 100%;
-    padding: 12px 14px;
+    padding: 11px 14px;
     border: 1.5px solid #cbd5e1;
-    border-radius: 12px;
+    border-radius: 10px;
     font-family: inherit;
-    font-size: 14px;
+    font-size: 13.5px;
     color: #1e293b;
     background: white;
     outline: none;
@@ -314,108 +348,43 @@
     border-color: #0ea47a;
     box-shadow: 0 0 0 3px rgba(14, 164, 122, 0.15);
 }
-.dpu-input:disabled, .dpu-select:disabled, .dpu-textarea:disabled {
-    background: #f8fafc;
-    color: #94a3b8;
-    cursor: not-allowed;
-    border-color: #e2e8f0;
-}
-.dpu-calc-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #0ea47a;
-    background: #ecfdf5;
-    padding: 3px 10px;
-    border-radius: 999px;
-    width: fit-content;
-}
 
-/* File Upload Zone */
-.dpu-upload-box {
-    border: 2px dashed #cbd5e1;
-    border-radius: 14px;
-    padding: 18px;
-    background: #f8fafc;
-    text-align: center;
-    cursor: pointer;
-    transition: all 0.2s;
-    position: relative;
-}
-.dpu-upload-box:hover, .dpu-upload-box.dragover {
-    border-color: #0ea47a;
-    background: #f0fdf4;
-}
-.dpu-upload-icon {
-    font-size: 28px;
-    margin-bottom: 6px;
-}
-.dpu-upload-title {
-    font-size: 13.5px;
-    font-weight: 700;
-    color: #334155;
-    margin: 0 0 4px;
-}
-.dpu-upload-hint {
-    font-size: 12px;
-    color: #94a3b8;
-    margin: 0;
-}
-.dpu-file-input {
-    display: none;
-}
-.dpu-file-selected {
-    display: none;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 14px;
+/* Document Selection Pill */
+.dpu-doc-select-box {
     background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
-    margin-top: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #0f172a;
-}
-.dpu-remove-file {
-    background: transparent;
-    border: none;
-    color: #ef4444;
-    cursor: pointer;
-    font-size: 14px;
-    font-weight: 700;
-    padding: 4px 8px;
-    border-radius: 6px;
-}
-.dpu-remove-file:hover {
-    background: #fee2e2;
-}
-
-/* Checkbox */
-.dpu-checkbox-label {
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 14px 18px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 12px 16px;
-    background: #f8fafc;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 10px;
+}
+.dpu-doc-selected-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0ea47a;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Diplomas Repeater */
+.dpu-diploma-item {
+    background: white;
     border: 1px solid #e2e8f0;
     border-radius: 12px;
-    cursor: pointer;
-    font-size: 13.5px;
-    font-weight: 600;
-    color: #334155;
-    transition: all 0.2s;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    position: relative;
 }
-.dpu-checkbox-label:hover {
-    background: #f1f5f9;
-}
-.dpu-checkbox-label input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    accent-color: #0ea47a;
-    cursor: pointer;
+.dpu-diploma-grid {
+    display: grid;
+    grid-template-columns: 2fr 2fr 1fr auto;
+    gap: 12px;
+    align-items: center;
 }
 
 /* Live Diff Comparison Box */
@@ -457,7 +426,6 @@
     font-weight: 700;
     font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 0.03em;
     border-bottom: 1px solid #e2e8f0;
 }
 .dpu-diff-table td {
@@ -486,13 +454,7 @@
     margin-left: 6px;
 }
 
-/* Action Buttons */
-.dpu-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-    margin-top: 24px;
-}
+/* Buttons */
 .dpu-btn {
     display: inline-flex;
     align-items: center;
@@ -555,21 +517,6 @@
     padding-bottom: 12px;
     border-bottom: 1px solid #f1f5f9;
 }
-.dpu-history-id {
-    font-size: 14px;
-    font-weight: 800;
-    color: #0f172a;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.dpu-history-date {
-    font-size: 12.5px;
-    color: #64748b;
-    font-weight: 500;
-}
-
-/* Status Badges */
 .dpu-status-badge {
     display: inline-flex;
     align-items: center;
@@ -579,144 +526,33 @@
     font-size: 12.5px;
     font-weight: 700;
 }
-.dpu-status-pending {
-    background: #fffbeb;
-    color: #b45309;
-    border: 1px solid #fde68a;
-}
-.dpu-status-approved {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-}
-.dpu-status-rejected {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
-}
-.dpu-status-direct {
-    background: #f5f3ff;
-    color: #6d28d9;
-    border: 1px solid #ddd6fe;
-}
+.dpu-status-pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.dpu-status-approved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.dpu-status-rejected { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.dpu-status-direct { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
 
-/* History Reason & Decision */
-.dpu-reason-box {
+/* Saved Documents Modal */
+.dpu-doc-modal-item {
     background: #f8fafc;
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin: 12px 0;
-    font-size: 13.5px;
-    line-height: 1.6;
-    color: #334155;
-}
-.dpu-decision-box {
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin-top: 12px;
-    font-size: 13.5px;
-    line-height: 1.6;
-}
-.dpu-decision-approved {
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    color: #166534;
-}
-.dpu-decision-rejected {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-    color: #991b1b;
-}
-
-/* Attachments row */
-.dpu-attachments-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 12px;
-}
-.dpu-attach-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 12px;
-    background: #f1f5f9;
-    color: #334155;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 700;
-    text-decoration: none;
-    transition: all 0.2s;
-    border: 1px solid #e2e8f0;
-}
-.dpu-attach-btn:hover {
-    background: #e2e8f0;
-    color: #0ea47a;
-}
-
-/* Loading & Empty States */
-.dpu-empty {
-    text-align: center;
-    padding: 48px 24px;
-    color: #64748b;
-}
-.dpu-empty-icon {
-    font-size: 48px;
-    margin-bottom: 12px;
-    opacity: 0.6;
-}
-
-/* Pagination */
-.dpu-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    margin-top: 24px;
-}
-.dpu-page-btn {
-    padding: 8px 16px;
     border: 1.5px solid #e2e8f0;
-    background: white;
-    border-radius: 10px;
-    font-size: 13.5px;
-    font-weight: 700;
-    color: #475569;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     cursor: pointer;
     transition: all 0.2s;
 }
-.dpu-page-btn:hover:not(:disabled) {
+.dpu-doc-modal-item:hover {
     border-color: #0ea47a;
-    color: #0ea47a;
-}
-.dpu-page-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
-.dpu-page-info {
-    font-size: 13.5px;
-    color: #64748b;
-    font-weight: 600;
+    background: #f0fdf4;
 }
 
 @@media (max-width: 768px) {
-    .dpu-info-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .dpu-form-grid {
-        grid-template-columns: 1fr;
-    }
-    .dpu-profile-top {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .dpu-nav-tabs {
-        flex-wrap: wrap;
-    }
-    .dpu-tab-btn {
-        flex: 1 1 auto;
-        justify-content: center;
-    }
+    .dpu-info-grid { grid-template-columns: repeat(2, 1fr); }
+    .dpu-form-grid { grid-template-columns: 1fr; }
+    .dpu-diploma-grid { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -729,7 +565,7 @@
         </div>
         <h1 class="dpu-title">Yêu cầu cập nhật chuyên môn</h1>
         <p class="dpu-subtitle">
-            Gửi yêu cầu điều chỉnh học vị, chuyên khoa hoặc cập nhật chứng chỉ hành nghề. Hồ sơ đã phê duyệt hiện tại vẫn tiếp tục hoạt động công khai trong lúc chờ ban quản trị thẩm định.
+            Học vị, bằng cấp chuyên môn và chứng chỉ hành nghề được quản lý theo từng hạng mục riêng. Hồ sơ hiện tại vẫn tiếp tục hoạt động công khai trong suốt quá trình xét duyệt.
         </p>
     </div>
 
@@ -748,7 +584,7 @@
         </div>
     </div>
 
-    <!-- Main Content Area (shown after loading) -->
+    <!-- Main Content Area -->
     <div id="dpuMainContent" style="display: none;">
         <!-- Current Doctor Profile Card -->
         <div class="dpu-profile-card">
@@ -763,9 +599,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="dpuVerificationBadge">
-                    <!-- Populated dynamically -->
-                </div>
+                <div id="dpuVerificationBadge"></div>
             </div>
 
             <!-- 4-Grid Current Info -->
@@ -773,20 +607,20 @@
                 <div class="dpu-info-box">
                     <span class="dpu-info-label">🎓 Học vị hiện tại</span>
                     <span class="dpu-info-val" id="dpuCurDegree">—</span>
-                    <span class="dpu-info-sub" id="dpuCurDegreeSub">Đã đối chiếu</span>
+                    <div id="dpuCurDegreeSub"></div>
                 </div>
                 <div class="dpu-info-box">
-                    <span class="dpu-info-label">🏥 Chuyên khoa</span>
-                    <span class="dpu-info-val" id="dpuCurSpecialty">—</span>
-                    <span class="dpu-info-sub" id="dpuCurSpecialtySub">Khoa đang công tác</span>
+                    <span class="dpu-info-label">📜 Giấy phép / CCHN</span>
+                    <span class="dpu-info-val" id="dpuCurLicenseNumber">Chưa số hóa</span>
+                    <div id="dpuCurLicenseSub"></div>
                 </div>
                 <div class="dpu-info-box">
-                    <span class="dpu-info-label">⏳ Năm bắt đầu hành nghề</span>
+                    <span class="dpu-info-label">⏳ Bắt đầu hành nghề</span>
                     <span class="dpu-info-val" id="dpuCurYear">—</span>
-                    <span class="dpu-info-sub" id="dpuCurExpCalc">Kinh nghiệm hành nghề</span>
+                    <div class="dpu-info-sub" id="dpuCurExpCalc">Kinh nghiệm công tác</div>
                 </div>
                 <div class="dpu-info-box">
-                    <span class="dpu-info-label">📄 Hồ sơ & Chứng chỉ</span>
+                    <span class="dpu-info-label">🪪 Giấy tờ đã lưu</span>
                     <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 2px;">
                         <span id="dpuCurCertLink">—</span>
                         <span id="dpuCurIdCardLink">—</span>
@@ -794,26 +628,19 @@
                 </div>
             </div>
 
-            <!-- Dynamic Alert Banners -->
+            <!-- Dynamic Alerts -->
             <div id="dpuPendingAlert" class="dpu-alert dpu-alert-warning" style="display: none;">
                 <span class="dpu-alert-icon">⏳</span>
                 <div>
                     <strong>Yêu cầu đang chờ xét duyệt:</strong>
-                    Bạn đang có 1 đề nghị cập nhật chuyên môn đang chờ quản trị viên xử lý. Bạn vẫn có thể xem lịch sử yêu cầu bên dưới, nhưng chưa thể gửi thêm yêu cầu mới cho đến khi hoàn tất thẩm định.
+                    Bạn đang có 1 đề nghị cập nhật chuyên môn chờ quản trị viên thẩm định. Trong thời gian này, hồ sơ hiện tại vẫn được sử dụng bình thường.
                 </div>
             </div>
 
             <div id="dpuActiveApptsAlert" class="dpu-alert dpu-alert-info" style="display: none;">
                 <span class="dpu-alert-icon">ℹ️</span>
                 <div id="dpuActiveApptsText">
-                    Lưu ý chuyển khoa: Bạn đang có lịch khám chưa hoàn tất. Việc chuyển sang chuyên khoa mới sẽ chỉ có hiệu lực sau khi các lịch khám này được xử lý xong.
-                </div>
-            </div>
-
-            <div id="dpuNotApprovedAlert" class="dpu-alert dpu-alert-error" style="display: none;">
-                <span class="dpu-alert-icon">⚠️</span>
-                <div>
-                    Hồ sơ ban đầu của bạn chưa được phê duyệt. Vui lòng hoàn tất xác minh hồ sơ bác sĩ trước khi gửi yêu cầu cập nhật chuyên môn.
+                    Lưu ý chuyển khoa: Bạn đang có lịch khám chưa hoàn tất. Chuyển chuyên khoa chỉ có hiệu lực sau khi các lịch này được xử lý xong.
                 </div>
             </div>
         </div>
@@ -836,140 +663,172 @@
             <div class="dpu-card">
                 <div class="dpu-card-title">
                     <span>📝</span>
-                    <span>Thông tin chuyên môn muốn thay đổi</span>
+                    <span>Nội dung đề nghị cập nhật thông tin</span>
                 </div>
                 <p class="dpu-card-desc">
-                    Điền các thông tin bạn muốn cập nhật. Những mục không thay đổi hãy giữ nguyên giá trị hiện tại.
+                    Mỗi thay đổi cần có minh chứng tương ứng hoặc chọn giấy tờ đã lưu trong hồ sơ để ban quản trị đối chiếu.
                 </p>
 
                 <form id="dpuRequestForm">
                     <fieldset id="dpuFieldset" style="border:0; padding:0; margin:0; min-width:0;">
-                        <div class="dpu-form-grid">
-                            <!-- Degree -->
-                            <div class="dpu-form-group">
-                                <label class="dpu-label" for="dpuInputDegree">
-                                    <span>Học vị / Bằng cấp chuyên môn</span>
-                                </label>
-                                <select id="dpuInputDegree" class="dpu-select">
-                                    <option value="">Giữ nguyên học vị hiện tại</option>
-                                    @foreach (var degree in WebDeveloper.Helpers.DoctorDegree.Options)
-                                    {
-                                        <option value="@degree">@degree</option>
-                                    }
-                                    <option value="Khác">Khác (nhập học vị đặc thù)</option>
-                                </select>
+                        <!-- MỤC 1: HỌC VỊ ĐÀO TẠO -->
+                        <div class="dpu-form-section">
+                            <div class="dpu-section-title">
+                                <span>🎓</span>
+                                <span>1. Học vị đào tạo (Thạc sĩ, Tiến sĩ...)</span>
                             </div>
+                            <p class="dpu-section-desc">Học vị học thuật sau đại học hoặc đại học (không bao gồm chức danh học hàm)</p>
 
-                            <!-- Custom Degree (hidden by default) -->
-                            <div class="dpu-form-group" id="dpuDegreeOtherGroup" style="display: none;">
-                                <label class="dpu-label" for="dpuInputDegreeOther">
-                                    <span>Mô tả học vị khác</span>
-                                    <span class="dpu-label-required">*</span>
-                                </label>
-                                <input type="text" id="dpuInputDegreeOther" class="dpu-input" maxlength="94" placeholder="Ví dụ: Bác sĩ Nội trú, Thạc sĩ Y sinh..." />
-                            </div>
-
-                            <!-- Start Year -->
-                            <div class="dpu-form-group">
-                                <label class="dpu-label" for="dpuInputYear">
-                                    <span>Năm bắt đầu hành nghề</span>
-                                    <span class="dpu-calc-badge" id="dpuExpPreview">Chưa chọn</span>
-                                </label>
-                                <input type="number" id="dpuInputYear" class="dpu-input" min="1900" max="@currentYear" placeholder="Nhập năm bắt đầu (ví dụ: 2016)" />
-                            </div>
-
-                            <!-- Specialty -->
-                            <div class="dpu-form-group">
-                                <label class="dpu-label" for="dpuInputSpecialty">
-                                    <span>Chuyên khoa</span>
-                                    <span class="dpu-label-required">*</span>
-                                </label>
-                                <select id="dpuInputSpecialty" class="dpu-select" required></select>
-                            </div>
-
-                            <!-- Evidence File Dropzone -->
-                            <div class="dpu-form-group">
-                                <label class="dpu-label">
-                                    <span>Minh chứng cho thay đổi</span>
-                                    <span style="font-size: 11.5px; color: #64748b; font-weight: 500;">(PDF, JPG, PNG &le; 5MB)</span>
-                                </label>
-                                <div class="dpu-upload-box" id="dpuEvidenceDropzone" onclick="document.getElementById('dpuEvidenceInput').click()">
-                                    <div class="dpu-upload-icon">📁</div>
-                                    <div class="dpu-upload-title">Nhấp để chọn hoặc kéo thả tệp minh chứng</div>
-                                    <p class="dpu-upload-hint">Bằng tốt nghiệp, chứng nhận đào tạo hoặc quyết định bổ nhiệm</p>
-                                    <input type="file" id="dpuEvidenceInput" class="dpu-file-input" accept="application/pdf,image/jpeg,image/png" />
+                            <div class="dpu-form-grid">
+                                <div class="dpu-form-group">
+                                    <label class="dpu-label">Học vị đào tạo mới</label>
+                                    <select id="dpuInputDegree" class="dpu-select">
+                                        <option value="">Giữ nguyên học vị hiện tại</option>
+                                        <option value="Bác sĩ">Bác sĩ</option>
+                                        <option value="Thạc sĩ">Thạc sĩ</option>
+                                        <option value="Tiến sĩ">Tiến sĩ</option>
+                                        <option value="Khác">Khác (Bác sĩ nội trú...)</option>
+                                    </select>
                                 </div>
-                                <div class="dpu-file-selected" id="dpuEvidenceSelected">
-                                    <span id="dpuEvidenceFileName"></span>
-                                    <button type="button" class="dpu-remove-file" onclick="clearDpuFile('evidence')">&times; Xóa</button>
+                                <div class="dpu-form-group" id="dpuDegreeOtherGroup" style="display: none;">
+                                    <label class="dpu-label">Mô tả học vị khác *</label>
+                                    <input type="text" id="dpuInputDegreeOther" class="dpu-input" maxlength="94" placeholder="Ví dụ: Bác sĩ Nội trú..." />
                                 </div>
                             </div>
 
-                            <!-- New Certificate File Dropzone (Optional) -->
-                            <div class="dpu-form-group">
-                                <label class="dpu-label">
-                                    <span>Thay chứng chỉ hành nghề mới</span>
-                                    <span style="font-size: 11.5px; color: #64748b; font-weight: 500;">(Không bắt buộc)</span>
-                                </label>
-                                <div class="dpu-upload-box" id="dpuCertDropzone" onclick="document.getElementById('dpuCertInput').click()">
-                                    <div class="dpu-upload-icon">📜</div>
-                                    <div class="dpu-upload-title">Nhấp để tải lên chứng chỉ hành nghề mới</div>
-                                    <p class="dpu-upload-hint">Để trống nếu không thay đổi số hiệu/phạm vi chứng chỉ</p>
-                                    <input type="file" id="dpuCertInput" class="dpu-file-input" accept="application/pdf,image/jpeg,image/png" />
+                            <div style="margin-top: 14px;">
+                                <label class="dpu-label">Minh chứng cho học vị mới (Văn bằng, quyết định công nhận):</label>
+                                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
+                                    <input type="file" id="dpuDegreeFile" accept="application/pdf,image/jpeg,image/png" style="font-size: 13px;" />
+                                    <button type="button" class="dpu-btn dpu-btn-secondary" style="padding: 8px 14px; font-size: 12.5px;" onclick="openSavedDocsModal('degree')">
+                                        <span>📂 Chọn giấy tờ đã lưu</span>
+                                    </button>
                                 </div>
-                                <div class="dpu-file-selected" id="dpuCertSelected">
-                                    <span id="dpuCertFileName"></span>
-                                    <button type="button" class="dpu-remove-file" onclick="clearDpuFile('cert')">&times; Xóa</button>
+                                <div id="dpuDegreeDocSelected" class="dpu-doc-selected-text" style="display: none; margin-top: 8px;">
+                                    <span>Đã chọn:</span> <span id="dpuDegreeDocName"></span>
+                                    <button type="button" onclick="clearSelectedSavedDoc('degree')" style="background: none; border: none; color: #ef4444; cursor: pointer; font-weight: 700;">&times; Hủy</button>
                                 </div>
-                            </div>
-
-                            <!-- Checkbox: Use Existing Certificate -->
-                            <div class="dpu-form-group full-width">
-                                <label class="dpu-checkbox-label">
-                                    <input type="checkbox" id="dpuCheckExistingCert" />
-                                    <span>Dùng chứng chỉ hành nghề hiện có làm minh chứng (chỉ chọn khi chứng chỉ hiện tại đã chứa đủ thông tin để thẩm định các cập nhật trên)</span>
-                                </label>
-                            </div>
-
-                            <!-- Reason Textarea -->
-                            <div class="dpu-form-group full-width">
-                                <label class="dpu-label" for="dpuInputReason">
-                                    <span>Lý do / Nội dung đề nghị cập nhật</span>
-                                    <span style="font-size: 12px; font-weight: 600; color: #64748b;" id="dpuReasonCounter">0 / 1000 ký tự</span>
-                                </label>
-                                <textarea id="dpuInputReason" class="dpu-textarea" rows="3" minlength="10" maxlength="1000" placeholder="Nêu rõ lý do thay đổi học vị, chuyên khoa hoặc bổ sung chứng chỉ để ban quản trị đối chiếu nhanh chóng..." required></textarea>
                             </div>
                         </div>
 
-                        <!-- Live Diff Comparison Card -->
+                        <!-- MỤC 2: BẰNG CẤP CHUYÊN MÔN -->
+                        <div class="dpu-form-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <div class="dpu-section-title" style="margin: 0;">
+                                    <span>📜</span>
+                                    <span>2. Bằng cấp chuyên môn (BSCKI, BSCKII, Bằng Y khoa...)</span>
+                                </div>
+                                <button type="button" class="dpu-btn dpu-btn-secondary" style="padding: 6px 12px; font-size: 12px;" onclick="addDiplomaRow()">
+                                    <span>+ Thêm bằng cấp</span>
+                                </button>
+                            </div>
+                            <p class="dpu-section-desc">Bổ sung danh sách văn bằng chuyên môn kèm nơi cấp và năm tốt nghiệp</p>
+
+                            <div id="dpuDiplomasList">
+                                <!-- Dynamic diploma items -->
+                            </div>
+                        </div>
+
+                        <!-- MỤC 3: GIẤY PHÉP / CHỨNG CHỈ HÀNH NGHỀ -->
+                        <div class="dpu-form-section">
+                            <div class="dpu-section-title">
+                                <span>📑</span>
+                                <span>3. Giấy phép / Chứng chỉ hành nghề</span>
+                            </div>
+                            <p class="dpu-section-desc">Cập nhật số hiệu, phạm vi hoạt động chuyên môn và tải bản scan giấy phép mới (bản cũ được lưu lịch sử)</p>
+
+                            <div class="dpu-form-grid">
+                                <div class="dpu-form-group">
+                                    <label class="dpu-label">Số giấy phép / Số CCHN</label>
+                                    <input type="text" id="dpuLicenseNumber" class="dpu-input" placeholder="Ví dụ: 012345/BYT-CCHN" />
+                                </div>
+                                <div class="dpu-form-group">
+                                    <label class="dpu-label">Nơi cấp giấy phép</label>
+                                    <input type="text" id="dpuLicenseIssuer" class="dpu-input" placeholder="Ví dụ: Sở Y tế Hà Nội" />
+                                </div>
+                                <div class="dpu-form-group">
+                                    <label class="dpu-label">Ngày cấp</label>
+                                    <input type="date" id="dpuLicenseIssueDate" class="dpu-input" />
+                                </div>
+                                <div class="dpu-form-group">
+                                    <label class="dpu-label">Phạm vi hành nghề ghi trên giấy phép</label>
+                                    <input type="text" id="dpuLicenseScope" class="dpu-input" placeholder="Ví dụ: Khám bệnh, chữa bệnh Nội khoa" />
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 14px;">
+                                <label class="dpu-label">Tệp scan Giấy phép / CCHN mới (PDF hoặc ảnh &le; 5MB):</label>
+                                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 6px;">
+                                    <input type="file" id="dpuCertFile" accept="application/pdf,image/jpeg,image/png" style="font-size: 13px;" />
+                                    <button type="button" class="dpu-btn dpu-btn-secondary" style="padding: 8px 14px; font-size: 12.5px;" onclick="openSavedDocsModal('license')">
+                                        <span>📂 Chọn giấy tờ đã lưu</span>
+                                    </button>
+                                </div>
+                                <div id="dpuLicenseDocSelected" class="dpu-doc-selected-text" style="display: none; margin-top: 8px;">
+                                    <span>Đã chọn:</span> <span id="dpuLicenseDocName"></span>
+                                    <button type="button" onclick="clearSelectedSavedDoc('license')" style="background: none; border: none; color: #ef4444; cursor: pointer; font-weight: 700;">&times; Hủy</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- MỤC 4: CHUYÊN KHOA KHÁM & NĂM BẮT ĐẦU HÀNH NGHỀ -->
+                        <div class="dpu-form-section">
+                            <div class="dpu-section-title">
+                                <span>🏥</span>
+                                <span>4. Chuyên khoa khám trên web & Năm bắt đầu hành nghề</span>
+                            </div>
+                            <p class="dpu-section-desc">Chuyên khoa để bệnh nhân tìm kiếm đặt lịch; Admin sẽ đối chiếu phạm vi CCHN và bằng cấp</p>
+
+                            <div class="dpu-form-grid">
+                                <div class="dpu-form-group">
+                                    <label class="dpu-label">Chuyên khoa đề xuất</label>
+                                    <select id="dpuInputSpecialty" class="dpu-select" required></select>
+                                </div>
+                                <div class="dpu-form-group">
+                                    <label class="dpu-label">
+                                        <span>Năm bắt đầu hành nghề</span>
+                                        <span class="dpu-calc-badge" id="dpuExpPreview"></span>
+                                    </label>
+                                    <input type="number" id="dpuInputYear" class="dpu-input" min="1900" max="@currentYear" placeholder="Ví dụ: 2016 (quá trình công tác thực tế)" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- LÝ DO ĐỀ NGHỊ -->
+                        <div class="dpu-form-group full-width" style="margin-bottom: 20px;">
+                            <label class="dpu-label" for="dpuInputReason">
+                                <span>Lý do / Nội dung đề nghị cập nhật *</span>
+                                <span style="font-size: 12px; font-weight: 600; color: #64748b;" id="dpuReasonCounter">0 / 1000 ký tự</span>
+                            </label>
+                            <textarea id="dpuInputReason" class="dpu-textarea" rows="3" minlength="10" maxlength="1000" placeholder="Nêu rõ lý do thay đổi (ví dụ: Tốt nghiệp thạc sĩ, bổ sung chứng chỉ hành nghề mới, đăng ký chuyển chuyên khoa)..." required></textarea>
+                        </div>
+
+                        <!-- LIVE DIFF PREVIEW -->
                         <div class="dpu-diff-card">
                             <div class="dpu-diff-header">
                                 <div class="dpu-diff-title">
                                     <span>🔍</span>
-                                    <span>Bản xem trước đối chiếu thay đổi (Live Preview)</span>
+                                    <span>Bản xem trước đối chiếu thay đổi (Live Diff)</span>
                                 </div>
-                                <span style="font-size: 12px; color: #64748b;">Hệ thống sẽ lưu lại đối chiếu này khi gửi</span>
+                                <span style="font-size: 12px; color: #64748b;">Hệ thống sẽ lưu vết đối chiếu này khi gửi</span>
                             </div>
                             <table class="dpu-diff-table">
                                 <thead>
                                     <tr>
                                         <th style="width: 25%;">Hạng mục</th>
                                         <th style="width: 37.5%;">Hồ sơ hiện tại</th>
-                                        <th style="width: 37.5%;">Đề xuất cập nhật</th>
+                                        <th style="width: 37.5%;">Đề xuất mới</th>
                                     </tr>
                                 </thead>
-                                <tbody id="dpuDiffTableBody">
-                                    <!-- Populated dynamically via JS -->
-                                </tbody>
+                                <tbody id="dpuDiffTableBody"></tbody>
                             </table>
                         </div>
 
-                        <!-- Action Buttons -->
+                        <!-- Submit Buttons -->
                         <div class="dpu-actions">
                             <button type="button" class="dpu-btn dpu-btn-secondary" onclick="resetDpuForm()">Nhập lại</button>
                             <button type="submit" class="dpu-btn dpu-btn-primary" id="dpuSubmitBtn">
-                                <span>🚀</span>
-                                <span>Gửi yêu cầu xét duyệt</span>
+                                <span>🚀 Gửi yêu cầu xét duyệt</span>
                             </button>
                         </div>
                     </fieldset>
@@ -980,23 +839,38 @@
         <!-- TAB 2: HISTORY SECTION -->
         <div id="dpuHistorySection" style="display: none;">
             <div class="dpu-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-                    <div>
-                        <div class="dpu-card-title">
-                            <span>📜</span>
-                            <span>Lịch sử các yêu cầu cập nhật</span>
-                        </div>
-                        <p class="dpu-card-desc" style="margin: 0;">Theo dõi trạng thái xét duyệt và phản hồi từ ban quản trị</p>
-                    </div>
+                <div class="dpu-card-title">
+                    <span>📜</span>
+                    <span>Lịch sử các yêu cầu cập nhật</span>
                 </div>
+                <p class="dpu-card-desc">Theo dõi tiến độ đối chiếu bằng cấp, giấy phép và phản hồi từ ban quản trị</p>
 
-                <div id="dpuHistoryList">
-                    <!-- Populated dynamically -->
-                </div>
-
-                <!-- History Pagination -->
+                <div id="dpuHistoryList"></div>
                 <div class="dpu-pagination" id="dpuHistoryPagination" style="display: none;"></div>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================
+     MODAL CHỌN GIẤY TỜ ĐÃ LƯU (SELECT SAVED DOCUMENTS)
+     ============================================================ -->
+<div id="dpuSavedDocsModal" class="modal-overlay" style="--modal-max-width: 520px; --modal-padding: 24px;">
+    <div class="modal-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f1f5f9;">
+            <h3 style="margin: 0; font-size: 17px; font-weight: 800; color: #0f172a;">📂 Chọn giấy tờ đã lưu trong hồ sơ</h3>
+            <button type="button" onclick="closeApuModal('dpuSavedDocsModal')" style="background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer;">&times;</button>
+        </div>
+        <p style="font-size: 13px; color: #64748b; margin: 0 0 16px;">
+            Chọn một tài liệu đã được lưu trữ trước đó làm căn cứ đối chiếu cho mục này.
+        </p>
+
+        <div id="dpuSavedDocsListContainer">
+            <!-- Populated via JS -->
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+            <button type="button" class="dpu-btn dpu-btn-secondary" onclick="closeApuModal('dpuSavedDocsModal')">Đóng</button>
         </div>
     </div>
 </div>
@@ -1010,14 +884,15 @@ DocBookingPage.mount(page => {
     let current = null;
     let specialties = [];
     let historyPage = 0;
+    let targetDocType = null;
+    let selectedDegreeDoc = null;
+    let selectedLicenseDoc = null;
+    let diplomasList = [];
     const currentYear = @currentYear;
 
-    // Helper functions
     const escape = text => escapeHtml(text || '');
-    const formatMoney = val => val == null ? 'Chưa có thông tin' : Number(val).toLocaleString('vi-VN') + ' đ';
     const formatDate = val => val ? new Date(val).toLocaleString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-        hour: '2-digit', minute: '2-digit',
+        timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit',
         day: '2-digit', month: '2-digit', year: 'numeric'
     }) : 'Chưa xử lý';
 
@@ -1026,9 +901,7 @@ DocBookingPage.mount(page => {
         try {
             const u = new URL(url);
             if (!['https:', 'http:'].includes(u.protocol)) return '<span style="color:#ef4444">Đường dẫn không hợp lệ</span>';
-        } catch (_) {
-            return '<span style="color:#ef4444">Đường dẫn không hợp lệ</span>';
-        }
+        } catch (_) { return '<span style="color:#ef4444">Đường dẫn không hợp lệ</span>'; }
         return `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer" class="dpu-file-link">
             <span>📄</span> <span>${escape(label)}</span>
         </a>`;
@@ -1045,7 +918,11 @@ DocBookingPage.mount(page => {
         return res.json();
     }
 
-    // Switch tab handler
+    // Modal controls
+    window.openApuModal = function(id) { document.getElementById(id)?.classList.add('active'); };
+    window.closeApuModal = function(id) { document.getElementById(id)?.classList.remove('active'); };
+
+    // Tab switcher
     window.switchDpuTab = function(tabName) {
         const isForm = tabName === 'form';
         document.getElementById('dpuTabFormBtn').classList.toggle('active', isForm);
@@ -1054,7 +931,7 @@ DocBookingPage.mount(page => {
         document.getElementById('dpuHistorySection').style.display = isForm ? 'none' : 'block';
     };
 
-    // Calculate experience years from start year
+    // Calculate experience years
     function calcExpYears(startYear) {
         if (!startYear || startYear < 1900 || startYear > currentYear) return null;
         return currentYear - startYear;
@@ -1068,197 +945,248 @@ DocBookingPage.mount(page => {
             badge.textContent = `~${years} năm kinh nghiệm (tính đến ${currentYear})`;
             badge.style.display = 'inline-flex';
         } else {
-            badge.textContent = 'Chưa chọn';
+            badge.textContent = '';
             badge.style.display = 'none';
         }
     }
 
-    // Handle Degree "Khác"
-    function handleDegreeChange() {
-        const degree = document.getElementById('dpuInputDegree').value;
-        const otherGroup = document.getElementById('dpuDegreeOtherGroup');
-        otherGroup.style.display = degree === 'Khác' ? 'flex' : 'none';
+    // Degree "Khác"
+    document.getElementById('dpuInputDegree').addEventListener('change', function() {
+        document.getElementById('dpuDegreeOtherGroup').style.display = this.value === 'Khác' ? 'flex' : 'none';
+        updateLiveDiff();
+    });
+
+    // Saved documents modal
+    window.openSavedDocsModal = function(forTarget) {
+        targetDocType = forTarget;
+        const container = document.getElementById('dpuSavedDocsListContainer');
+        container.replaceChildren();
+
+        const docs = current?.savedDocuments || [];
+        if (!docs.length) {
+            container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 20px;">Không có giấy tờ nào đã lưu trước đó.</div>';
+            openApuModal('dpuSavedDocsModal');
+            return;
+        }
+
+        docs.forEach(d => {
+            const item = document.createElement('div');
+            item.className = 'dpu-doc-modal-item';
+            item.innerHTML = `
+                <div>
+                    <div style="font-weight: 700; font-size: 13.5px; color: #0f172a;">${escape(d.label)}</div>
+                    <div style="font-size: 12px; color: #64748b;">Loại: ${d.type === 'LICENSE' ? 'Giấy phép / CCHN' : 'Căn cước công dân'}</div>
+                </div>
+                <button type="button" class="dpu-btn dpu-btn-primary" style="padding: 6px 12px; font-size: 12px;">Chọn giấy tờ này</button>
+            `;
+            item.onclick = () => selectSavedDoc(d);
+            container.appendChild(item);
+        });
+
+        openApuModal('dpuSavedDocsModal');
+    };
+
+    function selectSavedDoc(doc) {
+        if (targetDocType === 'degree') {
+            selectedDegreeDoc = doc;
+            document.getElementById('dpuDegreeDocName').textContent = doc.label;
+            document.getElementById('dpuDegreeDocSelected').style.display = 'flex';
+        } else if (targetDocType === 'license') {
+            selectedLicenseDoc = doc;
+            document.getElementById('dpuLicenseDocName').textContent = doc.label;
+            document.getElementById('dpuLicenseDocSelected').style.display = 'flex';
+        }
+        closeApuModal('dpuSavedDocsModal');
         updateLiveDiff();
     }
 
-    // File Dropzones & Inputs
-    function setupDropzone(dropzoneId, inputId, selectedId, nameId) {
-        const zone = document.getElementById(dropzoneId);
-        const input = document.getElementById(inputId);
-        const selected = document.getElementById(selectedId);
-        const nameSpan = document.getElementById(nameId);
-
-        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
-        zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
-        zone.addEventListener('drop', e => {
-            e.preventDefault();
-            zone.classList.remove('dragover');
-            if (e.dataTransfer.files.length) {
-                input.files = e.dataTransfer.files;
-                handleFileSelect(input, selected, nameSpan);
-            }
-        });
-
-        input.addEventListener('change', () => {
-            handleFileSelect(input, selected, nameSpan);
-        });
-    }
-
-    function handleFileSelect(input, selectedBox, nameSpan) {
-        const file = input.files[0];
-        if (!file) {
-            selectedBox.style.display = 'none';
-            updateLiveDiff();
-            return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-            showApiToast('Tệp tải lên không được vượt quá 5 MB.', 'warning');
-            input.value = '';
-            selectedBox.style.display = 'none';
-            return;
-        }
-        const sizeMb = (file.size / (1024 * 1024)).toFixed(2);
-        nameSpan.textContent = `📎 ${file.name} (${sizeMb} MB)`;
-        selectedBox.style.display = 'flex';
-        updateLiveDiff();
-    }
-
-    window.clearDpuFile = function(type) {
-        if (type === 'evidence') {
-            document.getElementById('dpuEvidenceInput').value = '';
-            document.getElementById('dpuEvidenceSelected').style.display = 'none';
-        } else if (type === 'cert') {
-            document.getElementById('dpuCertInput').value = '';
-            document.getElementById('dpuCertSelected').style.display = 'none';
+    window.clearSelectedSavedDoc = function(forTarget) {
+        if (forTarget === 'degree') {
+            selectedDegreeDoc = null;
+            document.getElementById('dpuDegreeDocSelected').style.display = 'none';
+        } else if (forTarget === 'license') {
+            selectedLicenseDoc = null;
+            document.getElementById('dpuLicenseDocSelected').style.display = 'none';
         }
         updateLiveDiff();
     };
+
+    // Diplomas list handler
+    window.addDiplomaRow = function() {
+        const id = Date.now();
+        const row = document.createElement('div');
+        row.className = 'dpu-diploma-item';
+        row.dataset.diplomaId = id;
+        row.innerHTML = `
+            <div class="dpu-diploma-grid">
+                <div>
+                    <label style="font-size: 11.5px; font-weight: 700; color: #475569;">Tên bằng cấp *</label>
+                    <input type="text" class="dpu-input dip-title" placeholder="Ví dụ: Bác sĩ chuyên khoa I Nhi" oninput="updateLiveDiff()" />
+                </div>
+                <div>
+                    <label style="font-size: 11.5px; font-weight: 700; color: #475569;">Nơi cấp / Trường đào tạo</label>
+                    <input type="text" class="dpu-input dip-issuer" placeholder="Ví dụ: ĐH Y Dược TPHCM" oninput="updateLiveDiff()" />
+                </div>
+                <div>
+                    <label style="font-size: 11.5px; font-weight: 700; color: #475569;">Năm cấp</label>
+                    <input type="number" class="dpu-input dip-year" min="1950" max="${currentYear}" placeholder="2021" oninput="updateLiveDiff()" />
+                </div>
+                <div style="padding-top: 18px;">
+                    <button type="button" class="dpu-btn dpu-btn-secondary" style="padding: 9px 12px; color: #ef4444;" onclick="removeDiplomaRow(${id})">&times; Xóa</button>
+                </div>
+            </div>
+        `;
+        document.getElementById('dpuDiplomasList').appendChild(row);
+        updateLiveDiff();
+    };
+
+    window.removeDiplomaRow = function(id) {
+        const item = document.querySelector(`.dpu-diploma-item[data-diploma-id="${id}"]`);
+        if (item) item.remove();
+        updateLiveDiff();
+    };
+
+    function getEnteredDiplomas() {
+        const items = [];
+        document.querySelectorAll('.dpu-diploma-item').forEach(el => {
+            const title = el.querySelector('.dip-title')?.value.trim();
+            const issuer = el.querySelector('.dip-issuer')?.value.trim();
+            const yearStr = el.querySelector('.dip-year')?.value.trim();
+            if (title) {
+                items.push({
+                    title,
+                    issuer: issuer || null,
+                    year: yearStr ? parseInt(yearStr, 10) : null
+                });
+            }
+        });
+        return items;
+    }
 
     // Live Diff comparison calculation
     function updateLiveDiff() {
         if (!current) return;
         const p = current.currentProfile;
 
-        // Proposed degree
+        // Degree
         const rawDegree = document.getElementById('dpuInputDegree').value;
         const otherDegree = document.getElementById('dpuInputDegreeOther').value.trim();
         let propDegree = rawDegree === 'Khác' ? (otherDegree ? `Khác: ${otherDegree}` : 'Khác') : (rawDegree || p.degree || 'Chưa cập nhật');
+        const degreeChanged = rawDegree && propDegree !== p.degree;
 
-        // Proposed year
+        // Year
         const rawYear = document.getElementById('dpuInputYear').value;
         const propYear = rawYear ? parseInt(rawYear, 10) : p.practiceStartYear;
+        const yearChanged = rawYear && propYear !== p.practiceStartYear;
 
-        // Proposed specialty
+        // Specialty
         const specSelect = document.getElementById('dpuInputSpecialty');
         const propSpecId = specSelect.value ? parseInt(specSelect.value, 10) : p.specialtyId;
         const propSpecName = specSelect.options[specSelect.selectedIndex]?.text || p.specialtyName;
+        const specChanged = propSpecId !== p.specialtyId;
 
-        // Files
-        const hasNewCert = document.getElementById('dpuCertInput').files.length > 0;
-        const hasEvidence = document.getElementById('dpuEvidenceInput').files.length > 0;
-        const useExisting = document.getElementById('dpuCheckExistingCert').checked;
+        // License
+        const propLicNum = document.getElementById('dpuLicenseNumber').value.trim();
+        const hasNewCertFile = document.getElementById('dpuCertFile').files.length > 0;
+        const licChanged = Boolean(propLicNum || hasNewCertFile || selectedLicenseDoc);
+
+        // Diplomas
+        const enteredDips = getEnteredDiplomas();
+        const dipsChanged = enteredDips.length > 0;
 
         const rows = [
             {
-                label: '🎓 Học vị / Bằng cấp',
+                label: '🎓 Học vị đào tạo',
                 before: p.degree || 'Chưa cập nhật',
-                proposed: propDegree,
-                changed: (rawDegree && propDegree !== p.degree)
+                prop: propDegree + (selectedDegreeDoc ? ` (Căn cứ: ${selectedDegreeDoc.label})` : ''),
+                changed: degreeChanged
+            },
+            {
+                label: '📜 Bằng cấp chuyên môn',
+                before: p.diplomas?.length ? p.diplomas.map(d => d.title).join(', ') : 'Chưa lưu danh mục riêng (Hồ sơ cũ)',
+                prop: enteredDips.length ? enteredDips.map(d => `${d.title} (${d.year || '—'})`).join(', ') : 'Không bổ sung thêm',
+                changed: dipsChanged
+            },
+            {
+                label: '📑 Giấy phép / CCHN',
+                before: p.licenseNumber ? `Số ${p.licenseNumber}` : (p.certificateUrl ? 'CCHN đang lưu (Chưa số hóa)' : 'Chưa có tệp'),
+                prop: propLicNum ? `Số ${propLicNum} ${hasNewCertFile ? '(Đính kèm tệp mới)' : ''}` : (selectedLicenseDoc ? selectedLicenseDoc.label : 'Giữ nguyên CCHN hiện tại'),
+                changed: licChanged
+            },
+            {
+                label: '🏥 Chuyên khoa web',
+                before: p.specialtyName,
+                prop: propSpecName,
+                changed: specChanged
             },
             {
                 label: '⏳ Năm bắt đầu hành nghề',
-                before: p.practiceStartYear ? `${p.practiceStartYear} (~${calcExpYears(p.practiceStartYear)} năm KN)` : (p.legacyExperienceYears ? `${p.legacyExperienceYears} năm (cũ)` : 'Chưa có thông tin'),
-                proposed: propYear ? `${propYear} (~${calcExpYears(propYear)} năm KN)` : 'Chưa có thông tin',
-                changed: (rawYear && propYear !== p.practiceStartYear)
-            },
-            {
-                label: '🏥 Chuyên khoa',
-                before: p.specialtyName,
-                proposed: propSpecName,
-                changed: (propSpecId !== p.specialtyId)
-            },
-            {
-                label: '📜 Chứng chỉ hành nghề',
-                before: p.certificateUrl ? 'Đang sử dụng chứng chỉ đã duyệt' : 'Chưa có chứng chỉ',
-                proposed: hasNewCert ? 'Tải lên chứng chỉ mới thay thế' : (useExisting ? 'Tiếp tục dùng chứng chỉ hiện có' : 'Giữ nguyên chứng chỉ cũ'),
-                changed: hasNewCert
-            },
-            {
-                label: '📁 Minh chứng thẩm định',
-                before: '—',
-                proposed: hasEvidence ? 'Đã chọn tệp minh chứng mới' : (useExisting ? 'Dùng chứng chỉ hiện có làm minh chứng' : 'Chưa chọn tệp minh chứng'),
-                changed: (hasEvidence || useExisting)
+                before: p.practiceStartYear ? `${p.practiceStartYear} (~${calcExpYears(p.practiceStartYear)} năm)` : (p.legacyExperienceYears ? `${p.legacyExperienceYears} năm (cũ)` : 'Chưa có'),
+                prop: propYear ? `${propYear} (~${calcExpYears(propYear)} năm KN)` : 'Chưa có',
+                changed: yearChanged
             }
         ];
 
-        const tbody = document.getElementById('dpuDiffTableBody');
-        tbody.innerHTML = rows.map(r => `
+        document.getElementById('dpuDiffTableBody').innerHTML = rows.map(r => `
             <tr class="${r.changed ? 'dpu-diff-changed' : ''}">
                 <td style="font-weight: 700; color: #334155;">${escape(r.label)}</td>
                 <td style="color: #64748b;">${escape(r.before)}</td>
                 <td>
-                    ${escape(r.proposed)}
+                    ${escape(r.prop)}
                     ${r.changed ? '<span class="dpu-diff-badge">Thay đổi</span>' : ''}
                 </td>
             </tr>
         `).join('');
     }
 
-    // Character counter
+    // Reason counter
     const reasonInput = document.getElementById('dpuInputReason');
     const reasonCounter = document.getElementById('dpuReasonCounter');
     reasonInput.addEventListener('input', () => {
         const len = reasonInput.value.length;
         reasonCounter.textContent = `${len} / 1000 ký tự`;
-        if (len > 0 && len < 10) {
-            reasonCounter.style.color = '#ef4444';
-        } else if (len >= 10) {
-            reasonCounter.style.color = '#059669';
-        } else {
-            reasonCounter.style.color = '#64748b';
-        }
+        reasonCounter.style.color = len >= 10 ? '#059669' : (len > 0 ? '#ef4444' : '#64748b');
     });
 
     // Reset Form
     window.resetDpuForm = function() {
         if (!current) return;
-        populateFormDefaults(current);
-        clearDpuFile('evidence');
-        clearDpuFile('cert');
-        document.getElementById('dpuInputReason').value = '';
-        reasonCounter.textContent = '0 / 1000 ký tự';
-        reasonCounter.style.color = '#64748b';
+        document.getElementById('dpuRequestForm').reset();
+        document.getElementById('dpuDiplomasList').replaceChildren();
+        clearSelectedSavedDoc('degree');
+        clearSelectedSavedDoc('license');
+        populateDefaults(current);
         updateLiveDiff();
     };
 
-    function populateFormDefaults(data) {
+    function populateDefaults(data) {
         const p = data.currentProfile;
         const degreeSelect = document.getElementById('dpuInputDegree');
-        const options = [...degreeSelect.options].map(o => o.value);
+        const opts = [...degreeSelect.options].map(o => o.value);
 
         if (!p.degree) {
             degreeSelect.value = '';
-        } else if (options.includes(p.degree)) {
+        } else if (opts.includes(p.degree)) {
             degreeSelect.value = p.degree;
         } else {
             degreeSelect.value = 'Khác';
             document.getElementById('dpuInputDegreeOther').value = (p.degree || '').replace(/^Khác:\s*/, '');
+            document.getElementById('dpuDegreeOtherGroup').style.display = 'flex';
         }
-        handleDegreeChange();
 
         document.getElementById('dpuInputYear').value = p.practiceStartYear || '';
         updateExpBadge();
 
-        const specSelect = document.getElementById('dpuInputSpecialty');
-        specSelect.value = p.specialtyId || '';
-
-        document.getElementById('dpuCheckExistingCert').disabled = !p.certificateUrl;
-        document.getElementById('dpuCheckExistingCert').checked = false;
+        document.getElementById('dpuInputSpecialty').value = p.specialtyId || '';
+        document.getElementById('dpuLicenseNumber').value = p.licenseNumber || '';
+        document.getElementById('dpuLicenseIssuer').value = p.licenseIssuer || '';
+        document.getElementById('dpuLicenseIssueDate').value = p.licenseIssueDate || '';
+        document.getElementById('dpuLicenseScope').value = p.licenseScope || '';
 
         updateLiveDiff();
     }
 
-    // Load Doctor Profile and Specialties
+    // Load Doctor Profile
     async function loadDoctorData() {
         document.getElementById('dpuInitialLoading').style.display = 'block';
         document.getElementById('dpuErrorState').style.display = 'none';
@@ -1274,36 +1202,40 @@ DocBookingPage.mount(page => {
             specialties = specList;
             const p = current.currentProfile;
 
-            // Render Doctor Top Card
+            // Render Top Card
             const initials = (current.doctorName || 'BS').split(' ').pop().substring(0, 2).toUpperCase();
             document.getElementById('dpuDoctorAvatar').textContent = initials;
             document.getElementById('dpuDoctorName').textContent = `BS. ${current.doctorName}`;
             document.getElementById('dpuDoctorSpecialty').textContent = p.specialtyName || 'Chưa cập nhật chuyên khoa';
 
             const badgeWrap = document.getElementById('dpuVerificationBadge');
-            if (current.verificationStatus === 'APPROVED') {
-                badgeWrap.innerHTML = '<span class="dpu-status-badge dpu-status-approved">✅ Đã xác minh hồ sơ</span>';
-            } else {
-                badgeWrap.innerHTML = '<span class="dpu-status-badge dpu-status-pending">⏳ Chờ duyệt hồ sơ ban đầu</span>';
-            }
+            badgeWrap.innerHTML = current.verificationStatus === 'APPROVED'
+                ? '<span class="dpu-status-badge dpu-status-approved">✅ Hồ sơ đã phê duyệt</span>'
+                : '<span class="dpu-status-badge dpu-status-pending">⏳ Chờ duyệt hồ sơ ban đầu</span>';
 
-            // Info grid values
+            // Current info values & legacy badges
+            const isLegacyDegree = p.degree && (p.degree.includes('Phó giáo sư') || p.degree.includes('Giáo sư') || p.degree.includes('chuyên khoa'));
             document.getElementById('dpuCurDegree').textContent = p.degree || 'Chưa cập nhật';
-            document.getElementById('dpuCurSpecialty').textContent = p.specialtyName || '—';
+            document.getElementById('dpuCurDegreeSub').innerHTML = isLegacyDegree
+                ? '<span class="dpu-legacy-badge">Hồ sơ cũ — Chưa phân loại học vị/bằng cấp riêng</span>'
+                : '<span class="dpu-info-sub">Học vị đã chuẩn hóa</span>';
+
+            document.getElementById('dpuCurLicenseNumber').textContent = p.licenseNumber ? `Số: ${p.licenseNumber}` : (p.certificateUrl ? 'Đang lưu bản scan' : 'Chưa có');
+            document.getElementById('dpuCurLicenseSub').innerHTML = p.licenseNumber
+                ? `<span class="dpu-info-sub">${escape(p.licenseIssuer || 'Đã đối chiếu')}</span>`
+                : '<span class="dpu-legacy-badge">CCHN cũ — Chưa số hóa số hiệu & phạm vi</span>';
 
             if (p.practiceStartYear) {
-                const exp = calcExpYears(p.practiceStartYear);
                 document.getElementById('dpuCurYear').textContent = `Từ năm ${p.practiceStartYear}`;
-                document.getElementById('dpuCurExpCalc').textContent = `~${exp} năm kinh nghiệm thực tế`;
+                document.getElementById('dpuCurExpCalc').textContent = `~${calcExpYears(p.practiceStartYear)} năm kinh nghiệm thực tế`;
             } else if (p.legacyExperienceYears != null) {
-                document.getElementById('dpuCurYear').textContent = `${p.legacyExperienceYears} năm`;
-                document.getElementById('dpuCurExpCalc').textContent = 'Hồ sơ cũ ghi nhận';
+                document.getElementById('dpuCurYear').textContent = `${p.legacyExperienceYears} năm KN`;
+                document.getElementById('dpuCurExpCalc').innerHTML = '<span class="dpu-legacy-badge">Hồ sơ cũ ghi nhận năm KN</span>';
             } else {
                 document.getElementById('dpuCurYear').textContent = 'Chưa có thông tin';
-                document.getElementById('dpuCurExpCalc').textContent = 'Có thể cập nhật bên dưới';
             }
 
-            document.getElementById('dpuCurCertLink').innerHTML = safeLink(p.certificateUrl, 'Xem Chứng chỉ hành nghề');
+            document.getElementById('dpuCurCertLink').innerHTML = safeLink(p.certificateUrl, 'Xem CCHN đang lưu');
             document.getElementById('dpuCurIdCardLink').innerHTML = safeLink(current.idCardUrl, 'Xem CCCD xác thực');
 
             // Alerts
@@ -1311,25 +1243,22 @@ DocBookingPage.mount(page => {
             if (current.activeAppointments > 0) {
                 document.getElementById('dpuActiveApptsAlert').style.display = 'flex';
                 document.getElementById('dpuActiveApptsText').textContent =
-                    `Lưu ý: Bạn đang có ${current.activeAppointments} lịch khám chưa hoàn tất. Bạn có thể cập nhật học vị, nhưng thay đổi chuyên khoa chỉ được áp dụng sau khi xử lý xong các lịch này.`;
+                    `Lưu ý: Bác sĩ đang có ${current.activeAppointments} lịch hẹn chưa hoàn tất. Chuyển chuyên khoa chỉ có thể áp dụng sau khi khám xong các lịch này.`;
             } else {
                 document.getElementById('dpuActiveApptsAlert').style.display = 'none';
             }
-            document.getElementById('dpuNotApprovedAlert').style.display = current.verificationStatus !== 'APPROVED' ? 'flex' : 'none';
 
             // Populate Specialty Select
             const specSelect = document.getElementById('dpuInputSpecialty');
             specSelect.replaceChildren();
-            for (const s of specialties) {
-                specSelect.add(new Option(s.name, s.id));
-            }
+            for (const s of specialties) specSelect.add(new Option(s.name, s.id));
             if (!specialties.some(s => s.id === p.specialtyId)) {
                 specSelect.add(new Option(`${p.specialtyName} (Ngừng nhận mới)`, p.specialtyId));
             }
 
-            populateFormDefaults(current);
+            populateDefaults(current);
 
-            // Disable form if pending or not approved
+            // Allow form submission only if approved & not pending
             const canSubmit = current.verificationStatus === 'APPROVED' && !current.hasPending;
             document.getElementById('dpuFieldset').disabled = !canSubmit;
             document.getElementById('dpuSubmitBtn').disabled = !canSubmit;
@@ -1337,7 +1266,6 @@ DocBookingPage.mount(page => {
             document.getElementById('dpuInitialLoading').style.display = 'none';
             document.getElementById('dpuMainContent').style.display = 'block';
 
-            // Load History
             loadHistory();
         } catch (err) {
             document.getElementById('dpuInitialLoading').style.display = 'none';
@@ -1356,12 +1284,12 @@ DocBookingPage.mount(page => {
             const data = await apiJson(`/api/v1/doctor/professional-updates?page=${historyPage}&size=10`);
             document.getElementById('dpuHistoryCount').textContent = data.totalElements || '0';
 
-            if (!data.content || data.content.length === 0) {
+            if (!data.content || !data.content.length) {
                 listContainer.innerHTML = `
-                    <div class="dpu-empty">
-                        <div class="dpu-empty-icon">📭</div>
-                        <h3 style="margin: 0 0 6px; font-size: 16px; color: #334155;">Chưa có yêu cầu cập nhật nào</h3>
-                        <p style="margin: 0; font-size: 13.5px; color: #94a3b8;">Khi bạn gửi đề nghị thay đổi học vị hoặc chuyên khoa, tiến trình xử lý sẽ hiển thị tại đây.</p>
+                    <div style="text-align: center; padding: 48px; color: #64748b;">
+                        <div style="font-size: 40px; margin-bottom: 8px;">📭</div>
+                        <h4 style="margin: 0 0 4px; font-size: 15px; color: #334155;">Chưa có yêu cầu cập nhật nào</h4>
+                        <p style="margin: 0; font-size: 13px; color: #94a3b8;">Khi gửi yêu cầu thay đổi, tiến trình xét duyệt sẽ hiển thị tại đây.</p>
                     </div>
                 `;
                 pagination.style.display = 'none';
@@ -1375,31 +1303,28 @@ DocBookingPage.mount(page => {
                 card.className = 'dpu-history-item';
 
                 let statusBadge = '';
-                if (item.status === 'PENDING') {
-                    statusBadge = '<span class="dpu-status-badge dpu-status-pending">⏳ Chờ duyệt</span>';
-                } else if (item.status === 'APPROVED') {
+                if (item.status === 'PENDING') statusBadge = '<span class="dpu-status-badge dpu-status-pending">⏳ Chờ thẩm định</span>';
+                else if (item.status === 'APPROVED') {
                     statusBadge = item.appliedDirectly
                         ? '<span class="dpu-status-badge dpu-status-direct">⚡ Quản trị viên cập nhật trực tiếp</span>'
                         : '<span class="dpu-status-badge dpu-status-approved">✅ Đã phê duyệt</span>';
-                } else {
-                    statusBadge = '<span class="dpu-status-badge dpu-status-rejected">❌ Bị từ chối</span>';
-                }
+                } else statusBadge = '<span class="dpu-status-badge dpu-status-rejected">❌ Bị từ chối</span>';
 
                 const diffRows = [
                     { label: 'Học vị', before: item.before?.degree || '—', prop: item.proposed?.degree || '—' },
-                    { label: 'Năm bắt đầu', before: item.before?.practiceStartYear || '—', prop: item.proposed?.practiceStartYear || '—' },
+                    { label: 'Số CCHN', before: item.before?.licenseNumber || '—', prop: item.proposed?.licenseNumber || '—' },
                     { label: 'Chuyên khoa', before: item.before?.specialtyName || '—', prop: item.proposed?.specialtyName || '—' },
-                    { label: 'Chứng chỉ hành nghề', before: item.before?.certificateUrl ? 'CCHN cũ' : '—', prop: item.proposed?.certificateUrl ? 'CCHN mới' : '—' }
+                    { label: 'Bắt đầu hành nghề', before: item.before?.practiceStartYear || '—', prop: item.proposed?.practiceStartYear || '—' }
                 ];
 
                 card.innerHTML = `
                     <div class="dpu-history-top">
-                        <div class="dpu-history-id">
+                        <div style="font-weight: 800; font-size: 14.5px; display: flex; align-items: center; gap: 8px;">
                             <span>Mã yêu cầu #${item.id}</span>
                             ${statusBadge}
                         </div>
-                        <div class="dpu-history-date">
-                            <span>Gửi lúc: ${formatDate(item.createdAt)}</span>
+                        <div style="font-size: 12.5px; color: #64748b;">
+                            Gửi lúc: ${formatDate(item.createdAt)}
                         </div>
                     </div>
 
@@ -1422,25 +1347,21 @@ DocBookingPage.mount(page => {
                         </tbody>
                     </table>
 
-                    <div class="dpu-reason-box">
+                    <div style="background: #f8fafc; border-radius: 10px; padding: 10px 14px; font-size: 13px; margin: 10px 0; color: #334155;">
                         <strong>Lý do đề nghị:</strong> ${escape(item.reason)}
                     </div>
 
-                    <div class="dpu-attachments-row">
-                        ${item.evidenceUrl ? safeLink(item.evidenceUrl, 'Minh chứng đính kèm') : ''}
-                        ${item.proposed?.certificateUrl ? safeLink(item.proposed.certificateUrl, 'Chứng chỉ mới') : ''}
-                        ${item.before?.certificateUrl ? safeLink(item.before.certificateUrl, 'Chứng chỉ ban đầu') : ''}
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                        ${item.evidenceUrl ? safeLink(item.evidenceUrl, 'Minh chứng tải lên') : ''}
+                        ${item.proposed?.certificateUrl ? safeLink(item.proposed.certificateUrl, 'Giấy phép CCHN mới') : ''}
+                        ${item.proposed?.referencedDocumentLabel ? `<span class="dpu-legacy-badge">Căn cứ: ${escape(item.proposed.referencedDocumentLabel)}</span>` : ''}
                     </div>
 
                     ${item.status !== 'PENDING' ? `
-                        <div class="dpu-decision-box ${item.status === 'APPROVED' ? 'dpu-decision-approved' : 'dpu-decision-rejected'}">
-                            <div style="font-weight: 700; margin-bottom: 4px;">
-                                ${item.status === 'APPROVED' ? '✅ Phản hồi phê duyệt từ quản trị viên:' : '❌ Lý do từ chối:'}
-                            </div>
-                            <div>${escape(item.decisionReason || (item.status === 'APPROVED' ? 'Hồ sơ đã được đối chiếu hợp lệ và cập nhật.' : 'Không có lý do chi tiết.'))}</div>
-                            <div style="font-size: 12px; color: #64748b; margin-top: 6px;">
-                                Người duyệt: ${escape(item.reviewedBy || 'Quản trị viên')} · ${formatDate(item.reviewedAt)}
-                            </div>
+                        <div style="margin-top: 12px; padding: 12px 14px; border-radius: 10px; font-size: 13px; background: ${item.status === 'APPROVED' ? '#f0fdf4; border: 1px solid #bbf7d0; color: #166534;' : '#fef2f2; border: 1px solid #fecaca; color: #991b1b;'}">
+                            <strong>${item.status === 'APPROVED' ? '✅ Phản hồi phê duyệt:' : '❌ Lý do từ chối:'}</strong>
+                            <div>${escape(item.decisionReason || (item.status === 'APPROVED' ? 'Đã đối chiếu văn bằng và giấy phép hợp lệ.' : 'Từ chối không nêu chi tiết.'))}</div>
+                            <div style="font-size: 11.5px; color: #64748b; margin-top: 4px;">Người duyệt: ${escape(item.reviewedBy || 'Quản trị viên')} · ${formatDate(item.reviewedAt)}</div>
                         </div>
                     ` : ''}
                 `;
@@ -1448,19 +1369,18 @@ DocBookingPage.mount(page => {
                 listContainer.appendChild(card);
             });
 
-            // Pagination setup
             if (data.totalPages > 1) {
                 pagination.style.display = 'flex';
                 pagination.innerHTML = `
-                    <button type="button" class="dpu-page-btn" ${historyPage === 0 ? 'disabled' : ''} onclick="pageDpuHistory(${historyPage - 1})">&larr; Trước</button>
-                    <span class="dpu-page-info">Trang ${historyPage + 1} / ${data.totalPages}</span>
-                    <button type="button" class="dpu-page-btn" ${historyPage >= data.totalPages - 1 ? 'disabled' : ''} onclick="pageDpuHistory(${historyPage + 1})">Sau &rarr;</button>
+                    <button type="button" class="dpu-btn dpu-btn-secondary" style="padding: 6px 12px;" ${historyPage === 0 ? 'disabled' : ''} onclick="pageDpuHistory(${historyPage - 1})">&larr; Trước</button>
+                    <span style="font-size: 13px; font-weight: 600; color: #64748b; align-self: center;">Trang ${historyPage + 1} / ${data.totalPages}</span>
+                    <button type="button" class="dpu-btn dpu-btn-secondary" style="padding: 6px 12px;" ${historyPage >= data.totalPages - 1 ? 'disabled' : ''} onclick="pageDpuHistory(${historyPage + 1})">Sau &rarr;</button>
                 `;
             } else {
                 pagination.style.display = 'none';
             }
         } catch (err) {
-            listContainer.innerHTML = `<div style="text-align: center; padding: 24px; color: #ef4444;">Không thể tải lịch sử: ${escape(err.message)}</div>`;
+            listContainer.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 20px;">Lỗi tải lịch sử: ${escape(err.message)}</div>`;
         }
     }
 
@@ -1469,7 +1389,7 @@ DocBookingPage.mount(page => {
         loadHistory();
     };
 
-    // Form Submission
+    // Submit Request
     document.getElementById('dpuRequestForm').addEventListener('submit', async e => {
         e.preventDefault();
         if (!current) return;
@@ -1481,12 +1401,13 @@ DocBookingPage.mount(page => {
             return;
         }
 
-        const evidenceFile = document.getElementById('dpuEvidenceInput').files[0];
-        const certFile = document.getElementById('dpuCertInput').files[0];
-        const useExistingCert = document.getElementById('dpuCheckExistingCert').checked;
+        const degreeFile = document.getElementById('dpuDegreeFile').files[0];
+        const certFile = document.getElementById('dpuCertFile').files[0];
 
-        if (!evidenceFile && !certFile && !useExistingCert) {
-            showApiToast('Vui lòng đính kèm tệp minh chứng hoặc chọn "Dùng chứng chỉ hiện có".', 'warning');
+        // Ensure proof is present for requested changes
+        const hasEvidence = degreeFile || certFile || selectedDegreeDoc || selectedLicenseDoc;
+        if (!hasEvidence) {
+            showApiToast('Vui lòng đính kèm minh chứng hoặc nhấn "Chọn giấy tờ đã lưu" làm căn cứ đối chiếu.', 'warning');
             return;
         }
 
@@ -1498,7 +1419,7 @@ DocBookingPage.mount(page => {
             if (rawDegree === 'Khác') {
                 const other = document.getElementById('dpuInputDegreeOther').value.trim();
                 if (other.length < 3) {
-                    showApiToast('Vui lòng nhập chi tiết học vị khác (ít nhất 3 ký tự).', 'warning');
+                    showApiToast('Vui lòng nhập mô tả học vị khác ít nhất 3 ký tự.', 'warning');
                     document.getElementById('dpuInputDegreeOther').focus();
                     return;
                 }
@@ -1514,7 +1435,6 @@ DocBookingPage.mount(page => {
             const yr = parseInt(startYear, 10);
             if (yr < 1900 || yr > currentYear) {
                 showApiToast(`Năm bắt đầu hành nghề phải từ 1900 đến ${currentYear}.`, 'warning');
-                document.getElementById('dpuInputYear').focus();
                 return;
             }
             formData.set('practiceStartYear', yr);
@@ -1522,22 +1442,41 @@ DocBookingPage.mount(page => {
 
         // Specialty
         const specId = document.getElementById('dpuInputSpecialty').value;
-        if (specId) {
-            formData.set('specialtyId', specId);
+        if (specId) formData.set('specialtyId', specId);
+
+        // License fields
+        const licNum = document.getElementById('dpuLicenseNumber').value.trim();
+        if (licNum) formData.set('licenseNumber', licNum);
+        const licIssuer = document.getElementById('dpuLicenseIssuer').value.trim();
+        if (licIssuer) formData.set('licenseIssuer', licIssuer);
+        const licDate = document.getElementById('dpuLicenseIssueDate').value;
+        if (licDate) formData.set('licenseIssueDate', licDate);
+        const licScope = document.getElementById('dpuLicenseScope').value.trim();
+        if (licScope) formData.set('licenseScope', licScope);
+
+        // Diplomas JSON
+        const enteredDips = getEnteredDiplomas();
+        if (enteredDips.length) {
+            formData.set('diplomasJson', JSON.stringify(enteredDips));
         }
 
-        // Files & options
-        if (evidenceFile) formData.set('evidenceFile', evidenceFile);
+        // Files
+        if (degreeFile) formData.set('evidenceFile', degreeFile);
         if (certFile) formData.set('certificateFile', certFile);
-        if (useExistingCert) formData.set('useExistingCertificate', 'true');
+
+        // Saved document referenced
+        const chosenSavedDoc = selectedLicenseDoc || selectedDegreeDoc;
+        if (chosenSavedDoc) {
+            formData.set('selectedSavedDocumentUrl', chosenSavedDoc.url);
+            formData.set('selectedSavedDocumentLabel', chosenSavedDoc.label);
+        }
 
         formData.set('reason', reason);
         formData.set('expectedVersion', current.version);
 
-        // Submit to API
         const submitBtn = document.getElementById('dpuSubmitBtn');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>⏳</span> <span>Đang gửi yêu cầu...</span>';
+        submitBtn.innerHTML = '<span>⏳ Đang gửi yêu cầu...</span>';
 
         try {
             const token = localStorage.getItem('token');
@@ -1550,9 +1489,7 @@ DocBookingPage.mount(page => {
             if (!res.ok) throw new Error(await readApiMessage(res));
             const result = await res.json();
 
-            showApiToast(result.message || 'Đã gửi yêu cầu cập nhật chuyên môn thành công!', 'success');
-
-            // Refresh data and switch to history tab
+            showApiToast(result.message || 'Đã gửi yêu cầu xét duyệt thành công!', 'success');
             historyPage = 0;
             await loadDoctorData();
             switchDpuTab('history');
@@ -1560,23 +1497,18 @@ DocBookingPage.mount(page => {
             showApiToast(err.message || 'Gửi yêu cầu không thành công.', 'error');
         } finally {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span>🚀</span> <span>Gửi yêu cầu xét duyệt</span>';
+            submitBtn.innerHTML = '<span>🚀 Gửi yêu cầu xét duyệt</span>';
         }
     });
 
     // Wire events
-    document.getElementById('dpuInputDegree').addEventListener('change', handleDegreeChange);
     document.getElementById('dpuInputDegreeOther').addEventListener('input', updateLiveDiff);
-    document.getElementById('dpuInputYear').addEventListener('input', () => {
-        updateExpBadge();
-        updateLiveDiff();
-    });
+    document.getElementById('dpuInputYear').addEventListener('input', () => { updateExpBadge(); updateLiveDiff(); });
     document.getElementById('dpuInputSpecialty').addEventListener('change', updateLiveDiff);
-    document.getElementById('dpuCheckExistingCert').addEventListener('change', updateLiveDiff);
+    document.getElementById('dpuLicenseNumber').addEventListener('input', updateLiveDiff);
+    document.getElementById('dpuCertFile').addEventListener('change', updateLiveDiff);
+    document.getElementById('dpuDegreeFile').addEventListener('change', updateLiveDiff);
     document.getElementById('dpuRetryBtn').addEventListener('click', loadDoctorData);
-
-    setupDropzone('dpuEvidenceDropzone', 'dpuEvidenceInput', 'dpuEvidenceSelected', 'dpuEvidenceFileName');
-    setupDropzone('dpuCertDropzone', 'dpuCertInput', 'dpuCertSelected', 'dpuCertFileName');
 
     // Initial load
     loadDoctorData();

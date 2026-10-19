@@ -156,7 +156,15 @@ namespace WebDeveloper.Services
                 existingDoctor.FacilityId = facility.FacilityId;
                 existingDoctor.Bio = req.Bio;
                 existingDoctor.Degree = req.Degree;
-                existingDoctor.ExperienceYears = req.ExperienceYears;
+                if (req.PracticeStartYear.HasValue)
+                {
+                    existingDoctor.PracticeStartYear = req.PracticeStartYear.Value;
+                    existingDoctor.ExperienceYears = VietnamTime.Now.Year - req.PracticeStartYear.Value;
+                }
+                else
+                {
+                    existingDoctor.ExperienceYears = req.ExperienceYears;
+                }
                 existingDoctor.Price = req.Price;
                 existingDoctor.VerificationStatus = VerificationStatus.PENDING;
                 
@@ -177,7 +185,8 @@ namespace WebDeveloper.Services
                     FacilityId = facility.FacilityId,
                     Bio = req.Bio,
                     Degree = req.Degree,
-                    ExperienceYears = req.ExperienceYears,
+                    PracticeStartYear = req.PracticeStartYear,
+                    ExperienceYears = req.PracticeStartYear.HasValue ? VietnamTime.Now.Year - req.PracticeStartYear.Value : req.ExperienceYears,
                     Price = req.Price,
                     VerificationStatus = VerificationStatus.PENDING,
                     IdCardUrl = await _fileUpload.UploadFileAsync(req.IdCardImage),

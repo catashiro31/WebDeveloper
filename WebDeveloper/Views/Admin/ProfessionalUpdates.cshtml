@@ -6,7 +6,7 @@
 
 <style>
 /* ============================================================
-   ADMIN PROFESSIONAL UPDATES — PREMIUM STYLING
+   ADMIN PROFESSIONAL UPDATES — SEPARATED CREDENTIALS AUDIT
    ============================================================ */
 .apu-container {
     max-width: 1400px;
@@ -72,22 +72,10 @@
     font-size: 24px;
     flex-shrink: 0;
 }
-.apu-kpi-amber {
-    background: #fffbeb;
-    color: #d97706;
-}
-.apu-kpi-emerald {
-    background: #ecfdf5;
-    color: #059669;
-}
-.apu-kpi-rose {
-    background: #fff1f2;
-    color: #e11d48;
-}
-.apu-kpi-purple {
-    background: #f5f3ff;
-    color: #7c3aed;
-}
+.apu-kpi-amber { background: #fffbeb; color: #d97706; }
+.apu-kpi-emerald { background: #ecfdf5; color: #059669; }
+.apu-kpi-rose { background: #fff1f2; color: #e11d48; }
+.apu-kpi-purple { background: #f5f3ff; color: #7c3aed; }
 .apu-kpi-value {
     font-size: 26px;
     font-weight: 800;
@@ -98,17 +86,9 @@
     align-items: center;
     gap: 8px;
 }
-.apu-kpi-label {
-    font-size: 13px;
-    color: #64748b;
-    font-weight: 600;
-    margin: 0;
-}
+.apu-kpi-label { font-size: 13px; color: #64748b; font-weight: 600; margin: 0; }
 .apu-kpi-pulse {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: #f59e0b;
+    width: 10px; height: 10px; border-radius: 50%; background: #f59e0b;
     animation: apu-pulse 1.8s infinite;
 }
 @@keyframes apu-pulse {
@@ -157,12 +137,6 @@
     color: #6366f1;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
-.apu-filter-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
 .apu-select-doctor {
     padding: 9px 14px;
     border-radius: 10px;
@@ -174,11 +148,8 @@
     outline: none;
     min-width: 240px;
     max-width: 320px;
-    transition: border-color 0.2s;
 }
-.apu-select-doctor:focus {
-    border-color: #6366f1;
-}
+.apu-select-doctor:focus { border-color: #6366f1; }
 
 /* Buttons */
 .apu-btn {
@@ -205,31 +176,14 @@
     transform: translateY(-1px);
     box-shadow: 0 6px 16px rgba(99, 102, 241, 0.35);
 }
-.apu-btn-success {
-    background: #0ea47a;
-    color: white;
-}
-.apu-btn-success:hover:not(:disabled) {
-    background: #059669;
-}
-.apu-btn-danger {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
-}
-.apu-btn-danger:hover:not(:disabled) {
-    background: #ffe4e6;
-}
-.apu-btn-secondary {
-    background: #f1f5f9;
-    color: #475569;
-}
-.apu-btn-secondary:hover {
-    background: #e2e8f0;
-    color: #1e293b;
-}
+.apu-btn-success { background: #0ea47a; color: white; }
+.apu-btn-success:hover:not(:disabled) { background: #059669; }
+.apu-btn-danger { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.apu-btn-danger:hover:not(:disabled) { background: #ffe4e6; }
+.apu-btn-secondary { background: #f1f5f9; color: #475569; }
+.apu-btn-secondary:hover { background: #e2e8f0; color: #1e293b; }
 
-/* Data Table Container */
+/* Table */
 .apu-table-card {
     background: white;
     border: 1px solid #e2e8f0;
@@ -258,240 +212,90 @@
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
 }
-.apu-table tr:last-child td {
-    border-bottom: none;
-}
-.apu-table tr:hover td {
-    background: #fafbfc;
-}
+.apu-table tr:hover td { background: #fafbfc; }
 
 /* Doctor Cell */
-.apu-doc-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
+.apu-doc-cell { display: flex; align-items: center; gap: 12px; }
 .apu-doc-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 12px;
+    width: 44px; height: 44px; border-radius: 12px;
     background: linear-gradient(135deg, #6366f1, #818cf8);
-    color: white;
-    font-size: 17px;
-    font-weight: 800;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
+    color: white; font-size: 17px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.apu-doc-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 2px;
-}
-.apu-doc-spec {
-    font-size: 12px;
-    color: #64748b;
-    font-weight: 500;
-}
+.apu-doc-name { font-size: 14px; font-weight: 700; color: #0f172a; margin: 0 0 2px; }
+.apu-doc-spec { font-size: 12px; color: #64748b; font-weight: 500; }
 
-/* Summary Chips */
-.apu-change-chips {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
+/* Chips */
+.apu-change-chips { display: flex; flex-direction: column; gap: 4px; }
 .apu-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 3px 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    width: fit-content;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; width: fit-content;
 }
-.apu-chip-degree {
-    background: #eef2ff;
-    color: #4338ca;
-}
-.apu-chip-spec {
-    background: #ecfdf5;
-    color: #047857;
-}
-.apu-chip-year {
-    background: #fff7ed;
-    color: #c2410c;
-}
-.apu-chip-cert {
-    background: #fdf4ff;
-    color: #86198f;
-}
+.apu-chip-degree { background: #eef2ff; color: #4338ca; }
+.apu-chip-spec { background: #ecfdf5; color: #047857; }
+.apu-chip-year { background: #fff7ed; color: #c2410c; }
+.apu-chip-cert { background: #fdf4ff; color: #86198f; }
 
 /* Status Badges */
 .apu-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700;
 }
-.apu-badge-pending {
-    background: #fffbeb;
-    color: #b45309;
-    border: 1px solid #fde68a;
-}
-.apu-badge-approved {
-    background: #ecfdf5;
-    color: #047857;
-    border: 1px solid #a7f3d0;
-}
-.apu-badge-rejected {
-    background: #fff1f2;
-    color: #be123c;
-    border: 1px solid #fecdd3;
-}
-.apu-badge-direct {
-    background: #f5f3ff;
-    color: #6d28d9;
-    border: 1px solid #ddd6fe;
+.apu-badge-pending { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+.apu-badge-approved { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+.apu-badge-rejected { background: #fff1f2; color: #be123c; border: 1px solid #fecdd3; }
+.apu-badge-direct { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+
+.apu-legacy-badge {
+    display: inline-block; padding: 2px 7px; border-radius: 6px; font-size: 11px;
+    font-weight: 700; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;
 }
 
-/* File Attachment Link */
+/* File link */
 .apu-file-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 4px 10px;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #475569;
-    text-decoration: none;
-    transition: all 0.2s;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; background: #f8fafc; border: 1px solid #e2e8f0;
+    border-radius: 8px; font-size: 12px; font-weight: 600; color: #475569; text-decoration: none;
 }
-.apu-file-link:hover {
-    border-color: #6366f1;
-    color: #6366f1;
-    background: #eef2ff;
-}
+.apu-file-link:hover { border-color: #6366f1; color: #6366f1; background: #eef2ff; }
 
-/* Diff Table in Modal */
+/* Diff Table */
 .apu-diff-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 13.5px;
-    margin: 16px 0;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #e2e8f0;
+    width: 100%; border-collapse: collapse; font-size: 13.5px;
+    margin: 16px 0; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;
 }
 .apu-diff-table th {
-    padding: 10px 14px;
-    background: #f8fafc;
-    color: #475569;
-    font-weight: 700;
-    font-size: 12px;
-    text-transform: uppercase;
-    border-bottom: 1px solid #e2e8f0;
-    text-align: left;
+    padding: 10px 14px; background: #f8fafc; color: #475569; font-weight: 700;
+    font-size: 12px; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; text-align: left;
 }
-.apu-diff-table td {
-    padding: 12px 14px;
-    border-bottom: 1px solid #f1f5f9;
-    vertical-align: middle;
-}
-.apu-diff-highlight {
-    background: #eef2ff !important;
-    font-weight: 700;
-    color: #3730a3 !important;
-}
+.apu-diff-table td { padding: 12px 14px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+.apu-diff-highlight { background: #eef2ff !important; font-weight: 700; color: #3730a3 !important; }
 
-/* Modal Template Chips */
-.apu-template-chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    margin: 8px 0 16px;
-}
+/* Template Chips */
+.apu-template-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 16px; }
 .apu-tpl-chip {
-    padding: 5px 10px;
-    border-radius: 8px;
-    background: #f1f5f9;
-    border: 1px solid #e2e8f0;
-    font-size: 12px;
-    font-weight: 600;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 5px 10px; border-radius: 8px; background: #f1f5f9; border: 1px solid #e2e8f0;
+    font-size: 12px; font-weight: 600; color: #475569; cursor: pointer; transition: all 0.2s;
 }
-.apu-tpl-chip:hover {
-    background: #e2e8f0;
-    color: #0f172a;
-}
+.apu-tpl-chip:hover { background: #e2e8f0; color: #0f172a; }
 
 /* Pagination */
 .apu-pagination {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    padding: 16px;
-    border-top: 1px solid #f1f5f9;
+    display: flex; justify-content: center; align-items: center; gap: 8px;
+    padding: 16px; border-top: 1px solid #f1f5f9;
 }
 .apu-page-btn {
-    padding: 7px 14px;
-    border: 1.5px solid #e2e8f0;
-    background: white;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    color: #475569;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 7px 14px; border: 1.5px solid #e2e8f0; background: white;
+    border-radius: 8px; font-size: 13px; font-weight: 700; color: #475569; cursor: pointer;
 }
-.apu-page-btn:hover:not(:disabled) {
-    border-color: #6366f1;
-    color: #6366f1;
-}
-.apu-page-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-}
+.apu-page-btn:hover:not(:disabled) { border-color: #6366f1; color: #6366f1; }
+.apu-page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-/* Empty State */
-.apu-empty {
-    text-align: center;
-    padding: 60px 24px;
-    color: #64748b;
-}
-
-@@media (max-width: 1024px) {
-    .apu-kpi-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
+@@media (max-width: 1024px) { .apu-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 @@media (max-width: 640px) {
-    .apu-kpi-grid {
-        grid-template-columns: 1fr;
-    }
-    .apu-toolbar {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .apu-filter-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .apu-select-doctor {
-        max-width: 100%;
-        min-width: 100%;
-    }
+    .apu-kpi-grid { grid-template-columns: 1fr; }
+    .apu-toolbar { flex-direction: column; align-items: stretch; }
+    .apu-select-doctor { max-width: 100%; min-width: 100%; }
 }
 </style>
 
@@ -501,7 +305,7 @@
         <div class="apu-title-wrap">
             <h1>Duyệt cập nhật chuyên môn</h1>
             <p class="apu-subtitle">
-                Thẩm định yêu cầu điều chỉnh học vị, chuyên khoa, chứng chỉ hành nghề của bác sĩ hoặc trực tiếp cập nhật có lưu vết kiểm toán.
+                Thẩm định học vị, bằng cấp chuyên môn, giấy phép hành nghề và chuyên khoa theo từng minh chứng riêng biệt; giữ nguyên hồ sơ cũ và bổ sung dần.
             </p>
         </div>
         <div>
@@ -567,7 +371,7 @@
             </button>
         </div>
 
-        <div class="apu-filter-actions">
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
             <select id="apuSelectDoctor" class="apu-select-doctor" onchange="handleApuDoctorFilterChange()">
                 <option value="">👨‍⚕️ Tất cả bác sĩ trong hệ thống</option>
             </select>
@@ -584,10 +388,10 @@
                 <thead>
                     <tr>
                         <th style="width: 24%;">Bác sĩ</th>
-                        <th style="width: 26%;">Nội dung đề xuất</th>
-                        <th style="width: 16%;">Tài liệu & Minh chứng</th>
-                        <th style="width: 14%;">Thời gian gửi</th>
-                        <th style="width: 10%;">Trạng thái</th>
+                        <th style="width: 28%;">Nội dung đề xuất thay đổi</th>
+                        <th style="width: 16%;">Minh chứng & Căn cứ</th>
+                        <th style="width: 13%;">Thời gian gửi</th>
+                        <th style="width: 9%;">Trạng thái</th>
                         <th style="width: 10%; text-align: center;">Thao tác</th>
                     </tr>
                 </thead>
@@ -595,14 +399,12 @@
                     <tr>
                         <td colspan="6" style="text-align: center; padding: 48px 0; color: #64748b;">
                             <div class="workspace-spinner" style="margin: 0 auto 12px; width: 28px; height: 28px;"></div>
-                            Đang tải danh sách yêu cầu cập nhật chuyên môn...
+                            Đang tải danh sách yêu cầu...
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-
-        <!-- Pagination -->
         <div class="apu-pagination" id="apuPagination" style="display: none;"></div>
     </div>
 </div>
@@ -610,7 +412,7 @@
 <!-- ============================================================
      MODAL 1: THẨM ĐỊNH & PHÊ DUYỆT YÊU CẦU
      ============================================================ -->
-<div id="apuReviewModal" class="modal-overlay" style="--modal-max-width: 860px; --modal-padding: 30px;">
+<div id="apuReviewModal" class="modal-overlay" style="--modal-max-width: 880px; --modal-padding: 30px;">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1.5px solid #f1f5f9;">
             <div style="display: flex; align-items: center; gap: 14px;">
@@ -628,20 +430,20 @@
 
         <!-- Appointment Alert if changing specialty -->
         <div id="revModalApptAlert" style="display: none; padding: 12px 16px; background: #fff1f2; border: 1.5px solid #fecdd3; border-radius: 12px; color: #be123c; font-size: 13.5px; line-height: 1.5; margin-bottom: 18px;">
-            ⚠️ <strong>Cảnh báo đổi chuyên khoa:</strong> Bác sĩ hiện đang có <span id="revModalApptCount" style="font-weight: 800;">0</span> lịch hẹn chờ khám hoặc đã xác nhận. Chuyên khoa chỉ có thể đổi sau khi xử lý xong các lịch này.
+            ⚠️ <strong>Lưu ý đổi chuyên khoa:</strong> Bác sĩ hiện đang có <span id="revModalApptCount" style="font-weight: 800;">0</span> lịch hẹn chưa khám hoặc đã xác nhận. Chuyển chuyên khoa chỉ có thể áp dụng sau khi xử lý xong các lịch này.
         </div>
 
         <!-- Comparison Table -->
         <div style="margin-bottom: 20px;">
-            <h4 style="margin: 0 0 8px; font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.03em;">
-                📊 Bảng đối chiếu thông tin (Trước vs Đề xuất mới)
+            <h4 style="margin: 0 0 8px; font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase;">
+                📊 Bảng đối chiếu từng hạng mục (Trước vs Đề xuất mới)
             </h4>
             <table class="apu-diff-table">
                 <thead>
                     <tr>
                         <th style="width: 25%;">Hạng mục</th>
                         <th style="width: 37.5%;">Hồ sơ trước đó</th>
-                        <th style="width: 37.5%;">Đề xuất cập nhật</th>
+                        <th style="width: 37.5%;">Đề xuất mới</th>
                     </tr>
                 </thead>
                 <tbody id="revModalDiffBody"></tbody>
@@ -650,30 +452,30 @@
 
         <!-- Attachments & Documents Grid -->
         <div style="margin-bottom: 20px;">
-            <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.03em;">
-                📁 Hồ sơ & Tài liệu đính kèm đối soát
+            <h4 style="margin: 0 0 10px; font-size: 14px; font-weight: 800; color: #334155; text-transform: uppercase;">
+                📁 Hồ sơ & Minh chứng đối chiếu
             </h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px;" id="revModalAttachmentsGrid"></div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px;" id="revModalAttachmentsGrid"></div>
         </div>
 
         <!-- Doctor's Reason -->
         <div style="margin-bottom: 22px;">
-            <h4 style="margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #334155;">💬 Lý do đề nghị từ bác sĩ:</h4>
+            <h4 style="margin: 0 0 6px; font-size: 14px; font-weight: 800; color: #334155;">💬 Lý do / Căn cứ từ bác sĩ:</h4>
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px; font-size: 13.5px; line-height: 1.6; color: #1e293b;" id="revModalReason"></div>
         </div>
 
-        <!-- Pending Review Form (Only for PENDING) -->
+        <!-- Pending Review Form -->
         <div id="revModalPendingSection" style="border-top: 1.5px solid #f1f5f9; padding-top: 18px;">
             <label style="display: block; font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">
                 Phản hồi / Ghi chú thẩm định <span style="font-weight: 500; color: #64748b;">(bắt buộc khi từ chối, tối thiểu 3 ký tự)</span>
             </label>
-            <textarea id="revModalNote" class="apu-select-doctor" style="width: 100%; min-width: 100%; max-width: 100%; min-height: 85px; box-sizing: border-box; font-family: inherit; font-size: 13.5px;" placeholder="Nhập căn cứ phê duyệt hoặc lý do từ chối yêu cầu..."></textarea>
+            <textarea id="revModalNote" class="apu-select-doctor" style="width: 100%; min-width: 100%; max-width: 100%; min-height: 80px; box-sizing: border-box; font-family: inherit; font-size: 13.5px;" placeholder="Ghi chú thẩm định hoặc nêu rõ lý do nếu từ chối..."></textarea>
 
             <div class="apu-template-chips">
                 <span style="font-size: 12px; color: #64748b; font-weight: 600; align-self: center;">Mẫu phản hồi nhanh:</span>
-                <button type="button" class="apu-tpl-chip" onclick="insertRevNote('Đã đối chiếu văn bằng và chứng chỉ hành nghề hợp lệ.')">✅ Văn bằng hợp lệ</button>
+                <button type="button" class="apu-tpl-chip" onclick="insertRevNote('Đã đối chiếu văn bằng và giấy phép hành nghề hợp lệ.')">✅ Văn bằng & CCHN hợp lệ</button>
                 <button type="button" class="apu-tpl-chip" onclick="insertRevNote('Tệp minh chứng đính kèm mờ, không rõ số hiệu chứng chỉ hoặc con dấu.')">❌ Minh chứng mờ</button>
-                <button type="button" class="apu-tpl-chip" onclick="insertRevNote('Chuyên khoa đề xuất chưa khớp với phạm vi chuyên môn trong chứng chỉ hành nghề.')">❌ Chuyên khoa chưa khớp</button>
+                <button type="button" class="apu-tpl-chip" onclick="insertRevNote('Chuyên khoa đăng ký chưa khớp với phạm vi chuyên môn trong chứng chỉ hành nghề.')">❌ Chuyên khoa chưa khớp phạm vi CCHN</button>
             </div>
 
             <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 16px;">
@@ -686,7 +488,7 @@
             </div>
         </div>
 
-        <!-- Completed Details (For APPROVED / REJECTED) -->
+        <!-- Completed Details -->
         <div id="revModalCompletedSection" style="display: none; border-top: 1.5px solid #f1f5f9; padding-top: 18px;">
             <div style="background: #f8fafc; border-radius: 12px; padding: 14px 18px;">
                 <div style="font-size: 13.5px; font-weight: 700; color: #0f172a; margin-bottom: 4px;" id="revModalDecidedTitle">Kết quả thẩm định</div>
@@ -700,42 +502,41 @@
 <!-- ============================================================
      MODAL 2: CHỈNH SỬA TRỰC TIẾP HỒ SƠ BÁC SĨ (ADMIN DIRECT EDIT)
      ============================================================ -->
-<div id="apuDirectModal" class="modal-overlay" style="--modal-max-width: 800px; --modal-padding: 30px;">
+<div id="apuDirectModal" class="modal-overlay" style="--modal-max-width: 820px; --modal-padding: 30px;">
     <div class="modal-content">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1.5px solid #f1f5f9;">
             <div>
                 <h3 style="margin: 0 0 4px; font-size: 19px; font-weight: 800; color: #0f172a;">⚡ Chỉnh sửa trực tiếp hồ sơ bác sĩ</h3>
-                <p style="margin: 0; font-size: 13px; color: #64748b;">Mọi thay đổi sẽ có hiệu lực tức thì, được lưu vào nhật ký đối soát và thông báo cho bác sĩ.</p>
+                <p style="margin: 0; font-size: 13px; color: #64748b;">Bổ sung thông tin phân loại cho hồ sơ cũ hoặc hiệu chỉnh hồ sơ; lưu nhật ký và gửi thông báo cho bác sĩ.</p>
             </div>
-            <button type="button" onclick="closeApuModal('apuDirectModal')" style="background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer; padding: 0 4px;">&times;</button>
+            <button type="button" onclick="closeApuModal('apuDirectModal')" style="background: none; border: none; font-size: 24px; color: #94a3b8; cursor: pointer;">&times;</button>
         </div>
 
         <form id="apuDirectForm">
             <!-- Select Doctor -->
             <div style="margin-bottom: 16px;">
-                <label style="display: block; font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">Chọn bác sĩ cần chỉnh sửa <span style="color:#ef4444">*</span></label>
+                <label style="display: block; font-size: 13.5px; font-weight: 700; color: #334155; margin-bottom: 6px;">Chọn bác sĩ <span style="color:#ef4444">*</span></label>
                 <select id="dirModalDoctorSelect" class="apu-select-doctor" style="width: 100%; min-width: 100%; max-width: 100%; box-sizing: border-box;" required onchange="loadDirectDoctorProfile()">
-                    <option value="">-- Chọn bác sĩ --</option>
+                    <option value="">-- Chọn bác sĩ trong hệ thống --</option>
                 </select>
             </div>
 
             <!-- Doctor Current Profile Preview Strip -->
-            <div id="dirDoctorInfoStrip" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.6; color: #334155;">
-                <!-- Populated dynamically -->
-            </div>
+            <div id="dirDoctorInfoStrip" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; margin-bottom: 18px; font-size: 13px; line-height: 1.6; color: #334155;"></div>
 
             <!-- Fields Grid -->
             <fieldset id="dirFieldset" disabled style="border: 0; padding: 0; margin: 0; min-width: 0;">
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 16px;">
                     <div>
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Học vị / Bằng cấp</label>
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Học vị đào tạo (loại bỏ PGS/GS)</label>
                         <select id="dirDegree" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box;">
                             <option value="">Giữ nguyên học vị hiện tại</option>
-                            @foreach (var degree in WebDeveloper.Helpers.DoctorDegree.Options)
-                            {
-                                <option value="@degree">@degree</option>
-                            }
-                            <option value="Khác">Khác</option>
+                            <option value="Bác sĩ">Bác sĩ</option>
+                            <option value="Thạc sĩ">Thạc sĩ</option>
+                            <option value="Tiến sĩ">Tiến sĩ</option>
+                            <option value="Bác sĩ chuyên khoa I">Bác sĩ chuyên khoa I</option>
+                            <option value="Bác sĩ chuyên khoa II">Bác sĩ chuyên khoa II</option>
+                            <option value="Khác">Khác (Bác sĩ nội trú...)</option>
                         </select>
                     </div>
 
@@ -750,18 +551,33 @@
                     </div>
 
                     <div>
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Chuyên khoa</label>
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Chuyên khoa web</label>
                         <select id="dirSpecialty" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box;" required></select>
                     </div>
 
                     <div>
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Giá khám cho lịch mới (VNĐ)</label>
-                        <input type="number" id="dirPrice" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box;" min="1" max="1000000000" step="1000" placeholder="Ví dụ: 300000" />
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Số giấy phép / CCHN</label>
+                        <input type="text" id="dirLicenseNumber" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box;" placeholder="Ví dụ: 012345/BYT-CCHN" />
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Nơi cấp giấy phép</label>
+                        <input type="text" id="dirLicenseIssuer" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box;" placeholder="Ví dụ: Sở Y tế Hà Nội" />
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Phạm vi hành nghề</label>
+                        <input type="text" id="dirLicenseScope" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box;" placeholder="Ví dụ: Khám bệnh, chữa bệnh Nội khoa" />
+                    </div>
+
+                    <div>
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Giá khám lịch mới (VNĐ)</label>
+                        <input type="number" id="dirPrice" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box;" min="1" max="1000000000" step="1000" />
                     </div>
 
                     <div style="grid-column: 1 / -1;">
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Tiểu sử & Giới thiệu chuyên môn</label>
-                        <textarea id="dirBio" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box; font-family: inherit;" rows="3" maxlength="10000" placeholder="Thông tin giới thiệu bác sĩ..."></textarea>
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Tiểu sử & Giới thiệu</label>
+                        <textarea id="dirBio" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box; font-family: inherit;" rows="3" maxlength="10000"></textarea>
                     </div>
 
                     <div>
@@ -770,7 +586,7 @@
                     </div>
 
                     <div>
-                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Thay chứng chỉ hành nghề mới (nếu có)</label>
+                        <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">Tệp giấy phép / CCHN mới (nếu có)</label>
                         <input type="file" id="dirCertificate" accept="application/pdf,image/jpeg,image/png" style="font-size: 13px;" />
                     </div>
                 </div>
@@ -778,7 +594,7 @@
                 <div style="margin-bottom: 16px;">
                     <label style="display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer;">
                         <input type="checkbox" id="dirExistingCert" style="width: 16px; height: 16px; accent-color: #6366f1;" />
-                        <span>Dùng chứng chỉ hành nghề hiện có làm căn cứ cho lần cập nhật này</span>
+                        <span>Căn cứ chứng chỉ hành nghề hiện có trong hồ sơ (không nộp tệp CCHN mới)</span>
                     </label>
                 </div>
 
@@ -786,7 +602,7 @@
                     <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 6px;">
                         Căn cứ / Lý do chỉnh sửa trực tiếp <span style="color:#ef4444">*</span> (10–1000 ký tự)
                     </label>
-                    <textarea id="dirReason" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box; font-family: inherit;" rows="2" minlength="10" maxlength="1000" required placeholder="Ghi rõ lý do cập nhật (ví dụ: Bổ sung năm bắt đầu hành nghề sau khi đối chiếu hồ sơ gốc)..."></textarea>
+                    <textarea id="dirReason" class="apu-select-doctor" style="width: 100%; min-width: 100%; box-sizing: border-box; font-family: inherit;" rows="2" minlength="10" maxlength="1000" required placeholder="Ghi rõ lý do (ví dụ: Chuẩn hóa học vị và bổ sung số hiệu giấy phép sau khi đối chiếu hồ sơ gốc)..."></textarea>
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 12px;">
@@ -818,8 +634,7 @@ DocBookingPage.mount(page => {
     const escape = text => escapeHtml(text || '');
     const formatMoney = val => val == null ? 'Chưa có thông tin' : Number(val).toLocaleString('vi-VN') + ' đ';
     const formatDate = val => val ? new Date(val).toLocaleString('vi-VN', {
-        timeZone: 'Asia/Ho_Chi_Minh',
-        hour: '2-digit', minute: '2-digit',
+        timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit',
         day: '2-digit', month: '2-digit', year: 'numeric'
     }) : 'Chưa xử lý';
 
@@ -828,9 +643,7 @@ DocBookingPage.mount(page => {
         try {
             const u = new URL(url);
             if (!['https:', 'http:'].includes(u.protocol)) return '<span style="color:#ef4444">Đường dẫn không hợp lệ</span>';
-        } catch (_) {
-            return '<span style="color:#ef4444">Đường dẫn không hợp lệ</span>';
-        }
+        } catch (_) { return '<span style="color:#ef4444">Đường dẫn không hợp lệ</span>'; }
         return `<a href="${escape(url)}" target="_blank" rel="noopener noreferrer" class="apu-file-link">
             <span>📄</span> <span>${escape(label)}</span>
         </a>`;
@@ -848,23 +661,15 @@ DocBookingPage.mount(page => {
     }
 
     // Modal controls
-    window.openApuModal = function(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.add('active');
-    };
-    window.closeApuModal = function(id) {
-        const modal = document.getElementById(id);
-        if (modal) modal.classList.remove('active');
-    };
+    window.openApuModal = function(id) { document.getElementById(id)?.classList.add('active'); };
+    window.closeApuModal = function(id) { document.getElementById(id)?.classList.remove('active'); };
 
     // Filter status
     window.setApuStatusFilter = function(status) {
         currentFilterStatus = status;
         document.querySelectorAll('.apu-tab-btn').forEach(b => b.classList.remove('active'));
-        const activeTabId = status ? `apuTab_${status}` : 'apuTab_ALL';
-        const tabEl = document.getElementById(activeTabId);
+        const tabEl = document.getElementById(status ? `apuTab_${status}` : 'apuTab_ALL');
         if (tabEl) tabEl.classList.add('active');
-
         currentPage = 0;
         loadRequests();
     };
@@ -880,7 +685,7 @@ DocBookingPage.mount(page => {
         loadRequests();
     };
 
-    // Load Doctor and Specialty catalogs
+    // Load Catalogs
     async function loadCatalogs() {
         try {
             const [docs, specs] = await Promise.all([
@@ -890,17 +695,14 @@ DocBookingPage.mount(page => {
             doctorList = docs;
             specialtyList = specs;
 
-            // Populate Filter Select
             const filterSelect = document.getElementById('apuSelectDoctor');
             filterSelect.replaceChildren(new Option('👨‍⚕️ Tất cả bác sĩ trong hệ thống', ''));
             doctorList.forEach(d => filterSelect.add(new Option(d.name, d.id)));
 
-            // Populate Direct Modal Doctor Select
             const dirDocSelect = document.getElementById('dirModalDoctorSelect');
-            dirDocSelect.replaceChildren(new Option('-- Chọn bác sĩ --', ''));
+            dirDocSelect.replaceChildren(new Option('-- Chọn bác sĩ trong hệ thống --', ''));
             doctorList.forEach(d => dirDocSelect.add(new Option(d.name, d.id)));
 
-            // Populate Direct Modal Specialty Select
             const dirSpecSelect = document.getElementById('dirSpecialty');
             dirSpecSelect.replaceChildren();
             specialtyList.forEach(s => dirSpecSelect.add(new Option(s.name, s.id)));
@@ -952,15 +754,12 @@ DocBookingPage.mount(page => {
         try {
             const data = await apiJson(`/api/v1/admin/professional-updates?${params}`);
 
-            if (!data.content || data.content.length === 0) {
+            if (!data.content || !data.content.length) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6">
-                            <div class="apu-empty">
-                                <div style="font-size: 40px; margin-bottom: 8px;">📭</div>
-                                <h3 style="margin: 0 0 4px; font-size: 15px; color: #334155;">Không có yêu cầu nào trong danh mục này</h3>
-                                <p style="margin: 0; font-size: 13px; color: #94a3b8;">Hãy thử đổi bộ lọc trạng thái hoặc bác sĩ khác.</p>
-                            </div>
+                        <td colspan="6" style="text-align: center; padding: 48px; color: #64748b;">
+                            <div style="font-size: 40px; margin-bottom: 8px;">📭</div>
+                            <h4 style="margin: 0 0 4px; font-size: 15px; color: #334155;">Không có yêu cầu nào trong danh mục này</h4>
                         </td>
                     </tr>
                 `;
@@ -972,41 +771,33 @@ DocBookingPage.mount(page => {
 
             data.content.forEach(item => {
                 const tr = document.createElement('tr');
-
-                // Doctor cell
                 const initials = (item.doctorName || 'BS').split(' ').pop().substring(0, 2).toUpperCase();
 
-                // Changes summary chips
                 const chips = [];
                 if (item.before?.degree !== item.proposed?.degree) {
-                    chips.push(`<span class="apu-chip apu-chip-degree">🎓 ${escape(item.before?.degree || 'Chưa có')} &rarr; ${escape(item.proposed?.degree)}</span>`);
+                    chips.push(`<span class="apu-chip apu-chip-degree">🎓 Học vị: ${escape(item.before?.degree || 'Chưa có')} &rarr; ${escape(item.proposed?.degree)}</span>`);
+                }
+                if (item.proposed?.licenseNumber && item.proposed?.licenseNumber !== item.before?.licenseNumber) {
+                    chips.push(`<span class="apu-chip apu-chip-cert">📑 Số CCHN: ${escape(item.proposed.licenseNumber)}</span>`);
+                }
+                if (item.before?.specialtyId !== item.proposed?.specialtyId) {
+                    chips.push(`<span class="apu-chip apu-chip-spec">🏥 Chuyên khoa: ${escape(item.before?.specialtyName)} &rarr; ${escape(item.proposed?.specialtyName)}</span>`);
                 }
                 if (item.before?.practiceStartYear !== item.proposed?.practiceStartYear) {
                     chips.push(`<span class="apu-chip apu-chip-year">⏳ Bắt đầu: ${escape(item.proposed?.practiceStartYear)}</span>`);
-                }
-                if (item.before?.specialtyId !== item.proposed?.specialtyId) {
-                    chips.push(`<span class="apu-chip apu-chip-spec">🏥 ${escape(item.before?.specialtyName)} &rarr; ${escape(item.proposed?.specialtyName)}</span>`);
-                }
-                if (item.proposed?.certificateUrl && item.proposed?.certificateUrl !== item.before?.certificateUrl) {
-                    chips.push(`<span class="apu-chip apu-chip-cert">📜 CCHN mới</span>`);
                 }
                 if (!chips.length) {
                     chips.push(`<span class="apu-chip" style="background:#f1f5f9;color:#64748b;">Chưa đổi thông tin cơ bản</span>`);
                 }
 
-                // Status Badge
                 let statusBadge = '';
-                if (item.status === 'PENDING') {
-                    statusBadge = '<span class="apu-badge apu-badge-pending">⏳ Chờ duyệt</span>';
-                } else if (item.status === 'APPROVED') {
+                if (item.status === 'PENDING') statusBadge = '<span class="apu-badge apu-badge-pending">⏳ Chờ duyệt</span>';
+                else if (item.status === 'APPROVED') {
                     statusBadge = item.appliedDirectly
                         ? '<span class="apu-badge apu-badge-direct">⚡ Chỉnh trực tiếp</span>'
                         : '<span class="apu-badge apu-badge-approved">✅ Đã duyệt</span>';
-                } else {
-                    statusBadge = '<span class="apu-badge apu-badge-rejected">❌ Bị từ chối</span>';
-                }
+                } else statusBadge = '<span class="apu-badge apu-badge-rejected">❌ Bị từ chối</span>';
 
-                // Action Button
                 const isPending = item.status === 'PENDING';
                 const actionBtn = isPending
                     ? `<button type="button" class="apu-btn apu-btn-primary" style="padding: 6px 14px; font-size: 12.5px;" onclick="viewApuRequestDetail(${item.id})">⚡ Thẩm định</button>`
@@ -1027,8 +818,9 @@ DocBookingPage.mount(page => {
                     </td>
                     <td>
                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                            ${item.evidenceUrl ? safeLink(item.evidenceUrl, 'Minh chứng') : '<span style="color:#94a3b8;font-size:12px;">Dùng CCHN cũ</span>'}
+                            ${item.evidenceUrl ? safeLink(item.evidenceUrl, 'Minh chứng tải lên') : ''}
                             ${item.proposed?.certificateUrl ? safeLink(item.proposed.certificateUrl, 'CCHN mới') : ''}
+                            ${item.proposed?.referencedDocumentLabel ? `<span class="apu-legacy-badge">Căn cứ: ${escape(item.proposed.referencedDocumentLabel)}</span>` : (!item.evidenceUrl && !item.proposed?.certificateUrl ? '<span style="color:#94a3b8;font-size:12px;">Dùng CCHN lưu trữ</span>' : '')}
                         </div>
                     </td>
                     <td>
@@ -1043,7 +835,6 @@ DocBookingPage.mount(page => {
                 tbody.appendChild(tr);
             });
 
-            // Pagination
             if (data.totalPages > 1) {
                 pagination.style.display = 'flex';
                 pagination.innerHTML = `
@@ -1059,14 +850,10 @@ DocBookingPage.mount(page => {
         }
     }
 
-    window.pageApuTable = function(p) {
-        currentPage = p;
-        loadRequests();
-    };
+    window.pageApuTable = function(p) { currentPage = p; loadRequests(); };
 
-    // View Request Detail / Review Modal
+    // View Request Detail
     window.viewApuRequestDetail = async function(id) {
-        // Find row item
         const rows = [...document.querySelectorAll('#apuTableBody tr')];
         const row = rows.find(r => {
             try { return JSON.parse(r.dataset.itemJson || '{}').id === id; }
@@ -1077,28 +864,22 @@ DocBookingPage.mount(page => {
         const item = JSON.parse(row.dataset.itemJson);
         selectedRequestItem = item;
 
-        // Modal Top
         const initials = (item.doctorName || 'BS').split(' ').pop().substring(0, 2).toUpperCase();
         document.getElementById('revModalAvatar').textContent = initials;
         document.getElementById('revModalDoctorName').textContent = `BS. ${item.doctorName}`;
         document.getElementById('revModalRequestId').textContent = `Mã yêu cầu #${item.id} · Gửi lúc ${formatDate(item.createdAt)} bởi ${escape(item.submittedBy)}`;
 
-        // Status Badge
         const badgeEl = document.getElementById('revModalStatusBadge');
-        if (item.status === 'PENDING') {
-            badgeEl.innerHTML = '<span class="apu-badge apu-badge-pending">⏳ Chờ duyệt</span>';
-        } else if (item.status === 'APPROVED') {
+        if (item.status === 'PENDING') badgeEl.innerHTML = '<span class="apu-badge apu-badge-pending">⏳ Chờ thẩm định</span>';
+        else if (item.status === 'APPROVED') {
             badgeEl.innerHTML = item.appliedDirectly
                 ? '<span class="apu-badge apu-badge-direct">⚡ Quản trị viên cập nhật trực tiếp</span>'
                 : '<span class="apu-badge apu-badge-approved">✅ Đã phê duyệt</span>';
-        } else {
-            badgeEl.innerHTML = '<span class="apu-badge apu-badge-rejected">❌ Bị từ chối</span>';
-        }
+        } else badgeEl.innerHTML = '<span class="apu-badge apu-badge-rejected">❌ Bị từ chối</span>';
 
-        // Active Appointment check (if changing specialty)
+        // Check active appointments
         const apptAlert = document.getElementById('revModalApptAlert');
         apptAlert.style.display = 'none';
-
         if (item.status === 'PENDING' && item.before?.specialtyId !== item.proposed?.specialtyId) {
             try {
                 const docCurrent = await apiJson(`/api/v1/admin/professional-updates/doctors/${item.doctorId}`);
@@ -1109,55 +890,47 @@ DocBookingPage.mount(page => {
             } catch (_) {}
         }
 
-        // Diff Table
+        // Comparison Table Rows
+        const isLegacyDegree = item.before?.degree && (item.before.degree.includes('Phó giáo sư') || item.before.degree.includes('Giáo sư') || item.before.degree.includes('chuyên khoa'));
+        const beforeDegreeDisplay = (item.before?.degree || 'Chưa cập nhật') + (isLegacyDegree ? ' <span class="apu-legacy-badge">Hồ sơ cũ</span>' : '');
+
         const diffRows = [
             {
-                label: '🎓 Học vị / Bằng cấp',
-                before: item.before?.degree || 'Chưa cập nhật',
+                label: '🎓 Học vị đào tạo',
+                before: beforeDegreeDisplay,
                 prop: item.proposed?.degree || 'Chưa cập nhật',
                 changed: item.before?.degree !== item.proposed?.degree
             },
             {
-                label: '⏳ Năm bắt đầu hành nghề',
-                before: item.before?.practiceStartYear ? `${item.before.practiceStartYear} (~${currentYear - item.before.practiceStartYear} năm)` : (item.before?.legacyExperienceYears ? `${item.before.legacyExperienceYears} năm (cũ)` : 'Chưa có'),
-                prop: item.proposed?.practiceStartYear ? `${item.proposed.practiceStartYear} (~${currentYear - item.proposed.practiceStartYear} năm)` : 'Chưa có',
-                changed: item.before?.practiceStartYear !== item.proposed?.practiceStartYear
+                label: '📑 Giấy phép / Số CCHN',
+                before: item.before?.licenseNumber ? `Số: ${item.before.licenseNumber}` : (item.before?.certificateUrl ? 'Đang lưu scan (Chưa số hóa)' : 'Chưa có'),
+                prop: item.proposed?.licenseNumber ? `Số: ${item.proposed.licenseNumber}` : 'Giữ nguyên',
+                changed: Boolean(item.proposed?.licenseNumber && item.proposed.licenseNumber !== item.before?.licenseNumber)
             },
             {
-                label: '🏥 Chuyên khoa',
+                label: '🏛️ Nơi cấp & Ngày cấp',
+                before: item.before?.licenseIssuer ? `${item.before.licenseIssuer} (${item.before.licenseIssueDate || '—'})` : 'Chưa số hóa',
+                prop: item.proposed?.licenseIssuer ? `${item.proposed.licenseIssuer} (${item.proposed.licenseIssueDate || '—'})` : 'Giữ nguyên',
+                changed: Boolean(item.proposed?.licenseIssuer && item.proposed.licenseIssuer !== item.before?.licenseIssuer)
+            },
+            {
+                label: '🏥 Chuyên khoa web',
                 before: item.before?.specialtyName || '—',
                 prop: item.proposed?.specialtyName || '—',
                 changed: item.before?.specialtyId !== item.proposed?.specialtyId
             },
             {
-                label: '📜 Chứng chỉ hành nghề',
-                before: item.before?.certificateUrl ? 'Đang dùng chứng chỉ hiện có' : 'Chưa có tệp',
-                prop: item.proposed?.certificateUrl ? 'Tệp chứng chỉ mới' : 'Giữ nguyên',
-                changed: item.before?.certificateUrl !== item.proposed?.certificateUrl
+                label: '⏳ Bắt đầu hành nghề',
+                before: item.before?.practiceStartYear ? `Từ năm ${item.before.practiceStartYear}` : (item.before?.legacyExperienceYears ? `${item.before.legacyExperienceYears} năm KN (hồ sơ cũ)` : 'Chưa có'),
+                prop: item.proposed?.practiceStartYear ? `Từ năm ${item.proposed.practiceStartYear}` : 'Giữ nguyên',
+                changed: item.before?.practiceStartYear !== item.proposed?.practiceStartYear
             }
         ];
-
-        if (item.before?.price !== item.proposed?.price) {
-            diffRows.push({
-                label: '💰 Giá khám cho lịch mới',
-                before: formatMoney(item.before?.price),
-                prop: formatMoney(item.proposed?.price),
-                changed: true
-            });
-        }
-        if (item.before?.bio !== item.proposed?.bio) {
-            diffRows.push({
-                label: '📝 Tiểu sử giới thiệu',
-                before: item.before?.bio || 'Chưa có',
-                prop: item.proposed?.bio || 'Chưa có',
-                changed: true
-            });
-        }
 
         document.getElementById('revModalDiffBody').innerHTML = diffRows.map(r => `
             <tr class="${r.changed ? 'apu-diff-highlight' : ''}">
                 <td style="font-weight: 700; color: #334155;">${escape(r.label)}</td>
-                <td style="color: #64748b;">${escape(r.before)}</td>
+                <td style="color: #64748b;">${r.before}</td>
                 <td>
                     ${escape(r.prop)}
                     ${r.changed ? '<span class="apu-chip apu-chip-spec" style="margin-left:6px;">Thay đổi</span>' : ''}
@@ -1171,25 +944,29 @@ DocBookingPage.mount(page => {
 
         const addAttachmentCard = (title, url, label) => {
             const card = document.createElement('div');
-            card.style.background = '#f8fafc';
-            card.style.border = '1px solid #e2e8f0';
-            card.style.borderRadius = '10px';
-            card.style.padding = '10px 14px';
-            card.innerHTML = `
-                <div style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">${escape(title)}</div>
-                ${safeLink(url, label)}
-            `;
+            card.style.background = '#f8fafc'; card.style.border = '1px solid #e2e8f0';
+            card.style.borderRadius = '10px'; card.style.padding = '10px 14px';
+            card.innerHTML = `<div style="font-size: 11.5px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 4px;">${escape(title)}</div>${safeLink(url, label)}`;
             attachGrid.appendChild(card);
         };
 
         if (item.evidenceUrl) addAttachmentCard('Minh chứng đính kèm', item.evidenceUrl, 'Xem tệp minh chứng');
-        if (item.proposed?.certificateUrl) addAttachmentCard('Chứng chỉ đề xuất mới', item.proposed.certificateUrl, 'Xem CCHN mới');
-        if (item.before?.certificateUrl) addAttachmentCard('Chứng chỉ hiện có', item.before.certificateUrl, 'Xem CCHN cũ');
+        if (item.proposed?.certificateUrl) addAttachmentCard('Giấy phép / CCHN mới', item.proposed.certificateUrl, 'Xem CCHN mới');
+        if (item.proposed?.referencedDocumentLabel) {
+            const card = document.createElement('div');
+            card.style.background = '#f0fdf4'; card.style.border = '1px solid #bbf7d0';
+            card.style.borderRadius = '10px'; card.style.padding = '10px 14px';
+            card.innerHTML = `
+                <div style="font-size: 11.5px; font-weight: 700; color: #166534; text-transform: uppercase; margin-bottom: 4px;">Giấy tờ đã lưu được căn cứ</div>
+                <div style="font-weight: 700; font-size: 13px; color: #047857;">${escape(item.proposed.referencedDocumentLabel)}</div>
+                ${item.proposed.referencedDocumentUrl ? safeLink(item.proposed.referencedDocumentUrl, 'Xem tài liệu đã lưu') : ''}
+            `;
+            attachGrid.appendChild(card);
+        }
+        if (item.before?.certificateUrl) addAttachmentCard('Giấy phép / CCHN cũ (lưu trữ)', item.before.certificateUrl, 'Xem CCHN cũ');
 
-        // Reason
         document.getElementById('revModalReason').textContent = item.reason || 'Không có lý do chi tiết.';
 
-        // Pending vs Completed sections
         const isPending = item.status === 'PENDING';
         document.getElementById('revModalPendingSection').style.display = isPending ? 'block' : 'none';
         document.getElementById('revModalCompletedSection').style.display = isPending ? 'none' : 'block';
@@ -1200,7 +977,7 @@ DocBookingPage.mount(page => {
             document.getElementById('revModalDecidedTitle').textContent =
                 item.status === 'APPROVED' ? '✅ Quyết định: Đã phê duyệt' : '❌ Quyết định: Đã từ chối';
             document.getElementById('revModalDecidedReason').textContent =
-                item.decisionReason || (item.status === 'APPROVED' ? 'Đã phê duyệt và áp dụng vào hồ sơ bác sĩ.' : 'Từ chối không nêu chi tiết.');
+                item.decisionReason || (item.status === 'APPROVED' ? 'Đã đối chiếu văn bằng và giấy phép hành nghề hợp lệ.' : 'Từ chối không nêu chi tiết.');
             document.getElementById('revModalDecidedAudit').textContent =
                 `Thực hiện bởi: ${escape(item.reviewedBy || 'Quản trị viên')} · Thời gian: ${formatDate(item.reviewedAt)}`;
         }
@@ -1213,7 +990,7 @@ DocBookingPage.mount(page => {
         document.getElementById('revModalNote').focus();
     };
 
-    // Decide Request (Approve or Reject)
+    // Decide Request
     window.decideApuRequest = async function(approve) {
         if (!selectedRequestItem) return;
 
@@ -1259,15 +1036,12 @@ DocBookingPage.mount(page => {
             document.getElementById('dirModalDoctorSelect').value = currentSelectedDoctorId;
             loadDirectDoctorProfile();
         }
-
         openApuModal('apuDirectModal');
     };
 
-    function handleDirectDegreeChange() {
-        const degree = document.getElementById('dirDegree').value;
-        document.getElementById('dirDegreeOtherWrap').style.display = degree === 'Khác' ? 'block' : 'none';
-    }
-    document.getElementById('dirDegree').addEventListener('change', handleDirectDegreeChange);
+    document.getElementById('dirDegree').addEventListener('change', function() {
+        document.getElementById('dirDegreeOtherWrap').style.display = this.value === 'Khác' ? 'block' : 'none';
+    });
 
     window.loadDirectDoctorProfile = async function() {
         const doctorId = document.getElementById('dirModalDoctorSelect').value;
@@ -1289,39 +1063,41 @@ DocBookingPage.mount(page => {
             directDoctorData = data;
             const p = data.currentProfile;
 
+            const isLegacy = p.degree && (p.degree.includes('Phó giáo sư') || p.degree.includes('Giáo sư') || p.degree.includes('chuyên khoa'));
             infoStrip.innerHTML = `
-                <div style="font-weight: 800; font-size: 14px; margin-bottom: 4px; color: #0f172a;">${escape(data.doctorName)}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 16px;">
-                    <span>🎓 Học vị: <strong>${escape(p.degree || 'Chưa cập nhật')}</strong></span>
+                <div style="font-weight: 800; font-size: 14px; margin-bottom: 6px; color: #0f172a;">${escape(data.doctorName)}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 14px;">
+                    <span>🎓 Học vị: <strong>${escape(p.degree || 'Chưa cập nhật')}</strong> ${isLegacy ? '<span class="apu-legacy-badge">Hồ sơ cũ</span>' : ''}</span>
+                    <span>📑 Số CCHN: <strong>${escape(p.licenseNumber || 'Chưa số hóa')}</strong></span>
                     <span>🏥 Chuyên khoa: <strong>${escape(p.specialtyName)}</strong></span>
-                    <span>⏳ Bắt đầu: <strong>${p.practiceStartYear ? p.practiceStartYear : 'Chưa có'}</strong></span>
-                    <span>💰 Giá khám: <strong>${formatMoney(p.price)}</strong></span>
+                    <span>⏳ Bắt đầu: <strong>${p.practiceStartYear || (p.legacyExperienceYears ? p.legacyExperienceYears + ' năm KN (cũ)' : 'Chưa có')}</strong></span>
                     <span>${safeLink(p.certificateUrl, 'Xem CCHN')} · ${safeLink(data.idCardUrl, 'Xem CCCD')}</span>
                 </div>
             `;
 
-            // Populate fields with current data
+            // Populate fields
             const degreeSelect = document.getElementById('dirDegree');
-            const options = [...degreeSelect.options].map(o => o.value);
-            if (!p.degree) {
-                degreeSelect.value = '';
-            } else if (options.includes(p.degree)) {
-                degreeSelect.value = p.degree;
-            } else {
+            const opts = [...degreeSelect.options].map(o => o.value);
+            if (!p.degree) degreeSelect.value = '';
+            else if (opts.includes(p.degree)) degreeSelect.value = p.degree;
+            else {
                 degreeSelect.value = 'Khác';
                 document.getElementById('dirDegreeOther').value = (p.degree || '').replace(/^Khác:\s*/, '');
+                document.getElementById('dirDegreeOtherWrap').style.display = 'block';
             }
-            handleDirectDegreeChange();
 
             document.getElementById('dirYear').value = p.practiceStartYear || '';
             document.getElementById('dirSpecialty').value = p.specialtyId || '';
+            document.getElementById('dirLicenseNumber').value = p.licenseNumber || '';
+            document.getElementById('dirLicenseIssuer').value = p.licenseIssuer || '';
+            document.getElementById('dirLicenseScope').value = p.licenseScope || '';
             document.getElementById('dirPrice').value = p.price || '';
             document.getElementById('dirBio').value = p.bio || '';
             document.getElementById('dirExistingCert').disabled = !p.certificateUrl;
 
             fieldset.disabled = false;
         } catch (err) {
-            infoStrip.innerHTML = `<span style="color:#ef4444">Không thể tải thông tin bác sĩ: ${escape(err.message)}</span>`;
+            infoStrip.innerHTML = `<span style="color:#ef4444">Lỗi tải thông tin bác sĩ: ${escape(err.message)}</span>`;
         }
     };
 
@@ -1340,39 +1116,33 @@ DocBookingPage.mount(page => {
 
         const formData = new FormData();
 
-        // Degree
         const rawDegree = document.getElementById('dirDegree').value;
         if (rawDegree) {
             if (rawDegree === 'Khác') {
                 const other = document.getElementById('dirDegreeOther').value.trim();
-                if (other.length < 3) {
-                    showApiToast('Vui lòng nhập chi tiết học vị khác (ít nhất 3 ký tự).', 'warning');
-                    document.getElementById('dirDegreeOther').focus();
-                    return;
-                }
                 formData.set('degree', `Khác: ${other}`);
-            } else {
-                formData.set('degree', rawDegree);
-            }
+            } else formData.set('degree', rawDegree);
         }
 
-        // Year
         const yr = document.getElementById('dirYear').value;
         if (yr) formData.set('practiceStartYear', parseInt(yr, 10));
 
-        // Specialty
         const specId = document.getElementById('dirSpecialty').value;
         if (specId) formData.set('specialtyId', specId);
 
-        // Price
+        const licNum = document.getElementById('dirLicenseNumber').value.trim();
+        if (licNum) formData.set('licenseNumber', licNum);
+        const licIssuer = document.getElementById('dirLicenseIssuer').value.trim();
+        if (licIssuer) formData.set('licenseIssuer', licIssuer);
+        const licScope = document.getElementById('dirLicenseScope').value.trim();
+        if (licScope) formData.set('licenseScope', licScope);
+
         const price = document.getElementById('dirPrice').value;
         if (price) formData.set('price', parseFloat(price));
 
-        // Bio
         const bio = document.getElementById('dirBio').value.trim();
         if (bio) formData.set('bio', bio);
 
-        // Files
         const evidenceFile = document.getElementById('dirEvidence').files[0];
         const certFile = document.getElementById('dirCertificate').files[0];
         const useExisting = document.getElementById('dirExistingCert').checked;
@@ -1386,7 +1156,7 @@ DocBookingPage.mount(page => {
 
         const submitBtn = document.getElementById('dirSubmitBtn');
         submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span>⏳</span> <span>Đang lưu...</span>';
+        submitBtn.innerHTML = '<span>⏳ Đang lưu...</span>';
 
         try {
             const token = localStorage.getItem('token');
