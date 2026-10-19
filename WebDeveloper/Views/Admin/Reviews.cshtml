@@ -70,20 +70,9 @@
 .pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; }
 .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
 
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.5); backdrop-filter: blur(4px);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s;
-    padding: 20px; box-sizing: border-box;
-}
-.modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content {
-    background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 480px;
-    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); transform: scale(0.95); transition: transform 0.3s;
-    box-sizing: border-box; max-height: 90vh; overflow-y: auto;
-}
-.modal-overlay.active .modal-content { transform: scale(1); }
+
+
+
 
 @@media (max-width: 640px) {
     .filter-bar {
@@ -103,10 +92,7 @@
     .admin-card {
         padding: 16px !important;
     }
-    .modal-content {
-        padding: 20px 16px !important;
-        border-radius: 20px !important;
-    }
+
 }
 </style>
 
@@ -116,7 +102,7 @@
 </div>
 
 <!-- Modal Xác nhận Ẩn/Hiện Đánh giá -->
-<div id="toggleReviewModal" class="modal-overlay" onclick="closeToggleReviewModal()">
+<div id="toggleReviewModal" class="modal-overlay" onclick="closeToggleReviewModal()" style="--modal-max-width: 480px; --modal-padding: 32px; --modal-border-radius: 24px; ">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
             <div id="toggleReviewIconBox" style="width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
@@ -358,19 +344,16 @@ DocBookingPage.mount(page => {
                 });
                 if (res.ok) {
                     page.globals.closeToggleReviewModal();
-                    Toastify({ 
-                        text: targetToggleIsHidden ? "Đã hiển thị lại đánh giá" : "Đã ẩn đánh giá", 
-                        style: { background: "#10b981" } 
-                    }).showToast();
+                    showApiToast(targetToggleIsHidden ? "Đã hiển thị lại đánh giá" : "Đã ẩn đánh giá", "success");
                     loadReviews();
                 } else {
-                    Toastify({ text: "Lỗi khi cập nhật trạng thái", style: { background: "#ef4444" } }).showToast();
+                    showApiToast("Lỗi khi cập nhật trạng thái", "error");
                     btn.disabled = false;
                     btn.innerText = 'Xác nhận';
                 }
             } catch(e) {
                 console.error(e);
-                Toastify({ text: "Lỗi mạng", style: { background: "#ef4444" } }).showToast();
+                showApiToast("Lỗi mạng", "error");
                 btn.disabled = false;
                 btn.innerText = 'Xác nhận';
             }

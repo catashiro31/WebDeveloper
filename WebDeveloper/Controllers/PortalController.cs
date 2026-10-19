@@ -41,10 +41,5 @@ namespace WebDeveloper.Controllers
             return View();
         }
 
-        public IActionResult Booking(int scheduleId)
-        {
-            ViewBag.ScheduleId = scheduleId;
-            return View();
-        }
     }
 }

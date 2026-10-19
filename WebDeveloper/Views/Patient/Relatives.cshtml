@@ -25,21 +25,9 @@
 }
 .floating-label-input input:focus, .floating-label-input select:focus { border-color: #6366f1; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
 
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; padding: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
-}
-.modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content {
-    background: white; border-radius: 32px; width: 100%;
-    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
-    max-height: 90vh; overflow-y: auto;
-    transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+
+
 
 @@media (max-width: 640px) {
     .relatives-header {
@@ -55,10 +43,7 @@
     #relativesContainer {
         grid-template-columns: 1fr !important;
     }
-    .modal-content {
-        padding: 24px 16px !important;
-        border-radius: 20px !important;
-    }
+
     .relative-card {
         padding: 18px 16px !important;
     }
@@ -84,7 +69,7 @@
 </div>
 
 <!-- Add/Edit Modal -->
-<div id="relativeModal" class="modal-overlay" onclick="closeModal()">
+<div id="relativeModal" class="modal-overlay" onclick="closeModal()" style="--modal-border-radius: 32px; ">
     <div class="modal-content" style="max-width: 600px; padding: 40px;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
             <h3 id="modalTitle" style="margin: 0; font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em;">Thêm người thân mới</h3>
@@ -140,7 +125,7 @@
 </div>
 
 <!-- Modal Xác nhận xóa hồ sơ người thân -->
-<div id="deleteRelativeModal" class="modal-overlay" onclick="closeDeleteRelativeModal()">
+<div id="deleteRelativeModal" class="modal-overlay" onclick="closeDeleteRelativeModal()" style="--modal-border-radius: 32px; ">
     <div class="modal-content" style="max-width: 460px; padding: 32px;" onclick="event.stopPropagation()">
         <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
             <div style="width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">
@@ -292,28 +277,28 @@ DocBookingPage.mount(page => {
             if (window.Validation) {
                 const nameCheck = window.Validation.validateFullName(fullName);
                 if (!nameCheck.valid) {
-                    Toastify({ text: nameCheck.message, style: { background: "#ef4444" } }).showToast();
+                    showApiToast(nameCheck.message, "error");
                     return;
                 }
                 const phoneCheck = window.Validation.validatePhoneNumber(phone);
                 if (!phoneCheck.valid) {
-                    Toastify({ text: phoneCheck.message, style: { background: "#ef4444" } }).showToast();
+                    showApiToast(phoneCheck.message, "error");
                     return;
                 }
                 const dobCheck = window.Validation.validateDateOfBirth(dob);
                 if (!dobCheck.valid) {
-                    Toastify({ text: dobCheck.message, style: { background: "#ef4444" } }).showToast();
+                    showApiToast(dobCheck.message, "error");
                     return;
                 }
                 const genderCheck = window.Validation.validateGender(gender);
                 if (!genderCheck.valid) {
-                    Toastify({ text: genderCheck.message, style: { background: "#ef4444" } }).showToast();
+                    showApiToast(genderCheck.message, "error");
                     return;
                 }
             }
 
             if (!relationship) {
-                Toastify({ text: "Vui lòng nhập mối quan hệ.", style: { background: "#ef4444" } }).showToast();
+                showApiToast("Vui lòng nhập mối quan hệ.", "error");
                 return;
             }
 
@@ -341,15 +326,15 @@ DocBookingPage.mount(page => {
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: isEdit ? "Cập nhật hồ sơ thành công" : "Thêm người thân thành công", style: { background: "#10b981" } }).showToast();
+                    showApiToast(isEdit ? "Cập nhật hồ sơ thành công" : "Thêm người thân thành công", "success");
                     closeModal();
                     fetchRelatives();
                 } else {
                     const msg = await readApiMessage(res);
-                    Toastify({ text: msg || "Không thể lưu thông tin", style: { background: "#ef4444" } }).showToast();
+                    showApiToast(msg || "Không thể lưu thông tin", "error");
                 }
             })
-            .catch(() => Toastify({ text: "Không thể lưu thông tin", style: { background: "#ef4444" } }).showToast())
+            .catch(() => showApiToast("Không thể lưu thông tin", "error"))
             .finally(() => {
                 btn.disabled = false;
                 btn.innerText = isEdit ? 'Cập nhật hồ sơ' : 'Lưu hồ sơ ngay';
@@ -386,17 +371,17 @@ DocBookingPage.mount(page => {
             .then(async res => {
                 if (res.ok) {
                     closeDeleteRelativeModal();
-                    Toastify({ text: "Đã xóa hồ sơ người thân thành công", style: { background: "#10b981" } }).showToast();
+                    showApiToast("Đã xóa hồ sơ người thân thành công", "success");
                     fetchRelatives();
                 } else {
                     const msg = await readApiMessage(res);
-                    Toastify({ text: msg || "Không thể xóa hồ sơ", style: { background: "#ef4444" } }).showToast();
+                    showApiToast(msg || "Không thể xóa hồ sơ", "error");
                     btn.disabled = false;
                     btn.innerText = 'Xác nhận xóa';
                 }
             })
             .catch(() => {
-                Toastify({ text: "Không thể xóa hồ sơ", style: { background: "#ef4444" } }).showToast();
+                showApiToast("Không thể xóa hồ sơ", "error");
                 btn.disabled = false;
                 btn.innerText = 'Xác nhận xóa';
             });

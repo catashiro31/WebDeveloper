@@ -21,6 +21,8 @@ namespace WebDeveloper.Helpers
         public static async Task<User> GetCurrentUser(HttpContext httpContext, ApplicationDbContext db)
         {
             var userId = GetCurrentUserId(httpContext);
+            // JwtMiddleware already loaded this entity into the scoped context.
+            // FindAsync reuses that tracked instance; it does not issue a second SQL query.
             var user = await db.Users.FindAsync(userId);
             if (user == null)
                 throw new UnauthorizedAccessException("Không thể xác định người dùng hiện tại! Vui lòng đăng nhập lại.");

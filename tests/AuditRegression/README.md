@@ -79,3 +79,16 @@ Kiểm tra chuyển trang đầu/cuối/quay lại ở bốn trang Admin sau đi
 trạng thái đánh giá không đóng khung, hai cột bác sĩ ở 768/820/1024px, bỏ bộ chọn
 số bác sĩ/trang, menu cả ba vai trò không lặp thông tin, header có mục đang chọn,
 bộ lọc đóng/mở, tối đa 6 chuyên gia có đánh giá và carousel hiện 3/2/1 thẻ.
+
+## Dọn code lặp
+
+Runner backend hiện có 39 assertion, gồm kiểm tra đếm SQL để bảo đảm việc lấy
+current user nhiều lần trong cùng request dùng chung entity đã được theo dõi.
+
+```sh
+AUDIT_BASE_URL=http://127.0.0.1:5015 node tests/AuditRegression/cleanup-browser.cjs
+```
+
+Runner này cập nhật tên/điện thoại và đổi mật khẩu fixture, sau đó đổi lại mật khẩu
+ban đầu. Chỉ chạy trên database thử cô lập. Kiểm tra cả ba role qua AJAX và reload,
+trạng thái duyệt bác sĩ, toast fallback, filter danh mục và route Booking đã xóa.

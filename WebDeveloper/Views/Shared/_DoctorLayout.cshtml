@@ -26,6 +26,7 @@
     <link rel="stylesheet" href="/css/utilities.css" asp-append-version="true" />
     <link rel="stylesheet" type="text/css" href="/lib/toastify/toastify.css" asp-append-version="true">
     <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/modals.css" asp-append-version="true" />
     <link rel="stylesheet" href="/css/role-layout.css" asp-append-version="true" />
     <style>
         body { font-family: var(--font-app); background: #f5f7fb; margin: 0; }
@@ -53,17 +54,11 @@
 </head>
 <body data-workspace="Doctor">
     <!-- Shade overlay -->
-    <button id="workspaceShade" type="button" aria-label="Đóng menu"></button>
-    <div id="workspaceLoading" class="workspace-loading" role="status" hidden>
-        <span class="workspace-spinner" aria-hidden="true"></span><span>Đang tải trang…</span>
-    </div>
-    <div id="workspaceError" role="alert" hidden></div>
+    @await Html.PartialAsync("_WorkspaceControls")
     <!-- Header -->
     <header class="role-header" style="background: white; padding: 16px 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; gap: 12px;">
         @* Hamburger — shown only on ≤1024px via CSS *@
-        <button id="workspaceMenu" class="workspace-menu" type="button" aria-controls="workspaceSidebar" aria-expanded="false" aria-label="Mở menu">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
+        @await Html.PartialAsync("_WorkspaceMenu")
         <div style="display: flex; align-items: center; gap: 20px; flex: 1;">
             <a href="/" style="text-decoration: none;">
                 <h1 style="margin: 0; font-size: 24px; background: linear-gradient(135deg, #5f6dfc, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">DocBooking</h1>

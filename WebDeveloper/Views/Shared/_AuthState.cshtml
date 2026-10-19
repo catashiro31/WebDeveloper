@@ -8,11 +8,14 @@
     string? verificationStatus = null;
     if (signedIn && int.TryParse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value, out var userId))
     {
-        account = await Db.Users.AsNoTracking().FirstOrDefaultAsync(u => u.UserId == userId);
+        account = await Db.Users.FindAsync(userId);
         if (User.IsInRole("DOCTOR"))
         {
-            var doctor = await Db.DoctorDetails.AsNoTracking().FirstOrDefaultAsync(d => d.UserId == userId);
-            verificationStatus = doctor?.VerificationStatus.ToString() ?? "UNREGISTERED";
+            var status = await Db.DoctorDetails.AsNoTracking()
+                .Where(d => d.UserId == userId)
+                .Select(d => (WebDeveloper.Models.Enums.VerificationStatus?)d.VerificationStatus)
+                .FirstOrDefaultAsync();
+            verificationStatus = status?.ToString() ?? "UNREGISTERED";
         }
     }
     var browserUser = JsonSerializer.Serialize(new

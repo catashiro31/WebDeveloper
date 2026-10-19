@@ -1,0 +1,151 @@
+<script>
+DocBookingPage.mount(page => {
+    const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
+
+        const token = localStorage.getItem('token');
+        const userStr = localStorage.getItem('user');
+        if (!token || !userStr) {
+            window.location.href = '/Auth/Login';
+            return;
+        }
+
+        let file = null;
+        let currentUser = null;
+
+        try {
+            currentUser = JSON.parse(userStr);
+            document.getElementById('email').value = currentUser.email || '';
+            document.getElementById('fullName').value = currentUser.fullName || '';
+            document.getElementById('phoneNumber').value = currentUser.phoneNumber || '';
+            
+            if (currentUser.avatarUrl) {
+                document.getElementById('avatarPreview').src = currentUser.avatarUrl;
+                document.getElementById('avatarPreview').style.display = 'block';
+                document.getElementById('avatarInitials').style.display = 'none';
+            } else {
+                document.getElementById('avatarInitials').innerText = (currentUser.fullName || currentUser.email || 'U').charAt(0).toUpperCase();
+            }
+        } catch(e) {}
+
+        page.globals.handleFileChange = function(e) {
+            const f = e.target.files[0];
+            if (f) {
+                if (f.size > 5 * 1024 * 1024 || !['image/jpeg', 'image/png'].includes(f.type)) {
+                    e.target.value = '';
+                    file = null;
+                    const preview = document.getElementById('avatarPreview');
+                    preview.style.display = currentUser?.avatarUrl ? 'block' : 'none';
+                    preview.src = currentUser?.avatarUrl || '';
+                    document.getElementById('avatarInitials').style.display = currentUser?.avatarUrl ? 'none' : 'block';
+                    showMessage(f.size > 5 * 1024 * 1024
+                        ? 'Ảnh đại diện không được vượt quá 5 MB.'
+                        : 'Ảnh đại diện chỉ hỗ trợ JPG hoặc PNG.', 'error');
+                    return;
+                }
+                file = f;
+                document.getElementById('avatarPreview').src = URL.createObjectURL(f);
+                document.getElementById('avatarPreview').style.display = 'block';
+                document.getElementById('avatarInitials').style.display = 'none';
+            }
+        };
+
+        function showMessage(text, type) {
+            const box = document.getElementById('messageBox');
+            box.style.display = 'block';
+            box.innerText = text;
+            if (type === 'success') {
+                box.style.background = '#ecfdf5';
+                box.style.color = '#059669';
+            } else {
+                box.style.background = '#fef2f2';
+                box.style.color = '#dc2626';
+            }
+        }
+
+        page.globals.handleSubmit = function(e) {
+            e.preventDefault();
+            
+            const fullName = document.getElementById('fullName').value.trim();
+            const phone = document.getElementById('phoneNumber').value.trim();
+            
+            if (window.Validation) {
+                const nameCheck = window.Validation.validateFullName(fullName);
+                if (!nameCheck.valid) {
+                    showMessage(nameCheck.message, "error");
+                    return;
+                }
+                if (phone) {
+                    const phoneCheck = window.Validation.validatePhoneNumber(phone);
+                    if (!phoneCheck.valid) {
+                        showMessage(phoneCheck.message, "error");
+                        return;
+                    }
+                }
+            } else {
+                if (!fullName) {
+                    showMessage("Họ và tên không được để trống.", "error");
+                    return;
+                }
+            }
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = 'Đang lưu...';
+            btn.style.opacity = '0.7';
+
+            const formData = new FormData();
+            formData.append('fullName', fullName);
+            formData.append('phoneNumber', phone);
+            if (file) {
+                formData.append('file', file);
+            }
+
+            fetch('/api/v1/user/profile', {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` },
+                body: formData
+            })
+            .then(async res => {
+                if (res.ok) {
+                    const updatedUser = { ...currentUser, ...await res.json() };
+                    try { localStorage.setItem('user', JSON.stringify(updatedUser)); } catch (_) {}
+                    showMessage("Cập nhật thông tin thành công!", "success");
+                    
+                    currentUser = updatedUser;
+                    for (const id of ['doctorName', 'headerDoctorName', 'patientHeaderName', 'patientSidebarName']) {
+                        const element = document.getElementById(id);
+                        if (element) element.textContent = (id === 'doctorName' || id === 'headerDoctorName' ? 'BS. ' : '') + updatedUser.fullName;
+                    }
+                    if (updatedUser.avatarUrl) {
+                        for (const id of ['adminAvatar', 'adminSidebarAvatar', 'doctorAvatar', 'patientSidebarAvatar']) {
+                            const container = document.getElementById(id);
+                            if (!container) continue;
+                            container.textContent = '';
+                            const img = document.createElement('img');
+                            img.src = updatedUser.avatarUrl;
+                            img.alt = '';
+                            img.style.cssText = 'width:100%;height:100%;object-fit:cover';
+                            container.appendChild(img);
+                        }
+                    }
+                } else {
+                    if (res.status === 413) {
+                        showMessage('Yêu cầu tải ảnh vượt giới hạn máy chủ. Hãy chọn ảnh nhỏ hơn hoặc liên hệ quản trị viên.', 'error');
+                    } else {
+                        const data = res.headers.get('content-type')?.includes('json')
+                            ? await res.json().catch(() => null) : null;
+                        showMessage(data?.detail || data?.message || data?.title || 'Không thể cập nhật thông tin. Vui lòng thử lại.', 'error');
+                    }
+                }
+            })
+            .catch(() => showMessage("Đã xảy ra lỗi khi cập nhật", "error"))
+            .finally(() => {
+                btn.disabled = false;
+                btn.innerText = 'Lưu thay đổi';
+                btn.style.opacity = '1';
+            });
+        };
+
+    page.expose({showMessage});
+});
+</script>

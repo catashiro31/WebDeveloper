@@ -119,8 +119,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IFileUploadService, FileUploadService>();
-builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IEmailService>(services => services.GetRequiredService<EmailService>());
 builder.Services.AddScoped<EmailOutboxProcessor>();
 if (builder.Configuration.GetValue<bool>("EmailOutbox:Enabled", true))
     builder.Services.AddHostedService<EmailOutboxWorker>();
@@ -132,7 +132,6 @@ builder.Services.AddScoped<IAppointmentJobService, AppointmentJobService>();
 
 // 5. Add Background Services & Caching
 builder.Services.AddMemoryCache();
-// builder.Services.AddHostedService<AppointmentCleanupService>();
 
 // Configure Hangfire with PostgreSQL
 builder.Services.AddHangfire(configuration => configuration
@@ -142,9 +141,7 @@ builder.Services.AddHangfire(configuration => configuration
     .UsePostgreSqlStorage(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddHangfireServer();
 
-builder.Services.AddControllersWithViews();
-// Add API controllers support specifically
-builder.Services.AddControllers().AddJsonOptions(options =>
+builder.Services.AddControllersWithViews().AddJsonOptions(options =>
 {
     options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());

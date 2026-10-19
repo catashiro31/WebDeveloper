@@ -37,15 +37,8 @@
 .btn-delete:disabled { opacity: .45; cursor: not-allowed; background: #fee2e2; }
 
 /* Modal styles */
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
-    display: none; align-items: center; justify-content: center; z-index: 1000;
-}
-.modal-content {
-    background: #fff; border-radius: 24px; width: 100%; max-width: 500px;
-    padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-}
+
+
 .form-group { margin-bottom: 16px; }
 .form-label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
 .form-input {
@@ -66,10 +59,7 @@
         justify-content: center !important;
         min-height: 44px !important;
     }
-    .modal-content {
-        padding: 24px 16px !important;
-        border-radius: 20px !important;
-    }
+
     .admin-card {
         padding: 16px !important;
     }
@@ -116,7 +106,7 @@
 </div>
 
 <!-- Edit Modal -->
-<div class="modal-overlay" id="specModal" onclick="closeModal()">
+<div class="modal-overlay modal-display" id="specModal" onclick="closeModal()" style="--modal-max-width: 500px; --modal-padding: 32px; --modal-border-radius: 24px; ">
     <div class="modal-content" onclick="event.stopPropagation()">
         <h3 id="modalTitle" style="margin: 0 0 24px; font-size: 20px; font-weight: 800; color: #1e293b;">Thêm chuyên khoa</h3>
         <input type="hidden" id="specId" />
@@ -139,7 +129,7 @@
 </div>
 
 <!-- Delete Modal -->
-<div class="modal-overlay" id="deleteSpecModal" onclick="closeDeleteModal()">
+<div class="modal-overlay modal-display" id="deleteSpecModal" onclick="closeDeleteModal()" style="--modal-max-width: 500px; --modal-padding: 32px; --modal-border-radius: 24px; ">
     <div class="modal-content" style="max-width: 440px;" onclick="event.stopPropagation()">
         <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 20px;">
             <div style="width: 48px; height: 48px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;">

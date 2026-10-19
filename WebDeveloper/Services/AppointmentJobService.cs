@@ -9,12 +9,10 @@ namespace WebDeveloper.Services
     public class AppointmentJobService : IAppointmentJobService
     {
         private readonly ApplicationDbContext _db;
-        private readonly IEmailService _emailService;
 
-        public AppointmentJobService(ApplicationDbContext db, IEmailService emailService)
+        public AppointmentJobService(ApplicationDbContext db)
         {
             _db = db;
-            _emailService = emailService;
         }
 
         // === Tác vụ trì hoãn: đọc lại trạng thái PENDING trước khi nhắc/hủy để bỏ qua ca đã xử lý. ===

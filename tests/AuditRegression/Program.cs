@@ -1,3 +1,7 @@
+using System.Data.Common;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Hangfire;
 using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Mvc;
@@ -26,7 +30,7 @@ var email = new FakeEmail();
 var adminService = new AdminService(db, null!, email);
 var doctors = new DoctorService(db, null!);
 var patients = new PatientService(db, redis, config);
-var jobs = new AppointmentJobService(db, email);
+var jobs = new AppointmentJobService(db);
 var today = DateOnly.FromDateTime(VietnamTime.Now);
 var key = Guid.NewGuid().ToString("N");
 int assertions = 0;
@@ -182,6 +186,21 @@ Check(await db.Appointments.AnyAsync(a => a.ScheduleId == lastDaySlot.ScheduleId
 // Keep another slot available on the last day for the browser's calendar check.
 var browserLastSlot = Slot(doctor, 30, TimeSlot.SLOT_17_00); db.Add(browserLastSlot); await db.SaveChangesAsync();
 Console.WriteLine("PASS: day 30 listing/booking accepted; day 31 listing/booking rejected.");
+// Verify the scoped FindAsync contract used by middleware, helpers and _AuthState.
+var reads = new ReadCounter();
+await using (var requestDb = new ApplicationDbContext(new DbContextOptionsBuilder<ApplicationDbContext>()
+    .UseNpgsql(connection).AddInterceptors(reads).Options))
+{
+    var context = new DefaultHttpContext { User = new ClaimsPrincipal(new ClaimsIdentity(
+        new[] { new Claim(ClaimTypes.NameIdentifier, patient.UserId.ToString()) }, "test")) };
+    var middlewareUser = await requestDb.Users.FindAsync(patient.UserId);
+    var helperUser = await SecurityHelper.GetCurrentUser(context, requestDb);
+    await new UserService(requestDb, null!).GetProfile(helperUser);
+    var layoutUser = await requestDb.Users.FindAsync(patient.UserId);
+    Check(ReferenceEquals(middlewareUser, helperUser) && ReferenceEquals(helperUser, layoutUser), "Current user was not reused within request");
+    Check(reads.Count == 1, "Repeated current-user access executed redundant SQL");
+}
+Console.WriteLine("PASS: middleware/helper/service/layout current-user lookup shares one SQL query per request.");
 await File.WriteAllTextAsync("/tmp/audit-browser-fixtures.json", System.Text.Json.JsonSerializer.Serialize(new {
     admin = admin.Email, patient = patient.Email, doctor = doctorUser.Email, noResultId = noResult.Id, resultId = past.Id,
     specialtyId = spec.SpecialtyId, doctorId = doctor.DoctorId, lastDate = today.AddDays(30).ToString("yyyy-MM-dd"), allCount = await db.Appointments.CountAsync()
@@ -195,4 +214,16 @@ sealed class FakeEmail : IEmailService
     public Task SendPermanentBanEmail(string a, string b, string c) => Task.CompletedTask;
     public Task SendSignUpConfirmationAsync(string a, string b, string c) => Task.CompletedTask;
     public Task SendPasswordResetLinkAsync(string a, string b, string c) => Task.CompletedTask;
+}
+
+sealed class ReadCounter : DbCommandInterceptor
+{
+    public int Count { get; private set; }
+    public override ValueTask<InterceptionResult<DbDataReader>> ReaderExecutingAsync(
+        DbCommand command, CommandEventData eventData, InterceptionResult<DbDataReader> result,
+        CancellationToken cancellationToken = default)
+    {
+        Count++;
+        return ValueTask.FromResult(result);
+    }
 }

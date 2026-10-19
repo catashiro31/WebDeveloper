@@ -124,21 +124,7 @@
     <!-- Global Helpers -->
     <script>
         // Global toast notification helper
-        window.showToast = function(message, type = 'success') {
-            Toastify({
-                text: message,
-                duration: 3000,
-                gravity: "top", 
-                position: "center",
-                style: {
-                    background: type === 'error' ? "linear-gradient(to right, #ef4444, #f87171)" 
-                               : type === 'warning' ? "linear-gradient(to right, #f59e0b, #fbbf24)"
-                               : "linear-gradient(to right, #0ea47a, #10b981)",
-                    borderRadius: "10px",
-                    fontFamily: "Noto Sans"
-                }
-            }).showToast();
-        }
+        window.showToast = (message, type = 'success') => showApiToast(message, type);
     </script>
 
     <script src="/js/api-messages.js" asp-append-version="true"></script>

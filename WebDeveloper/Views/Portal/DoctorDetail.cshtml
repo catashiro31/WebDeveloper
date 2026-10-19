@@ -1226,12 +1226,12 @@
             if (window.Validation) {
                 const reasonCheck = window.Validation.validateReason(reason);
                 if (!reasonCheck.valid) {
-                    Toastify({ text: reasonCheck.message, style: { background: "#ef4444" } }).showToast();
+                    showApiToast(reasonCheck.message, "error");
                     reasonInput.focus();
                     return;
                 }
             } else if (!reason || reason.length < 10 || reason.length > 500) {
-                Toastify({ text: "Lý do khám phải từ 10 đến 500 ký tự.", style: { background: "#ef4444" } }).showToast();
+                showApiToast("Lý do khám phải từ 10 đến 500 ký tự.", "error");
                 reasonInput.focus();
                 return;
             }
@@ -1259,7 +1259,7 @@
             if (window.Validation) {
                 const reasonCheck = window.Validation.validateReason(reason);
                 if (!reasonCheck.valid) {
-                    Toastify({ text: reasonCheck.message, style: { background: "#ef4444" } }).showToast();
+                    showApiToast(reasonCheck.message, "error");
                     return;
                 }
             } else if (!reason) {
@@ -1287,16 +1287,16 @@
                 });
 
                 if (res.ok) {
-                    Toastify({ text: "Đặt lịch thành công! Đang chuyển hướng...", style: { background: "#10b981" } }).showToast();
+                    showApiToast("Đặt lịch thành công! Đang chuyển hướng...", "success");
                     setTimeout(() => window.location.href = '/Patient/Appointments', 1200);
                 } else {
                     const msg = await readApiMessage(res);
-                    Toastify({ text: msg || "Đặt lịch thất bại", style: { background: "#ef4444" } }).showToast();
+                    showApiToast(msg || "Đặt lịch thất bại", "error");
                     finalBtn.disabled = false;
                     finalBtn.innerText = 'Xác nhận & Đặt khám';
                 }
             } catch(e) {
-                Toastify({ text: "Có lỗi xảy ra", style: { background: "#ef4444" } }).showToast();
+                showApiToast("Có lỗi xảy ra", "error");
                 finalBtn.disabled = false;
                 finalBtn.innerText = 'Xác nhận & Đặt khám';
             }

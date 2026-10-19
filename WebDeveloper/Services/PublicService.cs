@@ -47,27 +47,13 @@ namespace WebDeveloper.Services
         {
             // These lists also back admin screens. Read current records so a
             // successful create/update/delete is visible on the next request.
-            return await _db.Facilities.AsNoTracking()
-                .Where(f => f.IsActive)
-                .OrderBy(f => f.FacilityId)
-                .Select(f => new FacilityResponse
-                {
-                    Id = f.FacilityId,
-                    Name = f.FacilityName,
-                    Address = f.Address,
-                    Description = f.Description,
-                    ImageUrl = f.ImageUrl,
-                    LicenseUrl = f.LicenseUrl,
-                    MapUrl = f.MapUrl,
-                    Province = f.Province,
-                    Verified = f.IsVerified
-                }).ToListAsync();
+            return await _db.ActiveFacilities().OrderBy(f => f.FacilityId)
+                .ToFacilityResponses().ToListAsync();
         }
 
         public async Task<List<SpecialtyResponse>> GetAllSpecialties()
         {
-            return await _db.Specialties.AsNoTracking()
-                .Where(s => s.IsActive == true)
+            return await _db.ActiveSpecialties()
                 .OrderBy(s => s.SpecialtyId)
                 .Select(s => new SpecialtyResponse
                 {

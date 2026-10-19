@@ -77,6 +77,7 @@
         .reveal-delayed { animation: reveal 0.8s forwards; opacity: 0; }
     </style>
     <link rel="stylesheet" href="/css/auth-responsive.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/css/api-feedback.css" asp-append-version="true" />
 </head>
 <body>
     <div class="login-page">
@@ -191,14 +192,13 @@
         </div>
     </div>
 
+    <script src="/js/api-messages.js" asp-append-version="true"></script>
     <script>
         function showLoginMessage(message, isError = false) {
             const output = document.getElementById('loginMessage');
             output.textContent = message;
             output.style.color = isError ? '#dc2626' : '#0ea47a';
-            if (typeof Toastify === 'function') {
-                Toastify({ text: message, style: { background: isError ? '#dc2626' : '#0ea47a', borderRadius: '10px' } }).showToast();
-            }
+            showApiToast(message, isError ? 'error' : 'success');
         }
 
         if (new URLSearchParams(window.location.search).get('reason') === 'session') {

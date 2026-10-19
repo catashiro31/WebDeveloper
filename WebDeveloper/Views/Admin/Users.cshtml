@@ -50,10 +50,9 @@
 .pagination button.active { background: #6366f1; color: #fff; border-color: #6366f1; font-weight: 700; }
 .pagination button:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(15, 23, 42, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.3s; }
-.modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content { background: white; border-radius: 24px; padding: 32px; width: 100%; max-width: 480px; transform: scale(0.95); transition: transform 0.3s; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1); }
-.modal-overlay.active .modal-content { transform: scale(1); }
+
+
+
 
 @@media (max-width: 640px) {
     .filter-card {
@@ -83,10 +82,7 @@
         width: 100% !important;
         min-height: 44px !important;
     }
-    .modal-content {
-        padding: 20px 16px !important;
-        border-radius: 20px !important;
-    }
+
     #userDetailModal .modal-content > div:nth-child(2) {
         grid-template-columns: 1fr !important;
         gap: 12px !important;
@@ -161,7 +157,7 @@
 </div>
 
 <!-- Modal Khóa tài khoản -->
-<div id="blockModal" class="modal-overlay" onclick="closeBlockModal()">
+<div id="blockModal" class="modal-overlay" onclick="closeBlockModal()" style="--modal-max-width: 480px; --modal-padding: 32px; --modal-border-radius: 24px; ">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
             <div style="width: 44px; height: 44px; border-radius: 14px; background: #fee2e2; color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 22px;">🔒</div>
@@ -181,7 +177,7 @@
 </div>
 
 <!-- Modal Mở khóa tài khoản -->
-<div id="unblockModal" class="modal-overlay" onclick="closeUnblockModal()">
+<div id="unblockModal" class="modal-overlay" onclick="closeUnblockModal()" style="--modal-max-width: 480px; --modal-padding: 32px; --modal-border-radius: 24px; ">
     <div class="modal-content" onclick="event.stopPropagation()">
         <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
             <div style="width: 44px; height: 44px; border-radius: 14px; background: #dcfce7; color: #16a34a; display: flex; align-items: center; justify-content: center; font-size: 22px;">🔓</div>
@@ -205,7 +201,7 @@
 </div>
 
 <!-- Modal Chi tiết người dùng -->
-<div id="userDetailModal" class="modal-overlay" onclick="closeUserDetailModal()">
+<div id="userDetailModal" class="modal-overlay" onclick="closeUserDetailModal()" style="--modal-max-width: 480px; --modal-padding: 32px; --modal-border-radius: 24px; ">
     <div class="modal-content" style="max-width: 540px;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
             <div style="display: flex; align-items: center; gap: 16px;">

@@ -297,39 +297,27 @@
             if (window.Validation) {
                 const nameCheck = window.Validation.validateFullName(fullName);
                 if (!nameCheck.valid) {
-                    Toastify({
-                        text: nameCheck.message,
-                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
-                    }).showToast();
+                    showApiToast(nameCheck.message, "error");
                     return;
                 }
 
                 // 2. Kiểm tra mật khẩu
                 const passCheck = window.Validation.validatePassword(password);
                 if (!passCheck.valid) {
-                    Toastify({
-                        text: passCheck.message,
-                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
-                    }).showToast();
+                    showApiToast(passCheck.message, "error");
                     return;
                 }
 
                 // 3. Kiểm tra số điện thoại
                 const phoneCheck = window.Validation.validatePhoneNumber(phoneNumber);
                 if (!phoneCheck.valid) {
-                    Toastify({
-                        text: phoneCheck.message,
-                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
-                    }).showToast();
+                    showApiToast(phoneCheck.message, "error");
                     return;
                 }
             }
 
             if (password !== confirmPassword) {
-                Toastify({
-                    text: "Mật khẩu xác nhận không khớp.",
-                    style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
-                }).showToast();
+                showApiToast("Mật khẩu xác nhận không khớp.", "error");
                 return;
             }
             const btn = document.getElementById('submitBtn');
@@ -349,20 +337,13 @@
                     : "Đã xảy ra lỗi hệ thống.");
 
                 if (response.ok) {
-                    Toastify({
-                        text: msg || "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.",
-                        duration: 4000,
-                        style: { background: "linear-gradient(to right, #0ea47a, #10b981)", borderRadius: "10px" }
-                    }).showToast();
+                    showApiToast(msg || "Đăng ký thành công! Vui lòng kiểm tra email để xác thực tài khoản.", "success");
                     
                     setTimeout(() => {
                         window.location.href = '/Auth/Login';
                     }, 2000);
                 } else {
-                    Toastify({
-                        text: msg,
-                        style: { background: "linear-gradient(to right, #ef4444, #f87171)", borderRadius: "10px" }
-                    }).showToast();
+                    showApiToast(msg, "error");
                     btn.disabled = false;
                     btn.innerHTML = 'Tạo tài khoản';
                 }

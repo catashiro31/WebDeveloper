@@ -4,21 +4,10 @@
 }
 
 <style>
-.modal-overlay {
-    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(8px);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 1000; padding: 20px;
-    opacity: 0; pointer-events: none; transition: opacity 0.3s;
-}
-.modal-overlay.active { opacity: 1; pointer-events: auto; }
-.modal-content {
-    background: white; border-radius: 32px; width: 100%;
-    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
-    max-height: 90vh; overflow-y: auto;
-    transform: scale(0.95) translateY(20px); transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-.modal-overlay.active .modal-content { transform: scale(1) translateY(0); }
+
+
+
+
 @@media (max-width: 640px) {
     .premium-card {
         padding: 16px !important;
@@ -39,10 +28,7 @@
         text-align: center;
         justify-content: center;
     }
-    .modal-content {
-        padding: 24px 18px !important;
-        border-radius: 20px !important;
-    }
+
 }
 </style>
 
@@ -78,7 +64,7 @@
 </div>
 
 <!-- Detail Modal -->
-<div id="detailModal" class="modal-overlay" onclick="closeDetail()">
+<div id="detailModal" class="modal-overlay" onclick="closeDetail()" style="--modal-border-radius: 32px; ">
     <div class="modal-content" style="max-width: 600px; padding: 40px;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 32px;">
             <div>
@@ -97,7 +83,7 @@
 </div>
 
 <!-- Review Modal -->
-<div id="reviewModal" class="modal-overlay" onclick="closeReview()">
+<div id="reviewModal" class="modal-overlay" onclick="closeReview()" style="--modal-border-radius: 32px; ">
     <div class="modal-content" style="max-width: 480px; padding: 40px;" onclick="event.stopPropagation()">
         <h3 style="margin: 0 0 8px; font-size: 26px; font-weight: 950; color: #0f172a; letter-spacing: -0.02em;">Đánh giá trải nghiệm</h3>
         <p style="color: #64748b; font-size: 15px; margin-bottom: 32px; font-weight: 500;">Ý kiến của bạn là chìa khóa để chúng tôi nâng cao chất lượng phục vụ.</p>
@@ -202,7 +188,7 @@ DocBookingPage.mount(page => {
                 renderDetailContent(d);
                 document.getElementById('detailModal').classList.add('active');
             })
-            .catch(() => Toastify({ text: "Không thể tải chi tiết", style: { background: "#ef4444" } }).showToast());
+            .catch(() => showApiToast("Không thể tải chi tiết", "error"));
         };
 
         page.globals.closeDetail = () => document.getElementById('detailModal').classList.remove('active');
@@ -289,7 +275,7 @@ DocBookingPage.mount(page => {
                 renderStars();
                 document.getElementById('reviewModal').classList.add('active');
             })
-            .catch(() => Toastify({ text: "Không thể tải chi tiết để đánh giá", style: { background: "#ef4444" } }).showToast());
+            .catch(() => showApiToast("Không thể tải chi tiết để đánh giá", "error"));
         };
 
         page.globals.closeReview = () => {
@@ -312,7 +298,7 @@ DocBookingPage.mount(page => {
         page.globals.submitReview = function() {
             const comment = document.getElementById('reviewComment').value.trim();
             if (!comment) {
-                Toastify({ text: "Vui lòng nhập nhận xét", style: { background: "#f59e0b" } }).showToast();
+                showApiToast("Vui lòng nhập nhận xét", "warning");
                 return;
             }
 
@@ -331,15 +317,15 @@ DocBookingPage.mount(page => {
             })
             .then(async res => {
                 if (res.ok) {
-                    Toastify({ text: "Cảm ơn bạn đã đánh giá!", style: { background: "#10b981" } }).showToast();
+                    showApiToast("Cảm ơn bạn đã đánh giá!", "success");
                     closeReview();
                     fetchHistory();
                 } else {
                     const msg = await readApiMessage(res);
-                    Toastify({ text: msg || "Không thể gửi đánh giá", style: { background: "#ef4444" } }).showToast();
+                    showApiToast(msg || "Không thể gửi đánh giá", "error");
                 }
             })
-            .catch(() => Toastify({ text: "Không thể gửi đánh giá", style: { background: "#ef4444" } }).showToast())
+            .catch(() => showApiToast("Không thể gửi đánh giá", "error"))
             .finally(() => {
                 btn.disabled = false;
                 btn.innerText = 'Gửi đánh giá ngay';
