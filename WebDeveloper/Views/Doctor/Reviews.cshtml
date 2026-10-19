@@ -29,6 +29,11 @@
         <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
         <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
     </div>
+
+    <div id="reviewsPaginationWrapper" style="display: none; flex-direction: column; align-items: center; gap: 12px; margin-top: 28px;">
+        <div class="pagination" id="reviewsPagination"></div>
+        <div id="reviewsPaginationInfo" style="font-size: 13px; color: #64748b; font-weight: 600; text-align: center;"></div>
+    </div>
 </div>
 
 @section Scripts {
@@ -36,10 +41,13 @@
 DocBookingPage.mount(page => {
     const { fetch, fetchApiList, setTimeout, setInterval, clearTimeout, clearInterval } = page;
 
-        
-        
-
         const container = document.getElementById('reviewsContainer');
+
+        let reviewsPage = 0;
+        const reviewsPageSize = 10;
+        let reviewsTotalPages = 1;
+        let reviewsTotalElements = 0;
+        let statsLoaded = false;
 
         function renderStars(rating) {
             let html = '';
@@ -49,39 +57,30 @@ DocBookingPage.mount(page => {
             return html;
         }
 
-        function fetchReviews() {
+        // Fetch stats once (all reviews for accurate aggregate)
+        function fetchStats() {
             if (user && user.verificationStatus !== 'APPROVED') return;
-            fetch('/api/v1/doctor/reviews?page=0&size=50', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
+            fetch('/api/v1/doctor/reviews?page=0&size=1000', { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(async res => { if (!res.ok) throw new Error(); return res.json(); })
             .then(data => {
-                let reviews = [];
-                if (data && Array.isArray(data.content)) reviews = data.content;
-                else if (Array.isArray(data)) reviews = data;
+                let allReviews = [];
+                if (data && Array.isArray(data.content)) allReviews = data.content;
+                else if (Array.isArray(data)) allReviews = data;
 
-                if (reviews.length === 0) {
-                    document.getElementById('statsContainer').style.display = 'none';
-                    container.innerHTML = `
-                        <div style="text-align: center; padding: 60px; color: #6b7280; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;">
-                            <p style="font-size: 18px; margin: 0;">Chưa có đánh giá nào</p>
-                        </div>
-                    `;
-                    return;
-                }
+                if (allReviews.length === 0) return;
 
-                // Calculate stats
-                const total = reviews.length;
-                const sum = reviews.reduce((acc, r) => acc + (r.rating || 0), 0);
+                const total = allReviews.length;
+                const sum = allReviews.reduce((acc, r) => acc + (r.rating || 0), 0);
                 const avg = (sum / total).toFixed(1);
 
                 document.getElementById('statsContainer').style.display = 'flex';
                 document.getElementById('avgRating').innerText = avg;
-                document.getElementById('totalReviewsCount').innerText = total;
+                document.getElementById('totalReviewsCount').innerText = reviewsTotalElements || total;
                 document.getElementById('avgStars').innerHTML = renderStars(Math.round(avg));
 
-                // Star breakdown
                 let breakdownHtml = '';
                 for (let star = 5; star >= 1; star--) {
-                    const count = reviews.filter(r => r.rating === star).length;
+                    const count = allReviews.filter(r => r.rating === star).length;
                     const percent = total > 0 ? (count / total) * 100 : 0;
                     breakdownHtml += `
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
@@ -94,6 +93,42 @@ DocBookingPage.mount(page => {
                     `;
                 }
                 document.getElementById('starBreakdown').innerHTML = breakdownHtml;
+                statsLoaded = true;
+            })
+            .catch(() => {});
+        }
+
+        function fetchReviews() {
+            if (user && user.verificationStatus !== 'APPROVED') return;
+            const paginationWrapper = document.getElementById('reviewsPaginationWrapper');
+            if (paginationWrapper) paginationWrapper.style.display = 'none';
+
+            container.innerHTML = `
+                <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+                <div class="skeleton" style="height: 120px; width: 100%; border-radius: 16px;"></div>
+            `;
+
+            fetch(`/api/v1/doctor/reviews?page=${reviewsPage}&size=${reviewsPageSize}`, { headers: { 'Authorization': `Bearer ${token}` } })
+            .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
+            .then(data => {
+                let reviews = [];
+                if (data && Array.isArray(data.content)) reviews = data.content;
+                else if (Array.isArray(data)) reviews = data;
+
+                reviewsTotalPages = data.totalPages || 1;
+                reviewsTotalElements = data.totalElements != null ? data.totalElements : reviews.length;
+
+                if (!statsLoaded) fetchStats();
+
+                if (reviews.length === 0 && reviewsPage === 0) {
+                    document.getElementById('statsContainer').style.display = 'none';
+                    container.innerHTML = `
+                        <div style="text-align: center; padding: 60px; color: #6b7280; background: white; border-radius: 16px; border: 1px dashed #cbd5e1;">
+                            <p style="font-size: 18px; margin: 0;">Chưa có đánh giá nào</p>
+                        </div>
+                    `;
+                    return;
+                }
 
                 // Render reviews
                 let html = '';
@@ -119,6 +154,23 @@ DocBookingPage.mount(page => {
                     `;
                 });
                 container.innerHTML = html;
+
+                // Pagination
+                if (reviewsTotalElements === 0 || reviewsTotalPages <= 1) {
+                    if (paginationWrapper) paginationWrapper.style.display = 'none';
+                    return;
+                }
+                if (paginationWrapper) paginationWrapper.style.display = 'flex';
+                const fromItem = reviewsPage * reviewsPageSize + 1;
+                const toItem = Math.min((reviewsPage + 1) * reviewsPageSize, reviewsTotalElements);
+                const infoEl = document.getElementById('reviewsPaginationInfo');
+                if (infoEl) infoEl.innerHTML = `Hiển thị <strong>${fromItem} - ${toItem}</strong> trên tổng số <strong>${reviewsTotalElements}</strong> đánh giá (Trang ${reviewsPage + 1}/${Math.max(1, reviewsTotalPages)})`;
+                const pagiEl = document.getElementById('reviewsPagination');
+                if (pagiEl) renderAdminPagination(pagiEl, reviewsPage, Math.max(1, reviewsTotalPages), (p) => {
+                    reviewsPage = p;
+                    fetchReviews();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
             })
             .catch(() => {
                 container.innerHTML = `<div style="color: #dc2626; text-align: center; padding: 40px; background: #fef2f2; border-radius: 16px;">Không thể tải đánh giá</div>`;
@@ -129,6 +181,5 @@ DocBookingPage.mount(page => {
 
     page.expose({renderStars, fetchReviews});
 });
-</script>
+    </script>
 }
-

@@ -77,7 +77,10 @@
         <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
         <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
     </div>
-    <div class="pagination" id="doctorAptPagination" style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 32px;"></div>
+    <div id="doctorAptPaginationWrapper" style="display: none; flex-direction: column; align-items: center; gap: 12px; margin-top: 32px;">
+        <div class="pagination" id="doctorAptPagination"></div>
+        <div id="doctorAptPaginationInfo" style="font-size: 13px; color: #64748b; font-weight: 600; text-align: center;"></div>
+    </div>
 </div>
 
 <!-- Result Modal -->
@@ -298,41 +301,55 @@ DocBookingPage.mount(page => {
 
         let currentAptPage = 0;
         const aptPageSize = 8;
+        let totalAptPages = 1;
+        let totalAptElements = 0;
+        let aptRequestVersion = 0;
 
         page.globals.setFilter = function(filter, btn) {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentFilter = filter;
             currentAptPage = 0;
-            renderAppointments();
+            fetchAppointments();
         };
 
         function fetchAppointments() {
             if (user && user.verificationStatus !== 'APPROVED') return;
+            const version = ++aptRequestVersion;
             
             container.innerHTML = `
                 <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
                 <div class="skeleton" style="height: 160px; width: 100%; border-radius: 18px;"></div>
             `;
-            const pagi = document.getElementById('doctorAptPagination');
-            if (pagi) pagi.style.display = 'none';
+            const wrapper = document.getElementById('doctorAptPaginationWrapper');
+            if (wrapper) wrapper.style.display = 'none';
             
-            fetch('/api/v1/doctor/appointment?page=0&size=200', { headers: { 'Authorization': `Bearer ${token}` } })
+            let url = `/api/v1/doctor/appointment?page=${currentAptPage}&size=${aptPageSize}`;
+            if (currentFilter !== 'ALL') {
+                url += `&status=${currentFilter}`;
+            }
+
+            fetch(url, { headers: { 'Authorization': `Bearer ${token}` } })
             .then(async res => { if (!res.ok) throw new Error(await readApiMessage(res)); return res.json(); })
             .then(data => {
+                if (version !== aptRequestVersion) return;
                 allAppointments = data.content || data || [];
+                totalAptPages = data.totalPages || 1;
+                totalAptElements = data.totalElements != null ? data.totalElements : allAppointments.length;
                 renderAppointments();
             })
             .catch(() => {
+                if (version !== aptRequestVersion) return;
                 container.innerHTML = `<div style="padding: 40px; text-align: center; background: #fef2f2; border-radius: 16px; color: #dc2626; font-weight: 600;">Không thể tải danh sách lịch hẹn</div>`;
             });
         }
 
         function renderAppointments() {
-            const filtered = currentFilter === 'ALL' ? allAppointments : allAppointments.filter(a => a.bookingStatus === currentFilter);
+            const wrapper = document.getElementById('doctorAptPaginationWrapper');
             const pagi = document.getElementById('doctorAptPagination');
+            const info = document.getElementById('doctorAptPaginationInfo');
             
-            if (filtered.length === 0) {
+            if (allAppointments.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 100px 20px; background: #f9fafb; border-radius: 24px; border: 2px dashed #e2e8f0;">
                         <div style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;">📅</div>
@@ -340,19 +357,12 @@ DocBookingPage.mount(page => {
                         <p style="color: #64748b; margin-top: 8px;">Bạn hiện không có yêu cầu nào trong danh mục này.</p>
                     </div>
                 `;
-                if (pagi) pagi.style.display = 'none';
+                if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            const totalPages = Math.ceil(filtered.length / aptPageSize);
-            if (currentAptPage >= totalPages) currentAptPage = totalPages - 1;
-            if (currentAptPage < 0) currentAptPage = 0;
-
-            const start = currentAptPage * aptPageSize;
-            const pageItems = filtered.slice(start, start + aptPageSize);
-
             let html = '';
-            pageItems.forEach(apt => {
+            allAppointments.forEach(apt => {
                 const sStyle = getStatusStyle(apt.bookingStatus);
                 let actionsHtml = '';
                 const started = visitHasStarted(apt);
@@ -417,27 +427,22 @@ DocBookingPage.mount(page => {
             });
             container.innerHTML = html;
 
-            // Render pagination
-            if (totalPages <= 1) {
-                if (pagi) pagi.style.display = 'none';
+            // Render pagination with standard admin component
+            if (totalAptElements === 0 || totalAptPages <= 1) {
+                if (wrapper) wrapper.style.display = 'none';
                 return;
             }
 
-            pagi.style.display = 'flex';
-            let phtml = `<button type="button" class="filter-btn" style="padding: 8px 14px; min-width: 40px;" ${currentAptPage === 0 ? 'disabled' : ''} onclick="setDoctorAptPage(${currentAptPage - 1})">←</button>`;
-            for (let i = 0; i < totalPages; i++) {
-                const isActive = i === currentAptPage;
-                phtml += `<button type="button" class="filter-btn ${isActive ? 'active' : ''}" style="padding: 8px 14px; min-width: 40px;" onclick="setDoctorAptPage(${i})">${i + 1}</button>`;
-            }
-            phtml += `<button type="button" class="filter-btn" style="padding: 8px 14px; min-width: 40px;" ${currentAptPage === totalPages - 1 ? 'disabled' : ''} onclick="setDoctorAptPage(${currentAptPage + 1})">→</button>`;
-            pagi.innerHTML = phtml;
+            if (wrapper) wrapper.style.display = 'flex';
+            const fromItem = currentAptPage * aptPageSize + 1;
+            const toItem = Math.min((currentAptPage + 1) * aptPageSize, totalAptElements);
+            if (info) info.innerHTML = `Hiển thị <strong>${fromItem} - ${toItem}</strong> trên tổng số <strong>${totalAptElements}</strong> lịch hẹn (Trang ${currentAptPage + 1}/${Math.max(1, totalAptPages)})`;
+            if (pagi) renderAdminPagination(pagi, currentAptPage, Math.max(1, totalAptPages), (p) => {
+                currentAptPage = p;
+                fetchAppointments();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
         }
-
-        page.globals.setDoctorAptPage = function(p) {
-            currentAptPage = p;
-            renderAppointments();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
 
         let currentRejectAptId = null;
 

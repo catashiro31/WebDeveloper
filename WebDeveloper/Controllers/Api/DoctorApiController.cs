@@ -73,10 +73,10 @@ namespace WebDeveloper.Controllers.Api
 
         [HttpGet("appointment")]
         [Authorize(Roles = "DOCTOR")]
-        public async Task<IActionResult> GetAppointments([FromQuery] int page = 0, [FromQuery] int size = 10)
+        public async Task<IActionResult> GetAppointments([FromQuery] BookingStatus? status = null, [FromQuery] int page = 0, [FromQuery] int size = 10)
         {
             var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
-            return Ok(await _doctorService.GetAppointments(user, page, size));
+            return Ok(await _doctorService.GetAppointments(user, status, page, size));
         }
 
         [HttpGet("appointments/overdue")]

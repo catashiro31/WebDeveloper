@@ -18,7 +18,7 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> DeclineAppointment(User user, int id, BookingStatus status, string? reason = null);
         Task<string> CreateSchedule(User user, ScheduleRequest request);
         Task<string> DeleteSchedule(User user, int scheduleId);
-        Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, int page, int size);
+        Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, BookingStatus? status, int page, int size);
         Task<string> ConfirmAppointment(User user, int appointmentId);
         Task<string> CompleteAppointment(User user, int appointmentId);
         Task<string> SaveMedicalResult(User user, int appointmentId, MedicalResultRequest request);

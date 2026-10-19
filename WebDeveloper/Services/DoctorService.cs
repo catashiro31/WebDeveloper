@@ -430,15 +430,39 @@ namespace WebDeveloper.Services
         }
 
         // === Lịch hẹn của bác sĩ: quyền sở hữu được kiểm tra trước mỗi thay đổi trạng thái. ===
-        public async Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, int page, int size)
+        public async Task<PagedResult<DoctorAppointmentResponse>> GetAppointments(User user, BookingStatus? status, int page, int size)
         {
             var appointmentsQuery = _db.Appointments
                 .Include(a => a.Schedule).ThenInclude(s => s.Doctor).ThenInclude(d => d.Specialty)
                 .Include(a => a.Patient).ThenInclude(p => p.User)
                 .AsSplitQuery()
-                .Where(a => a.Schedule.Doctor.UserId == user.UserId)
-                .OrderByDescending(a => a.Schedule.DateWorking)
-                .ThenBy(a => a.Schedule.TimeSlot);
+                .Where(a => a.Schedule.Doctor.UserId == user.UserId);
+
+            if (status.HasValue)
+            {
+                appointmentsQuery = appointmentsQuery.Where(a => a.BookingStatus == status.Value);
+                if (status.Value == BookingStatus.CONFIRMED)
+                {
+                    appointmentsQuery = appointmentsQuery
+                        .OrderBy(a => a.Schedule.DateWorking)
+                        .ThenBy(a => a.Schedule.TimeSlot);
+                }
+                else
+                {
+                    appointmentsQuery = appointmentsQuery
+                        .OrderByDescending(a => a.Schedule.DateWorking)
+                        .ThenBy(a => a.Schedule.TimeSlot);
+                }
+            }
+            else
+            {
+                // Mặc định (Tất cả): ưu tiên lịch sắp tới (CONFIRMED) hiển thị lên đầu
+                appointmentsQuery = appointmentsQuery
+                    .OrderBy(a => a.BookingStatus == BookingStatus.CONFIRMED ? 0 :
+                                  a.BookingStatus == BookingStatus.PENDING ? 1 : 2)
+                    .ThenByDescending(a => a.Schedule.DateWorking)
+                    .ThenBy(a => a.Schedule.TimeSlot);
+            }
 
             var total = await appointmentsQuery.CountAsync();
             var items = await appointmentsQuery
