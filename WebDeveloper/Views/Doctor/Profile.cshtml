@@ -15,6 +15,7 @@
 .upload-zone.has-file { padding: 0; background: #000; min-height: 140px; border-color: #0ea47a; }
 
 
+
 </style>
 
 <div id="initialLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px;">
@@ -39,9 +40,9 @@
             </div>
             <p id="profileDegreeSpecialty" style="margin: 0; color: #64748b; font-size: 15px; font-weight: 500;"></p>
         </div>
-        <div style="text-align: right; min-width: 380px;">
+        <div class="credential-actions">
             <div id="actionButtons" style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="openCredentialEdit('DEGREE')" class="floating-input">Chỉnh sửa học vị</button>
+                <button type="button" onclick="openCredentialEdit('DEGREE')" class="credential-btn primary">Chỉnh sửa học vị</button>
                 <button id="transferBtn" onclick="openTransferModal()" style="padding: 12px 20px; background: white; color: #0ea47a; border: 2px solid #0ea47a; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s;">Chuyển công tác</button>
                 <button onclick="toggleEditMode(true)" style="padding: 12px 24px; background: linear-gradient(135deg, #0ea47a, #059669); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; box-shadow: 0 8px 16px rgba(14,164,122,0.2);">Chỉnh sửa tiểu sử & giá</button>
             </div>
@@ -74,9 +75,11 @@
                 <div>
                     <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Kinh nghiệm</label>
                     <p id="viewExp" style="margin: 0; font-weight: 600; color: #1e293b;"></p>
-                    <p id="credentialStatus" role="status"></p>
-                    <button type="button" onclick="openDocument('CERTIFICATE')">Chứng chỉ hành nghề</button>
-                    <button type="button" onclick="openDocument('DIPLOMA')">Bằng cấp <span id="diplomaMissing"></span></button>
+                    <div class="credential-documents">
+                        <button type="button" class="credential-document certificate" onclick="openDocument('CERTIFICATE')"><span class="credential-icon" aria-hidden="true">▤</span><span><strong>Chứng chỉ hành nghề</strong><small>Xem hoặc gửi yêu cầu thay đổi</small></span><span class="credential-chevron" aria-hidden="true">›</span></button>
+                        <button type="button" class="credential-document diploma" onclick="openDocument('DIPLOMA')"><span class="credential-icon" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m2 9 10-5 10 5-10 5-10-5Z"/><path d="M6 11v6c4 3 8 3 12 0v-6M22 9v7"/></svg></span><span><strong>Bằng cấp</strong><small id="diplomaMissing"></small></span><span class="credential-chevron" aria-hidden="true">›</span></button>
+                    </div>
+                    <p id="credentialStatus" class="credential-notice" role="status"></p>
                 </div>
             </div>
         </div>
@@ -152,16 +155,21 @@
                 <button type="button" onclick="loadOptions()" class="floating-input" style="width: auto; cursor: pointer;">Tải lại danh sách</button>
             </div>
 
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px;">
-                <div>
-                    <label id="idCardLabel" style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Ảnh CCCD *</label>
-                    <input type="file" id="f_idCard" class="floating-input" accept="image/jpeg,image/png" required style="padding: 10px;" />
+            <div class="credential-upload-grid">
+                <div class="credential-upload">
+                    <label for="f_idCard" id="idCardLabel">Ảnh CCCD *</label>
+                    <p>Ảnh JPG hoặc PNG, tối đa 5 MB.</p>
+                    <input type="file" id="f_idCard" accept="image/jpeg,image/png" required />
                 </div>
-                <div>
-                    <label id="certificateLabel" style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Chứng chỉ hành nghề *</label>
-                    <label for="f_diploma">Bằng cấp chứng minh học vị * (PDF, tối đa 5 MB)</label>
-                    <input type="file" id="f_diploma" class="floating-input" accept="application/pdf" required />
-                    <input type="file" id="f_certificate" class="floating-input" accept="application/pdf" required style="padding: 10px;" />
+                <div class="credential-upload certificate">
+                    <label for="f_certificate" id="certificateLabel">Chứng chỉ hành nghề *</label>
+                    <p>Minh chứng hành nghề, chuyên khoa và kinh nghiệm. PDF, tối đa 5 MB.</p>
+                    <input type="file" id="f_certificate" accept="application/pdf" required />
+                </div>
+                <div class="credential-upload diploma">
+                    <label for="f_diploma" id="diplomaLabel">Bằng cấp * (bắt buộc)</label>
+                    <p>Tải bằng cấp chứng minh học vị đã chọn. PDF, tối đa 5 MB.</p>
+                    <input type="file" id="f_diploma" accept="application/pdf" required />
                 </div>
             </div>
         </div>
@@ -193,31 +201,40 @@
     </div>
 </div>
 
-<div id="documentModal" class="modal-overlay">
- <div class="modal-content" style="padding:28px;max-width:500px">
-  <h3 id="documentTitle"></h3><p id="documentMissing"></p>
-  <a id="documentView" target="_blank" rel="noopener noreferrer">Xem</a>
-  <button type="button" onclick="editSelectedDocument()">Chỉnh sửa</button>
-  <button type="button" onclick="closeCredentialModals()">Đóng</button>
+<div id="documentModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="documentTitle">
+ <div class="modal-content" style="--modal-max-width:500px">
+  <div class="credential-modal-heading"><div><span class="credential-eyebrow">HỒ SƠ CHUYÊN MÔN</span><h3 id="documentTitle"></h3><p>Tài liệu trong hồ sơ đã được duyệt của bạn</p></div><button type="button" class="credential-close" onclick="closeCredentialModals()" aria-label="Đóng">×</button></div>
+  <p id="documentMissing" class="credential-notice"></p>
+  <p class="credential-notice">Khi chỉnh sửa, tài liệu mới được gửi cho admin duyệt. Tài liệu hiện tại vẫn được giữ nguyên trong thời gian chờ.</p>
+  <div class="credential-document-options">
+   <a id="documentView" class="credential-option view" target="_blank" rel="noopener noreferrer"><span class="credential-option-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg></span><span><strong>Xem tài liệu</strong><small>Mở tệp đã được duyệt trong tab mới</small></span><span aria-hidden="true"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 17 17 7M7 7h10v10"/></svg></span></a>
+   <button type="button" class="credential-option edit" onclick="editSelectedDocument()"><span class="credential-option-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m16 3 5 5-12 12H4v-5L16 3Z M13 6l5 5"/></svg></span><span><strong>Chỉnh sửa tài liệu</strong><small>Tải tệp thay thế và gửi admin xét duyệt</small></span><span aria-hidden="true">›</span></button>
+  </div>
  </div>
 </div>
-<div id="credentialModal" class="modal-overlay">
- <form id="credentialForm" class="modal-content" style="padding:28px;max-width:540px">
-  <h3 id="credentialTitle">Gửi thay đổi chuyên môn</h3>
-  <p>Thông tin đã được duyệt vẫn công khai trong lúc chờ admin xét duyệt.</p>
-  <div id="credentialDegreeWrap">
-   <label for="credentialDegree">Học vị mới</label>
+<div id="credentialModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="credentialTitle">
+ <form id="credentialForm" class="modal-content" style="--modal-max-width:560px">
+  <div class="credential-modal-heading"><div><span class="credential-eyebrow">CẬP NHẬT HỒ SƠ</span><h3 id="credentialTitle">Gửi thay đổi chuyên môn</h3><p>Cập nhật thông tin và đính kèm minh chứng</p></div><button type="button" class="credential-close" onclick="closeCredentialModals()" aria-label="Đóng">×</button></div>
+  <p class="credential-notice">Trong lúc chờ duyệt, hồ sơ công khai giữ nguyên thông tin đã được duyệt. Bạn vẫn hoạt động bình thường.</p>
+  <div id="credentialDegreeWrap" class="credential-field">
+   <label for="credentialDegree">Học vị mới <span style="color:#dc2626">*</span></label>
    <select id="credentialDegree" class="floating-input" onchange="document.getElementById('credentialOther').hidden = this.value !== 'Khác'">
     @foreach (var degree in WebDeveloper.Helpers.DoctorDegree.Options) { <option value="@degree">@degree</option> }
     <option value="Khác">Khác</option>
    </select>
-   <input id="credentialOther" class="floating-input" hidden maxlength="94" placeholder="Mô tả học vị khác" />
+   <input id="credentialOther" class="floating-input" hidden maxlength="94" aria-label="Mô tả học vị khác" placeholder="Mô tả học vị khác" style="margin-top:10px" />
   </div>
-  <label for="credentialFile">Minh chứng bắt buộc (PDF, tối đa 5 MB)</label>
-  <input type="file" id="credentialFile" class="floating-input" accept="application/pdf" required />
-  <p id="credentialError" role="alert" style="color:#b91c1c"></p>
-  <button type="button" onclick="closeCredentialModals()">Hủy</button>
-  <button type="submit" id="credentialSubmit">Gửi admin duyệt</button>
+  <div class="credential-upload" style="margin-top:20px">
+   <label id="credentialFileLabel" for="credentialFile">Bằng cấp chứng minh học vị *</label>
+   <p>Chọn tệp PDF rõ nét, đầy đủ thông tin. Dung lượng tối đa 5 MB.</p>
+   <div class="credential-file-picker">
+    <input type="file" id="credentialFile" accept="application/pdf" required aria-describedby="credentialFileName" />
+    <label for="credentialFile" class="credential-file-button">＋ Chọn tệp PDF</label>
+    <span id="credentialFileName">Chưa chọn tệp</span>
+   </div>
+  </div>
+  <p id="credentialError" role="alert" style="color:#b91c1c;font-size:13px"></p>
+  <div class="credential-footer"><button type="button" class="credential-btn secondary" onclick="closeCredentialModals()">Hủy</button><button type="submit" id="credentialSubmit" class="credential-btn primary">Gửi admin duyệt</button></div>
  </form>
 </div>
 @section Scripts {
@@ -239,7 +256,7 @@ DocBookingPage.mount(page => {
             const url = kind === 'CERTIFICATE' ? profileData.certificateUrl : profileData.diplomaUrl;
             document.getElementById('documentTitle').textContent = kind === 'CERTIFICATE' ? 'Chứng chỉ hành nghề' : 'Bằng cấp';
             const link = document.getElementById('documentView');
-            link.hidden = !url; link.href = url || '#';
+            link.style.display = url ? 'flex' : 'none'; link.href = url || '#';
             document.getElementById('documentMissing').textContent = url ? '' : 'Cần bổ sung';
             document.getElementById('documentModal').classList.add('active');
         };
@@ -248,9 +265,11 @@ DocBookingPage.mount(page => {
             if (profileData.hasPendingCredentialRequest) { showApiToast('Bạn đang có yêu cầu thay đổi chờ duyệt', 'warning'); return; }
             closeCredentialModals(); credentialKind = kind;
             document.getElementById('credentialForm').reset();
+            document.getElementById('credentialFileName').textContent = 'Chưa chọn tệp';
             document.getElementById('credentialError').textContent = '';
             document.getElementById('credentialTitle').textContent = kind === 'DEGREE' ? 'Chỉnh sửa học vị và bằng cấp' : kind === 'DIPLOMA' ? 'Thay / bổ sung bằng cấp' : 'Thay chứng chỉ hành nghề';
             document.getElementById('credentialDegreeWrap').hidden = kind !== 'DEGREE';
+            document.getElementById('credentialFileLabel').textContent = kind === 'CERTIFICATE' ? 'Chứng chỉ hành nghề mới *' : 'Bằng cấp chứng minh học vị *';
             const degree = profileData.degree || 'Bác sĩ';
             const other = degree.startsWith('Khác: ');
             document.getElementById('credentialDegree').value = other ? 'Khác' : degree;
@@ -258,9 +277,12 @@ DocBookingPage.mount(page => {
             document.getElementById('credentialOther').value = other ? degree.slice(6) : '';
             document.getElementById('credentialModal').classList.add('active');
         };
+        document.getElementById('credentialFile').addEventListener('change', event => {
+            document.getElementById('credentialFileName').textContent = event.target.files[0]?.name || 'Chưa chọn tệp';
+        });
         document.getElementById('credentialForm').addEventListener('submit', async event => {
             event.preventDefault();
-            const btn = document.getElementById('credentialSubmit'); btn.disabled = true;
+            const btn = document.getElementById('credentialSubmit'); btn.disabled = true; btn.textContent = 'Đang gửi…';
             const body = new FormData(); body.append('kind', credentialKind);
             body.append('document', document.getElementById('credentialFile').files[0]);
             const degree = document.getElementById('credentialDegree').value;
@@ -270,7 +292,7 @@ DocBookingPage.mount(page => {
                 if (!res.ok) throw new Error(await readApiMessage(res));
                 closeCredentialModals(); showApiToast('Đã gửi yêu cầu chờ duyệt', 'success'); init();
             } catch (error) { document.getElementById('credentialError').textContent = error.message; }
-            finally { btn.disabled = false; }
+            finally { btn.disabled = false; btn.textContent = 'Gửi admin duyệt'; }
         });
 
         function init() {
@@ -295,6 +317,7 @@ DocBookingPage.mount(page => {
                     document.getElementById('f_idCard').required = mustUploadDocuments;
                     document.getElementById('f_certificate').required = mustUploadDocuments;
                     document.getElementById('f_diploma').required = !data.diplomaUrl;
+                    document.getElementById('diplomaLabel').textContent = data.diplomaUrl ? 'Bằng cấp (nếu cần thay đổi)' : 'Bằng cấp * (bắt buộc)';
                     document.getElementById('idCardLabel').innerText = mustUploadDocuments ? 'Ảnh CCCD *' : 'Ảnh CCCD (nếu cần thay đổi)';
                     document.getElementById('certificateLabel').innerText = mustUploadDocuments ? 'Chứng chỉ hành nghề *' : 'Chứng chỉ hành nghề (nếu cần thay đổi)';
                     document.getElementById('formView').style.display = 'block';
@@ -318,7 +341,8 @@ DocBookingPage.mount(page => {
             document.getElementById('profileName').innerText = user?.fullName || '';
             document.getElementById('profileDegreeSpecialty').innerText = `${data.degree} • ${data.specialty?.specialtyName || data.specialtyName || ''}`;
             
-            document.getElementById('diplomaMissing').textContent = data.diplomaUrl ? '' : '— Cần bổ sung';
+            document.getElementById('diplomaMissing').textContent = data.diplomaUrl ? 'Xem hoặc gửi yêu cầu thay đổi' : 'Cần bổ sung bằng cấp';
+            document.getElementById('credentialStatus').dataset.state = data.lastCredentialStatus || '';
             document.getElementById('credentialStatus').textContent = data.hasPendingCredentialRequest
                 ? 'Yêu cầu thay đổi đang chờ duyệt. Hồ sơ đã duyệt vẫn hoạt động bình thường.'
                 : data.lastCredentialStatus === 'REJECTED' ? 'Yêu cầu bị từ chối: ' + (data.lastCredentialNote || '')
