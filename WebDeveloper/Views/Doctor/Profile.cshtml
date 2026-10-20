@@ -16,40 +16,6 @@
 
 
 
-.credential-btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 18px; border:1.5px solid #0ea47a; border-radius:12px; background:#fff; color:#078361; font:700 14px var(--font-app); cursor:pointer; text-decoration:none; transition:background .2s; }
-.credential-btn:hover { background:#ecfdf5; }
-.credential-btn.primary { background:#0ea47a; color:white; }
-.credential-btn.secondary { border-color:#e2e8f0; background:#f8fafc; color:#475569; }
-.credential-btn:disabled { opacity:.55; cursor:wait; }
-.credential-btn:focus-visible,.credential-document:focus-visible { outline:3px solid #99f6e4; outline-offset:3px; }
-.credential-documents { display:grid; gap:10px; margin-top:20px; padding-top:20px; border-top:1px solid #e2e8f0; }
-.credential-document { display:flex; align-items:center; gap:12px; width:100%; padding:14px; border:1px solid #e2e8f0; border-radius:14px; text-align:left; background:#f8fafc; color:#1e293b; cursor:pointer; font-family:var(--font-app); }
-.credential-document:hover { border-color:#0ea47a; background:#f0fdf9; }
-.credential-icon { display:grid; place-items:center; width:42px; height:42px; flex-shrink:0; border-radius:12px; background:#e8faf3; color:#078361; font-size:22px; }
-.credential-document strong { display:block; font-size:14px; }
-.credential-document small { display:block; color:#64748b; font-size:12px; margin-top:5px; }
-.credential-document .credential-chevron { margin-left:auto; color:#94a3b8; font-size:22px; }
-.credential-document #diplomaMissing { color:#b45309; }
-.credential-notice { padding:14px 16px; border:1px solid #cceee4; border-radius:12px; background:#f0fdf9; color:#065f46; line-height:1.65; font-size:13px; }
-.credential-notice:empty { display:none; }
-.credential-notice[data-state="PENDING"] { background:#fffbeb; color:#92400e; border-color:#fde68a; }
-.credential-notice[data-state="REJECTED"] { background:#fff1f2; color:#9f1239; border-color:#fecdd3; }
-.credential-modal-heading { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; }
-.credential-modal-heading h3 { margin:0 0 6px; font-size:21px; color:#0f172a; }
-.credential-modal-heading p { margin:0; color:#64748b; font-size:13px; line-height:1.6; }
-.credential-close { border:0; background:#f1f5f9; color:#64748b; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:22px; flex-shrink:0; }
-.credential-field { margin:20px 0; }
-.credential-field label,.credential-upload label { display:block; font-size:13px; font-weight:700; color:#334155; margin-bottom:8px; }
-.credential-upload { padding:18px; border:1.5px dashed #b7dfd3; border-radius:14px; background:#f6fcf9; }
-.credential-upload p { margin:6px 0 12px; font-size:12px; color:#64748b; line-height:1.6; }
-.credential-upload input[type=file] { width:100%; min-width:0; font:13px var(--font-app); color:#475569; }
-.credential-upload input::file-selector-button { padding:9px 12px; border:1px solid #cceee4; border-radius:8px; margin-right:10px; background:white; color:#078361; cursor:pointer; }
-.credential-footer { display:flex; gap:12px; justify-content:flex-end; margin-top:24px; padding-top:20px; border-top:1px solid #f1f5f9; }
-.credential-upload-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:20px; }
-#actionButtons { flex-wrap:wrap; }
-.credential-actions { text-align:right; flex:1 1 100%; min-width:0; }
-@@media(max-width:600px) { .credential-footer { flex-wrap:wrap; } .credential-footer .credential-btn { flex:1; } #actionButtons > button { flex:1 1 auto; } }
-
 </style>
 
 <div id="initialLoading" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 400px;">
@@ -76,7 +42,7 @@
         </div>
         <div class="credential-actions">
             <div id="actionButtons" style="display: flex; gap: 10px; justify-content: flex-end;">
-                <button type="button" onclick="openCredentialEdit('DEGREE')" class="credential-btn">Chỉnh sửa học vị</button>
+                <button type="button" onclick="openCredentialEdit('DEGREE')" class="credential-btn primary">Chỉnh sửa học vị</button>
                 <button id="transferBtn" onclick="openTransferModal()" style="padding: 12px 20px; background: white; color: #0ea47a; border: 2px solid #0ea47a; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s;">Chuyển công tác</button>
                 <button onclick="toggleEditMode(true)" style="padding: 12px 24px; background: linear-gradient(135deg, #0ea47a, #059669); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; box-shadow: 0 8px 16px rgba(14,164,122,0.2);">Chỉnh sửa tiểu sử & giá</button>
             </div>
@@ -110,8 +76,8 @@
                     <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Kinh nghiệm</label>
                     <p id="viewExp" style="margin: 0; font-weight: 600; color: #1e293b;"></p>
                     <div class="credential-documents">
-                        <button type="button" class="credential-document" onclick="openDocument('CERTIFICATE')"><span class="credential-icon" aria-hidden="true">▤</span><span><strong>Chứng chỉ hành nghề</strong><small>Xem hoặc gửi yêu cầu thay đổi</small></span><span class="credential-chevron" aria-hidden="true">›</span></button>
-                        <button type="button" class="credential-document" onclick="openDocument('DIPLOMA')"><span class="credential-icon" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m2 9 10-5 10 5-10 5-10-5Z"/><path d="M6 11v6c4 3 8 3 12 0v-6M22 9v7"/></svg></span><span><strong>Bằng cấp</strong><small id="diplomaMissing"></small></span><span class="credential-chevron" aria-hidden="true">›</span></button>
+                        <button type="button" class="credential-document certificate" onclick="openDocument('CERTIFICATE')"><span class="credential-icon" aria-hidden="true">▤</span><span><strong>Chứng chỉ hành nghề</strong><small>Xem hoặc gửi yêu cầu thay đổi</small></span><span class="credential-chevron" aria-hidden="true">›</span></button>
+                        <button type="button" class="credential-document diploma" onclick="openDocument('DIPLOMA')"><span class="credential-icon" aria-hidden="true"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="m2 9 10-5 10 5-10 5-10-5Z"/><path d="M6 11v6c4 3 8 3 12 0v-6M22 9v7"/></svg></span><span><strong>Bằng cấp</strong><small id="diplomaMissing"></small></span><span class="credential-chevron" aria-hidden="true">›</span></button>
                     </div>
                     <p id="credentialStatus" class="credential-notice" role="status"></p>
                 </div>
@@ -195,12 +161,12 @@
                     <p>Ảnh JPG hoặc PNG, tối đa 5 MB.</p>
                     <input type="file" id="f_idCard" accept="image/jpeg,image/png" required />
                 </div>
-                <div class="credential-upload">
+                <div class="credential-upload certificate">
                     <label for="f_certificate" id="certificateLabel">Chứng chỉ hành nghề *</label>
                     <p>Minh chứng hành nghề, chuyên khoa và kinh nghiệm. PDF, tối đa 5 MB.</p>
                     <input type="file" id="f_certificate" accept="application/pdf" required />
                 </div>
-                <div class="credential-upload">
+                <div class="credential-upload diploma">
                     <label for="f_diploma" id="diplomaLabel">Bằng cấp * (bắt buộc)</label>
                     <p>Tải bằng cấp chứng minh học vị đã chọn. PDF, tối đa 5 MB.</p>
                     <input type="file" id="f_diploma" accept="application/pdf" required />
@@ -237,7 +203,7 @@
 
 <div id="documentModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="documentTitle">
  <div class="modal-content" style="--modal-max-width:500px">
-  <div class="credential-modal-heading"><div><h3 id="documentTitle"></h3><p>Tài liệu trong hồ sơ đã được duyệt của bạn</p></div><button type="button" class="credential-close" onclick="closeCredentialModals()" aria-label="Đóng">×</button></div>
+  <div class="credential-modal-heading"><div><span class="credential-eyebrow">HỒ SƠ CHUYÊN MÔN</span><h3 id="documentTitle"></h3><p>Tài liệu trong hồ sơ đã được duyệt của bạn</p></div><button type="button" class="credential-close" onclick="closeCredentialModals()" aria-label="Đóng">×</button></div>
   <p id="documentMissing" class="credential-notice"></p>
   <p class="credential-notice">Khi chỉnh sửa, tài liệu mới được gửi cho admin duyệt. Tài liệu hiện tại vẫn được giữ nguyên trong thời gian chờ.</p>
   <div class="credential-footer">
@@ -248,7 +214,7 @@
 </div>
 <div id="credentialModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="credentialTitle">
  <form id="credentialForm" class="modal-content" style="--modal-max-width:560px">
-  <div class="credential-modal-heading"><div><h3 id="credentialTitle">Gửi thay đổi chuyên môn</h3><p>Cập nhật thông tin và đính kèm minh chứng</p></div><button type="button" class="credential-close" onclick="closeCredentialModals()" aria-label="Đóng">×</button></div>
+  <div class="credential-modal-heading"><div><span class="credential-eyebrow">CẬP NHẬT HỒ SƠ</span><h3 id="credentialTitle">Gửi thay đổi chuyên môn</h3><p>Cập nhật thông tin và đính kèm minh chứng</p></div><button type="button" class="credential-close" onclick="closeCredentialModals()" aria-label="Đóng">×</button></div>
   <p class="credential-notice">Trong lúc chờ duyệt, hồ sơ công khai giữ nguyên thông tin đã được duyệt. Bạn vẫn hoạt động bình thường.</p>
   <div id="credentialDegreeWrap" class="credential-field">
    <label for="credentialDegree">Học vị mới <span style="color:#dc2626">*</span></label>
