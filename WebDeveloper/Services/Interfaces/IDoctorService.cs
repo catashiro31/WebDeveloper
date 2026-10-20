@@ -24,6 +24,9 @@ namespace WebDeveloper.Services.Interfaces
         Task<string> SaveMedicalResult(User user, int appointmentId, MedicalResultRequest request);
         Task<PagedResult<DoctorReviewResponse>> GetReviews(User user, int page, int size);
         Task<List<DoctorAppointmentResponse>> GetOverdueConfirmedAppointments(User user);
+        Task<string> CreateCredentialRequest(User user, CredentialChangeRequest request);
+        Task<PagedResult<object>> GetCredentialRequests(TransferStatus status, int page, int size);
+        Task ProcessCredentialRequest(int id, bool approve, string? adminNote);
         Task<string> CreateTransferRequest(User user, TransferRequestDto request);
 
         Task<PagedResult<object>> GetTransferRequests(TransferStatus status, int page, int size);

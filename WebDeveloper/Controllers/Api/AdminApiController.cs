@@ -179,6 +179,27 @@ namespace WebDeveloper.Controllers.Api
             return Ok(new { comment = commentText, labels = results });
         }
 
+        [HttpGet("credentials")]
+        public async Task<IActionResult> GetCredentials([FromQuery] string status = "PENDING", [FromQuery] int page = 0, [FromQuery] int size = 10)
+        {
+            if (!Enum.TryParse<TransferStatus>(status, out var parsed) || !Enum.IsDefined(parsed)) return BadRequest("Trạng thái không hợp lệ");
+            return Ok(await _doctorService.GetCredentialRequests(parsed, page, size));
+        }
+
+        [HttpPut("credentials/{id}/approve")]
+        public async Task<IActionResult> ApproveCredential(int id, [FromBody] ProcessTransferRequest req)
+        {
+            await _doctorService.ProcessCredentialRequest(id, true, req.AdminNote);
+            return Ok("Đã duyệt thay đổi");
+        }
+
+        [HttpPut("credentials/{id}/reject")]
+        public async Task<IActionResult> RejectCredential(int id, [FromBody] ProcessTransferRequest req)
+        {
+            await _doctorService.ProcessCredentialRequest(id, false, req.AdminNote);
+            return Ok("Đã từ chối thay đổi");
+        }
+
         [HttpGet("transfers")]
         public async Task<IActionResult> GetTransferRequests(
             [FromQuery] string status = "PENDING",

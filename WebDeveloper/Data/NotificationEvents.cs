@@ -47,6 +47,16 @@ internal static class NotificationEvents
                 var id = await db.Appointments.Where(a => a.Id == result.AppointmentId).Select(a => a.Patient.UserId).SingleAsync(ct);
                 Send(id, "Kết quả khám đã được cập nhật", "/Patient/History");
             }
+            if (entry.Entity is DoctorCredentialRequest credential && (entry.State == EntityState.Added || changed(nameof(DoctorCredentialRequest.Status))))
+            {
+                var id = credential.Doctor?.UserId ?? await db.DoctorDetails.Where(d => d.DoctorId == credential.DoctorId).Select(d => d.UserId).SingleAsync(ct);
+                if (credential.Status == TransferStatus.PENDING)
+                {
+                    Send(id, "Đã gửi yêu cầu thay đổi học vị / tài liệu", "/Doctor/Profile");
+                    await Admins("Có thay đổi học vị / tài liệu cần duyệt", "/Admin/Credentials");
+                }
+                else Send(id, credential.Status == TransferStatus.APPROVED ? "Thay đổi học vị / tài liệu đã được duyệt" : "Thay đổi học vị / tài liệu bị từ chối", "/Doctor/Profile", (credential.AdminNote ?? "")[..Math.Min(1000, (credential.AdminNote ?? "").Length)]);
+            }
             if (entry.Entity is DoctorTransferRequest transfer && (entry.State == EntityState.Added || changed(nameof(DoctorTransferRequest.Status))))
             {
                 var id = transfer.Doctor?.UserId ?? await db.DoctorDetails.Where(d => d.DoctorId == transfer.DoctorId).Select(d => d.UserId).SingleAsync(ct);

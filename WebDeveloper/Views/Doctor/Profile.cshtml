@@ -41,6 +41,7 @@
         </div>
         <div style="text-align: right; min-width: 380px;">
             <div id="actionButtons" style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" onclick="openCredentialEdit('DEGREE')" class="floating-input">Chỉnh sửa học vị</button>
                 <button id="transferBtn" onclick="openTransferModal()" style="padding: 12px 20px; background: white; color: #0ea47a; border: 2px solid #0ea47a; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s;">Chuyển công tác</button>
                 <button onclick="toggleEditMode(true)" style="padding: 12px 24px; background: linear-gradient(135deg, #0ea47a, #059669); color: white; border: none; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 14px; box-shadow: 0 8px 16px rgba(14,164,122,0.2);">Chỉnh sửa tiểu sử & giá</button>
             </div>
@@ -73,6 +74,9 @@
                 <div>
                     <label style="display: block; font-size: 12px; color: #94a3b8; margin-bottom: 4px;">Kinh nghiệm</label>
                     <p id="viewExp" style="margin: 0; font-weight: 600; color: #1e293b;"></p>
+                    <p id="credentialStatus" role="status"></p>
+                    <button type="button" onclick="openDocument('CERTIFICATE')">Chứng chỉ hành nghề</button>
+                    <button type="button" onclick="openDocument('DIPLOMA')">Bằng cấp <span id="diplomaMissing"></span></button>
                 </div>
             </div>
         </div>
@@ -155,6 +159,8 @@
                 </div>
                 <div>
                     <label id="certificateLabel" style="display: block; font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 6px; text-transform: uppercase;">Chứng chỉ hành nghề *</label>
+                    <label for="f_diploma">Bằng cấp chứng minh học vị * (PDF, tối đa 5 MB)</label>
+                    <input type="file" id="f_diploma" class="floating-input" accept="application/pdf" required />
                     <input type="file" id="f_certificate" class="floating-input" accept="application/pdf" required style="padding: 10px;" />
                 </div>
             </div>
@@ -187,6 +193,33 @@
     </div>
 </div>
 
+<div id="documentModal" class="modal-overlay">
+ <div class="modal-content" style="padding:28px;max-width:500px">
+  <h3 id="documentTitle"></h3><p id="documentMissing"></p>
+  <a id="documentView" target="_blank" rel="noopener noreferrer">Xem</a>
+  <button type="button" onclick="editSelectedDocument()">Chỉnh sửa</button>
+  <button type="button" onclick="closeCredentialModals()">Đóng</button>
+ </div>
+</div>
+<div id="credentialModal" class="modal-overlay">
+ <form id="credentialForm" class="modal-content" style="padding:28px;max-width:540px">
+  <h3 id="credentialTitle">Gửi thay đổi chuyên môn</h3>
+  <p>Thông tin đã được duyệt vẫn công khai trong lúc chờ admin xét duyệt.</p>
+  <div id="credentialDegreeWrap">
+   <label for="credentialDegree">Học vị mới</label>
+   <select id="credentialDegree" class="floating-input" onchange="document.getElementById('credentialOther').hidden = this.value !== 'Khác'">
+    @foreach (var degree in WebDeveloper.Helpers.DoctorDegree.Options) { <option value="@degree">@degree</option> }
+    <option value="Khác">Khác</option>
+   </select>
+   <input id="credentialOther" class="floating-input" hidden maxlength="94" placeholder="Mô tả học vị khác" />
+  </div>
+  <label for="credentialFile">Minh chứng bắt buộc (PDF, tối đa 5 MB)</label>
+  <input type="file" id="credentialFile" class="floating-input" accept="application/pdf" required />
+  <p id="credentialError" role="alert" style="color:#b91c1c"></p>
+  <button type="button" onclick="closeCredentialModals()">Hủy</button>
+  <button type="submit" id="credentialSubmit">Gửi admin duyệt</button>
+ </form>
+</div>
 @section Scripts {
     <script>
 DocBookingPage.mount(page => {
@@ -196,6 +229,49 @@ DocBookingPage.mount(page => {
 
         let profileData = null;
         let facilitiesList = [];
+        let credentialKind = 'DEGREE';
+        page.globals.closeCredentialModals = () => {
+            document.getElementById('documentModal').classList.remove('active');
+            document.getElementById('credentialModal').classList.remove('active');
+        };
+        page.globals.openDocument = kind => {
+            credentialKind = kind;
+            const url = kind === 'CERTIFICATE' ? profileData.certificateUrl : profileData.diplomaUrl;
+            document.getElementById('documentTitle').textContent = kind === 'CERTIFICATE' ? 'Chứng chỉ hành nghề' : 'Bằng cấp';
+            const link = document.getElementById('documentView');
+            link.hidden = !url; link.href = url || '#';
+            document.getElementById('documentMissing').textContent = url ? '' : 'Cần bổ sung';
+            document.getElementById('documentModal').classList.add('active');
+        };
+        page.globals.editSelectedDocument = () => openCredentialEdit(credentialKind);
+        page.globals.openCredentialEdit = kind => {
+            if (profileData.hasPendingCredentialRequest) { showApiToast('Bạn đang có yêu cầu thay đổi chờ duyệt', 'warning'); return; }
+            closeCredentialModals(); credentialKind = kind;
+            document.getElementById('credentialForm').reset();
+            document.getElementById('credentialError').textContent = '';
+            document.getElementById('credentialTitle').textContent = kind === 'DEGREE' ? 'Chỉnh sửa học vị và bằng cấp' : kind === 'DIPLOMA' ? 'Thay / bổ sung bằng cấp' : 'Thay chứng chỉ hành nghề';
+            document.getElementById('credentialDegreeWrap').hidden = kind !== 'DEGREE';
+            const degree = profileData.degree || 'Bác sĩ';
+            const other = degree.startsWith('Khác: ');
+            document.getElementById('credentialDegree').value = other ? 'Khác' : degree;
+            document.getElementById('credentialOther').hidden = !other;
+            document.getElementById('credentialOther').value = other ? degree.slice(6) : '';
+            document.getElementById('credentialModal').classList.add('active');
+        };
+        document.getElementById('credentialForm').addEventListener('submit', async event => {
+            event.preventDefault();
+            const btn = document.getElementById('credentialSubmit'); btn.disabled = true;
+            const body = new FormData(); body.append('kind', credentialKind);
+            body.append('document', document.getElementById('credentialFile').files[0]);
+            const degree = document.getElementById('credentialDegree').value;
+            if (credentialKind === 'DEGREE') body.append('degree', degree === 'Khác' ? 'Khác: ' + document.getElementById('credentialOther').value.trim() : degree);
+            try {
+                const res = await fetch('/api/v1/doctor/credentials', {method:'POST', headers:{Authorization:`Bearer ${token}`}, body});
+                if (!res.ok) throw new Error(await readApiMessage(res));
+                closeCredentialModals(); showApiToast('Đã gửi yêu cầu chờ duyệt', 'success'); init();
+            } catch (error) { document.getElementById('credentialError').textContent = error.message; }
+            finally { btn.disabled = false; }
+        });
 
         function init() {
             document.getElementById('profileLoadError').style.display = 'none';
@@ -218,6 +294,7 @@ DocBookingPage.mount(page => {
                     const mustUploadDocuments = status === 'UNREGISTERED';
                     document.getElementById('f_idCard').required = mustUploadDocuments;
                     document.getElementById('f_certificate').required = mustUploadDocuments;
+                    document.getElementById('f_diploma').required = !data.diplomaUrl;
                     document.getElementById('idCardLabel').innerText = mustUploadDocuments ? 'Ảnh CCCD *' : 'Ảnh CCCD (nếu cần thay đổi)';
                     document.getElementById('certificateLabel').innerText = mustUploadDocuments ? 'Chứng chỉ hành nghề *' : 'Chứng chỉ hành nghề (nếu cần thay đổi)';
                     document.getElementById('formView').style.display = 'block';
@@ -241,6 +318,11 @@ DocBookingPage.mount(page => {
             document.getElementById('profileName').innerText = user?.fullName || '';
             document.getElementById('profileDegreeSpecialty').innerText = `${data.degree} • ${data.specialty?.specialtyName || data.specialtyName || ''}`;
             
+            document.getElementById('diplomaMissing').textContent = data.diplomaUrl ? '' : '— Cần bổ sung';
+            document.getElementById('credentialStatus').textContent = data.hasPendingCredentialRequest
+                ? 'Yêu cầu thay đổi đang chờ duyệt. Hồ sơ đã duyệt vẫn hoạt động bình thường.'
+                : data.lastCredentialStatus === 'REJECTED' ? 'Yêu cầu bị từ chối: ' + (data.lastCredentialNote || '')
+                : data.lastCredentialStatus === 'APPROVED' ? 'Yêu cầu thay đổi đã được duyệt.' : '';
             document.getElementById('viewDegree').innerText = data.degree || '';
             document.getElementById('viewSpecialty').innerText = data.specialty?.specialtyName || data.specialtyName || '';
             document.getElementById('viewFacility').innerText = data.facility?.facilityName || data.facilityName || '';
@@ -372,6 +454,8 @@ DocBookingPage.mount(page => {
             const idCardFile = document.getElementById('f_idCard').files[0];
             if (idCardFile) formData.append('idCardImage', idCardFile);
             
+            const diploma = document.getElementById('f_diploma').files[0];
+            if (diploma) formData.append('diplomaPdf', diploma);
             const certFile = document.getElementById('f_certificate').files[0];
             if (certFile) formData.append('certificatePdf', certFile);
 
