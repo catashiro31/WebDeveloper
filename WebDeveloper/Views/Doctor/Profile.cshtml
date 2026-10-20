@@ -346,7 +346,7 @@ DocBookingPage.mount(page => {
             document.getElementById('credentialStatus').textContent = data.hasPendingCredentialRequest
                 ? 'Yêu cầu thay đổi đang chờ duyệt. Hồ sơ đã duyệt vẫn hoạt động bình thường.'
                 : data.lastCredentialStatus === 'REJECTED' ? 'Yêu cầu bị từ chối: ' + (data.lastCredentialNote || '')
-                : data.lastCredentialStatus === 'APPROVED' ? 'Yêu cầu thay đổi đã được duyệt.' : '';
+                : '';
             document.getElementById('viewDegree').innerText = data.degree || '';
             document.getElementById('viewSpecialty').innerText = data.specialty?.specialtyName || data.specialtyName || '';
             document.getElementById('viewFacility').innerText = data.facility?.facilityName || data.facilityName || '';

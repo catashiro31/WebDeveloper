@@ -88,14 +88,13 @@
         <table class="premium-table">
             <thead>
                 <tr>
-                    <th>ID</th>
                     <th>Tên chuyên khoa</th>
                     <th>Mô tả</th>
                     <th>Hành động</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
-                <tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>
+                <tr><td colspan="3" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>
             </tbody>
         </table>
     </div>
@@ -169,7 +168,7 @@ DocBookingPage.mount(page => {
             const version = ++searchVersion;
             const tbody = document.getElementById('tableBody');
             const wrapper = document.getElementById('specPaginationWrapper');
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px;">Đang tải dữ liệu...</td></tr>';
             if (wrapper) wrapper.style.display = 'none';
             
             try {
@@ -182,7 +181,7 @@ DocBookingPage.mount(page => {
                 renderSpecialtiesTable();
             } catch (err) {
                 console.error(err);
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #ef4444;">Không thể tải danh sách chuyên khoa. <button type="button" class="btn-action" onclick="loadSpecialties()">Thử lại</button></td></tr>';
+                tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; padding: 40px; color: #ef4444;">Không thể tải danh sách chuyên khoa. <button type="button" class="btn-action" onclick="loadSpecialties()">Thử lại</button></td></tr>';
             }
         }
 
@@ -192,7 +191,7 @@ DocBookingPage.mount(page => {
             const pagi = document.getElementById('specPagination');
             const info = document.getElementById('specPaginationInfo');
             if (specialties.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: #64748b;">Chưa có dữ liệu</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; padding: 40px; color: #64748b;">Chưa có dữ liệu</td></tr>`;
                 if (wrapper) wrapper.style.display = 'none';
                 return;
             }
@@ -206,9 +205,6 @@ DocBookingPage.mount(page => {
 
             tbody.innerHTML = pageItems.map(s => `
                 <tr>
-                    <td>
-                        <div style="font-weight: 600; color: #64748b;">#${s.id || s.specialtyId}</div>
-                    </td>
                     <td>
                         <div style="font-weight: 700; color: #1e293b;">${escapeHtml(s.name || s.specialtyName)}</div>
                     </td>

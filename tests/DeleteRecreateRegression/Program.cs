@@ -126,6 +126,14 @@ Check(await controller.Delete(otherNotification.Id, default) is Microsoft.AspNet
 Check(await controller.Delete(readNotification.Id, default) is Microsoft.AspNetCore.Mvc.NoContentResult, "Read notification deleted");
 await controller.DeleteRead(default);
 Check(await db.Notifications.AnyAsync(n => n.Id == unreadNotification.Id) && await db.Notifications.AnyAsync(n => n.Id == otherNotification.Id), "Bulk delete preserves unread and other user's notifications");
+// Numeric input must search phone numbers, not switch to a user-ID-only branch.
+patient.PhoneNumber = "0912345678";
+await db.SaveChangesAsync();
+Check((await admin.GetAllUsers(0, 10, "0912345678")).TotalElements == 1, "Full numeric phone search failed");
+Check((await admin.GetAllUsers(0, 10, "09123")).TotalElements == 1, "Partial numeric phone search failed");
+Check((await admin.GetAllUsers(0, 10, "0912345678", RoleStatus.DOCTOR)).TotalElements == 0, "Phone search ignored role filter");
+Check((await admin.GetAllUsers(0, 10, "benh nhan")).TotalElements == 1, "Accent-insensitive multiword search regressed");
+Check((await admin.GetAllUsers(0, 10, "%")).TotalElements == 0, "Search treated a literal percent as a wildcard");
 Console.WriteLine($"PASS: {checks} checks for delete/recreate, duplicate names, renaming, stale edits, doctor registration, linked-record protection, schedules and relatives.");
 
 sealed class TestUpload : IFileUploadService

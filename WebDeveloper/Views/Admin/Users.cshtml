@@ -18,9 +18,7 @@
     border-bottom: 1px dashed #cbd5e1;
 }
 .user-name-link:hover { color: #6366f1; border-color: #6366f1; }
-.user-id-badge {
-    background: #eef2ff; color: #4f46e5; font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 6px; border: 1px solid #e0e7ff;
-}
+
 
 .filter-card {
     background: white; border-radius: 20px; padding: 18px 24px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
@@ -102,7 +100,7 @@
     <div class="filter-card">
         <div class="filter-search-wrap">
             <span class="filter-search-icon">🔍</span>
-            <input type="text" id="userSearch" placeholder="Tìm theo tên, email, SĐT hoặc mã người dùng..." />
+            <input type="text" id="userSearch" placeholder="Tìm theo tên, email hoặc số điện thoại..." />
         </div>
         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -209,7 +207,6 @@
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px;">
                         <h3 id="detailFullName" style="margin: 0; font-size: 18px; font-weight: 800; color: #0f172a;"></h3>
-                        <span id="detailUserIdBadge" class="user-id-badge"></span>
                     </div>
                     <div id="detailEmail" style="color: #64748b; font-size: 13px; margin-top: 2px;"></div>
                 </div>
@@ -388,7 +385,6 @@ DocBookingPage.mount(page => {
                                 <div class="user-avatar">${avatar}</div>
                                 <div>
                                     <div style="display: flex; align-items: center; gap: 8px;">
-                                        <span class="user-id-badge">#${u.userId}</span>
                                         <a href="javascript:void(0)" onclick="openUserDetailModal(${u.userId})" class="user-name-link" title="Bấm để xem chi tiết người dùng">${escapeHtml(u.fullName || 'Chưa đặt tên')}</a>
                                     </div>
                                     <div style="color: #64748b; font-size: 12px; margin-top: 3px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
@@ -547,7 +543,6 @@ DocBookingPage.mount(page => {
             if (!user) return;
 
             document.getElementById('detailFullName').innerText = user.fullName || 'Chưa đặt tên';
-            document.getElementById('detailUserIdBadge').innerText = '#' + user.userId;
             document.getElementById('detailEmail').innerText = user.email || '—';
             document.getElementById('detailPhone').innerText = user.phoneNumber || 'Chưa cập nhật';
             document.getElementById('detailRole').innerHTML = getRoleBadge(user.role || '');

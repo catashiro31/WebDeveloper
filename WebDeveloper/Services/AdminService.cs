@@ -383,21 +383,12 @@ namespace WebDeveloper.Services
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var trimmed = search.Trim();
-                if (int.TryParse(trimmed, out int uid))
+                foreach (var word in trimmed.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    query = query.Where(u => u.UserId == uid 
-                        || (u.FullName != null && EF.Functions.ILike(EF.Functions.Unaccent(u.FullName), EF.Functions.Unaccent($"%{trimmed}%"), "\\"))
-                        || EF.Functions.ILike(u.Email, $"%{trimmed}%"));
-                }
-                else
-                {
-                    foreach (var word in trimmed.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
-                    {
-                        var pattern = "%" + word.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
-                        query = query.Where(u => (u.FullName != null && EF.Functions.ILike(EF.Functions.Unaccent(u.FullName), EF.Functions.Unaccent(pattern), "\\"))
-                            || EF.Functions.ILike(u.Email, pattern, "\\")
-                            || (u.PhoneNumber != null && EF.Functions.ILike(u.PhoneNumber, pattern, "\\")));
-                    }
+                    var pattern = "%" + word.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+                    query = query.Where(u => (u.FullName != null && EF.Functions.ILike(EF.Functions.Unaccent(u.FullName), EF.Functions.Unaccent(pattern), "\\"))
+                        || EF.Functions.ILike(u.Email, pattern, "\\")
+                        || (u.PhoneNumber != null && EF.Functions.ILike(u.PhoneNumber, pattern, "\\")));
                 }
             }
 
