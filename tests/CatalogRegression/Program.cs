@@ -117,7 +117,7 @@ try
         {
             SpecialtyId = specialtyId.Value, FacilityId = facilityId.Value,
             Bio = "Regression profile", Degree = "Bác sĩ", ExperienceYears = 3,
-            Price = 200000, IdCardImage = image, CertificatePdf = license
+            Price = 200000, IdCardImage = image, CertificatePdf = license, DiplomaPdf = license
         });
     }
     await using (var db = new ApplicationDbContext(options))

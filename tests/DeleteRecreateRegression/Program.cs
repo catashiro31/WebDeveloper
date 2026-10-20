@@ -73,7 +73,7 @@ Check(otherSpecialty.SpecialtyName == prefix && otherFacility.FacilityName == pr
 
 var doctor = new User {Email=prefix+"@example.test", FullName="Bác sĩ thử nghiệm", Role=RoleStatus.DOCTOR, IsActive=true};
 db.Users.Add(doctor); await db.SaveChangesAsync();
-DoctorProfileRequest Profile(int specialtyId) => new() {SpecialtyId=specialtyId, NewFacilityName="  "+prefix+"  ", FacilityAddress="Địa chỉ mới", FacilityLicensePdf=File("application/pdf"), Bio="Hồ sơ thử nghiệm", Degree="Bác sĩ", Price=100000, IdCardImage=File("image/png"), CertificatePdf=File("application/pdf")};
+DoctorProfileRequest Profile(int specialtyId) => new() {SpecialtyId=specialtyId, NewFacilityName="  "+prefix+"  ", FacilityAddress="Địa chỉ mới", FacilityLicensePdf=File("application/pdf"), Bio="Hồ sơ thử nghiệm", Degree="Bác sĩ", Price=100000, IdCardImage=File("image/png"), CertificatePdf=File("application/pdf"), DiplomaPdf=File("application/pdf")};
 await Reject(() => doctorService.RegisterDoctor(doctor, Profile(oldSpecialty.SpecialtyId)), "Chuyên khoa không tồn tại");
 await Reject(() => doctorService.RegisterDoctor(doctor, Profile(otherSpecialty.SpecialtyId)), "đã tồn tại");
 await admin.DeleteFacility(otherFacility.FacilityId);

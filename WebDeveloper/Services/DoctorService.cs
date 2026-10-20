@@ -8,7 +8,7 @@ using WebDeveloper.Services.Interfaces;
 
 namespace WebDeveloper.Services
 {
-    public class DoctorService : IDoctorService
+    public partial class DoctorService : IDoctorService
     {
         private readonly ApplicationDbContext _db;
         private readonly IFileUploadService _fileUpload;
@@ -51,8 +51,14 @@ namespace WebDeveloper.Services
                 .OrderByDescending(t => t.CreatedAt)
                 .FirstOrDefaultAsync();
 
+            var credential = await _db.DoctorCredentialRequests.Where(r => r.DoctorId == doctor.DoctorId).OrderByDescending(r => r.Id).FirstOrDefaultAsync();
             return new DoctorProfileResponse
             {
+                CertificateUrl = doctor.CertificateUrl,
+                DiplomaUrl = doctor.DiplomaUrl,
+                HasPendingCredentialRequest = credential?.Status == TransferStatus.PENDING,
+                LastCredentialStatus = credential?.Status.ToString(),
+                LastCredentialNote = credential?.AdminNote,
                 FullName = doctor.User.FullName,
                 Email = doctor.User.Email,
                 PhoneNumber = doctor.User.PhoneNumber,
@@ -97,6 +103,10 @@ namespace WebDeveloper.Services
                 // If REJECTED, allow resubmission
             }
 
+            if (req.DiplomaPdf == null && string.IsNullOrWhiteSpace(existingDoctor?.DiplomaUrl))
+                throw new InvalidOperationException("Vui lòng đính kèm bằng cấp chứng minh học vị!");
+            if (req.DiplomaPdf != null) _fileUpload.ValidateFile(req.DiplomaPdf, "Bằng cấp", "application/pdf");
+
             if (existingDoctor == null)
             {
                 if (req.IdCardImage == null || req.IdCardImage.Length == 0)
@@ -111,6 +121,9 @@ namespace WebDeveloper.Services
                 if (req.IdCardImage != null) _fileUpload.ValidateFile(req.IdCardImage, "Ảnh CCCD", "image/jpeg", "image/png");
                 if (req.CertificatePdf != null) _fileUpload.ValidateFile(req.CertificatePdf, "Chứng chỉ", "application/pdf");
             }
+
+            var diplomaUrl = req.DiplomaPdf == null ? existingDoctor?.DiplomaUrl : await _fileUpload.UploadFileAsync(req.DiplomaPdf);
+            if (string.IsNullOrWhiteSpace(diplomaUrl)) throw new InvalidOperationException("Tải bằng cấp thất bại. Vui lòng thử lại");
 
             if (req.FacilityId == null && string.IsNullOrWhiteSpace(req.NewFacilityName))
                 throw new InvalidOperationException("Vui lòng chọn cơ sở y tế có sẵn hoặc tạo mới!");
@@ -151,6 +164,7 @@ namespace WebDeveloper.Services
 
             if (existingDoctor != null)
             {
+                existingDoctor.DiplomaUrl = diplomaUrl;
                 existingDoctor.SpecialtyId = req.SpecialtyId;
                 existingDoctor.FacilityId = facility.FacilityId;
                 existingDoctor.Bio = req.Bio;
@@ -180,6 +194,7 @@ namespace WebDeveloper.Services
                     Price = req.Price,
                     VerificationStatus = VerificationStatus.PENDING,
                     IdCardUrl = await _fileUpload.UploadFileAsync(req.IdCardImage),
+                    DiplomaUrl = diplomaUrl,
                     CertificateUrl = await _fileUpload.UploadFileAsync(req.CertificatePdf)
                 };
 

@@ -13,6 +13,7 @@ namespace WebDeveloper.Data
         public DbSet<User> Users => Set<User>();
         public DbSet<Notification> Notifications => Set<Notification>();
         public DbSet<Appointment> Appointments => Set<Appointment>();
+        public DbSet<DoctorCredentialRequest> DoctorCredentialRequests => Set<DoctorCredentialRequest>();
         public DbSet<DoctorDetail> DoctorDetails => Set<DoctorDetail>();
         public DbSet<DoctorSchedule> DoctorSchedules => Set<DoctorSchedule>();
         public DbSet<DoctorTransferRequest> DoctorTransferRequests => Set<DoctorTransferRequest>();
@@ -27,6 +28,10 @@ namespace WebDeveloper.Data
         {
             base.OnModelCreating(modelBuilder);
             modelBuilder.HasPostgresExtension("unaccent");
+
+            modelBuilder.Entity<DoctorCredentialRequest>().Property(r => r.Status).HasConversion<string>();
+            modelBuilder.Entity<DoctorCredentialRequest>().HasIndex(r => r.DoctorId).IsUnique().HasFilter("\"Status\" = 'PENDING'");
+            modelBuilder.Entity<DoctorCredentialRequest>().HasOne(r => r.Doctor).WithMany().HasForeignKey(r => r.DoctorId).OnDelete(DeleteBehavior.Cascade);
 
             // Store enums as strings (matching Java @Enumerated(EnumType.STRING))
             modelBuilder.Entity<User>()

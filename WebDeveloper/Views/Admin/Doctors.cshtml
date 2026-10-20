@@ -187,6 +187,7 @@
                         <b>Chứng chỉ hành nghề:</b>
                         <a id="modalCertLink" href="#" target="_blank" rel="noopener noreferrer" style="display:block; padding:16px; color:#4f46e5;">📄 Mở tệp chứng chỉ hành nghề</a>
                     </div>
+                    <div><a id="modalDiplomaLink" target="_blank" rel="noopener noreferrer" style="display:block;padding:16px;color:#4f46e5">📄 Mở tệp bằng cấp</a><span id="modalDiplomaMissing">Bằng cấp: Cần bổ sung</span></div>
                     <div id="modalIdWrap" style="display: none;">
                         <b>CCCD/Hộ chiếu:</b>
                         <a id="modalIdLink" href="#" target="_blank"><img id="modalIdImg" src="" style="width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid #f1f5f9;" /></a>
@@ -511,6 +512,9 @@ DocBookingPage.mount(page => {
                 document.getElementById('modalRating').innerText = data.reviewCount > 0 ? `⭐ ${Number(data.ratingAverage || 0).toFixed(1)} / 5.0 (${data.reviewCount} đánh giá)` : 'Chưa có đánh giá';
                 document.getElementById('modalBio').innerText = data.bio || '';
 
+                document.getElementById('modalDiplomaLink').href = data.diplomaUrl || '#';
+                document.getElementById('modalDiplomaLink').style.display = data.diplomaUrl ? 'block' : 'none';
+                document.getElementById('modalDiplomaMissing').hidden = !!data.diplomaUrl;
                 if (data.certificateUrl) {
                     document.getElementById('modalCertLink').href = data.certificateUrl;
                     document.getElementById('modalCertWrap').style.display = 'block';

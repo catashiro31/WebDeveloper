@@ -126,6 +126,14 @@ namespace WebDeveloper.Controllers.Api
             return Ok(await _doctorService.GetReviews(user, page, size));
         }
 
+        [HttpPost("credentials")]
+        [Authorize(Roles = "DOCTOR")]
+        public async Task<IActionResult> RequestCredentialChange([FromForm] CredentialChangeRequest req)
+        {
+            var user = await SecurityHelper.GetCurrentUser(HttpContext, _db);
+            return Ok(await _doctorService.CreateCredentialRequest(user, req));
+        }
+
         [HttpPost("transfer")]
         [Authorize(Roles = "DOCTOR")]
         public async Task<IActionResult> RequestTransfer([FromBody] TransferRequestDto req)

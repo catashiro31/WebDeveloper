@@ -117,6 +117,25 @@ namespace WebDeveloper.Migrations
                     b.ToTable("appointments");
                 });
 
+            modelBuilder.Entity("WebDeveloper.Models.Entities.DoctorCredentialRequest", b =>
+            {
+                b.Property<int>("Id").ValueGeneratedOnAdd().HasColumnType("integer");
+                NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+                b.Property<int>("DoctorId").HasColumnType("integer");
+                b.Property<string>("Kind").IsRequired().HasMaxLength(20).HasColumnType("character varying(20)");
+                b.Property<string>("OldDegree").HasMaxLength(100).HasColumnType("character varying(100)");
+                b.Property<string>("NewDegree").HasMaxLength(100).HasColumnType("character varying(100)");
+                b.Property<string>("OldDocumentUrl").HasColumnType("text");
+                b.Property<string>("NewDocumentUrl").IsRequired().HasColumnType("text");
+                b.Property<string>("Status").IsRequired().IsConcurrencyToken().HasColumnType("text");
+                b.Property<string>("AdminNote").HasColumnType("text");
+                b.Property<DateTime>("CreatedAt").HasColumnType("timestamp with time zone");
+                b.Property<DateTime?>("ProcessedAt").HasColumnType("timestamp with time zone");
+                b.HasKey("Id");
+                b.HasIndex("DoctorId").IsUnique().HasFilter("\"Status\" = 'PENDING'");
+                b.ToTable("doctor_credential_requests");
+            });
+
             modelBuilder.Entity("WebDeveloper.Models.Entities.DoctorDetail", b =>
                 {
                     b.Property<int>("DoctorId")
@@ -130,13 +149,15 @@ namespace WebDeveloper.Migrations
                         .HasColumnType("text")
                         .HasColumnName("bio");
 
+                    b.Property<string>("DiplomaUrl").HasColumnType("text").HasColumnName("diploma_url");
+
                     b.Property<string>("CertificateUrl")
                         .HasColumnType("text")
                         .HasColumnName("certificate_url");
 
                     b.Property<string>("Degree")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("degree");
 
                     b.Property<int?>("ExperienceYears")
@@ -886,6 +907,11 @@ namespace WebDeveloper.Migrations
                 {
                     b.Navigation("PatientProfiles");
                 });
+            modelBuilder.Entity("WebDeveloper.Models.Entities.DoctorCredentialRequest", b =>
+            {
+                b.HasOne("WebDeveloper.Models.Entities.DoctorDetail", "Doctor").WithMany().HasForeignKey("DoctorId").OnDelete(DeleteBehavior.Cascade).IsRequired();
+                b.Navigation("Doctor");
+            });
 #pragma warning restore 612, 618
         }
     }

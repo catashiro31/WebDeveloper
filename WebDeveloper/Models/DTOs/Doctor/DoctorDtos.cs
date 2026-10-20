@@ -22,6 +22,7 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public IFormFile? IdCardImage { get; set; }
 
         public IFormFile? CertificatePdf { get; set; }
+        public IFormFile? DiplomaPdf { get; set; }
 
         [Required(ErrorMessage = "Vui lòng chọn chuyên khoa")]
         public int SpecialtyId { get; set; }
@@ -35,6 +36,13 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public string? FacilityMapUrl { get; set; }
         public string? NewFacilityProvince { get; set; }
         public IFormFile? FacilityLicensePdf { get; set; }
+    }
+
+    public class CredentialChangeRequest
+    {
+        [Required] public string Kind { get; set; } = "";
+        public string? Degree { get; set; }
+        [Required] public IFormFile? Document { get; set; }
     }
 
     public class ChangeProfileRequest
@@ -102,6 +110,11 @@ namespace WebDeveloper.Models.DTOs.Doctor
         public double? RatingAverage { get; set; }
         public int? ReviewCount { get; set; }
         public string? VerificationStatus { get; set; }
+        public string? CertificateUrl { get; set; }
+        public string? DiplomaUrl { get; set; }
+        public bool HasPendingCredentialRequest { get; set; }
+        public string? LastCredentialStatus { get; set; }
+        public string? LastCredentialNote { get; set; }
         public bool? HasPendingTransfer { get; set; }
         public string? LastTransferStatus { get; set; }
         public string? LastTransferNote { get; set; }

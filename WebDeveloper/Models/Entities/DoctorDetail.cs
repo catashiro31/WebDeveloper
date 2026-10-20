@@ -35,7 +35,7 @@ namespace WebDeveloper.Models.Entities
         public string? Bio { get; set; }
 
         [Column("degree")]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string? Degree { get; set; }
 
         [Column("experience_years")]
@@ -46,6 +46,9 @@ namespace WebDeveloper.Models.Entities
 
         [Column("id_card_url")]
         public string? IdCardUrl { get; set; }
+
+        [Column("diploma_url")]
+        public string? DiplomaUrl { get; set; }
 
         [Column("certificate_url")]
         public string? CertificateUrl { get; set; }

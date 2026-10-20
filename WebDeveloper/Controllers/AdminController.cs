@@ -43,6 +43,8 @@ namespace WebDeveloper.Controllers
             return View();
         }
         
+        public IActionResult Credentials() => View();
+
         public IActionResult Transfers()
         {
             return View();

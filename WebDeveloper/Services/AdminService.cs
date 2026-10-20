@@ -188,6 +188,7 @@ namespace WebDeveloper.Services
                 d.Bio,
                 d.IdCardUrl,
                 d.CertificateUrl,
+                d.DiplomaUrl,
                 VerificationStatus = d.VerificationStatus.ToString(),
                 RatingAverage = d.ReviewCount > 0 ? d.RatingAverage : null,
                 ReviewCount = d.ReviewCount ?? 0
