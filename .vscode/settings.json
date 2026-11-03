@@ -1,0 +1,21 @@
+{
+    "ROS2.distro": "jazzy",
+    "python.autoComplete.extraPaths": [
+        "/home/catashiro31/ros2_ws/build/turtlesim_project",
+        "/home/catashiro31/ros2_ws/install/turtlesim_project/lib/python3.12/site-packages",
+        "/home/catashiro31/ros2_ws/install/turtlesim_interfaces/lib/python3.12/site-packages",
+        "/home/catashiro31/ros2_ws/install/my_py_pkg/lib/python3.12/site-packages",
+        "/home/catashiro31/ros2_ws/install/my_robot_interfaces/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/opt/gz_math_vendor/lib/python",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ],
+    "python.analysis.extraPaths": [
+        "/home/catashiro31/ros2_ws/build/turtlesim_project",
+        "/home/catashiro31/ros2_ws/install/turtlesim_project/lib/python3.12/site-packages",
+        "/home/catashiro31/ros2_ws/install/turtlesim_interfaces/lib/python3.12/site-packages",
+        "/home/catashiro31/ros2_ws/install/my_py_pkg/lib/python3.12/site-packages",
+        "/home/catashiro31/ros2_ws/install/my_robot_interfaces/lib/python3.12/site-packages",
+        "/opt/ros/jazzy/opt/gz_math_vendor/lib/python",
+        "/opt/ros/jazzy/lib/python3.12/site-packages"
+    ]
+}
