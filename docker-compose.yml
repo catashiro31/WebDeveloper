@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   webapi:
     build:
@@ -13,10 +11,12 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - Authentication__AllowInsecureCookies=${AUTH_ALLOW_INSECURE_COOKIES:-false}
       - ConnectionStrings__DefaultConnection=Host=postgres_db;Database=Docbooking;Username=postgres;Password=your_strong_password
-      - ConnectionStrings__Redis=redis_cache:6379
+      - ConnectionStrings__Redis=redis_cache:6379,password=${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
     depends_on:
-      - postgres_db
-      - redis_cache
+      postgres_db:
+        condition: service_started
+      redis_cache:
+        condition: service_healthy
     networks:
       - docbooking_network
 
@@ -39,8 +39,15 @@ services:
     image: redis:7-alpine
     container_name: docbooking_redis
     restart: always
-    ports:
-      - "6379:6379" # Có thể đóng lại nếu không cần truy cập từ ngoài
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}"]
+    environment:
+      REDISCLI_AUTH: ${REDIS_PASSWORD:?Set REDIS_PASSWORD in .env}
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -qx PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
     volumes:
       - redisdata:/data
     networks:

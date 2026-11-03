@@ -4,6 +4,7 @@ Hệ thống backend cung cấp các API cho ứng dụng đặt lịch khám b�
 
 Nếu đăng nhập thành công nhưng không giữ phiên khi triển khai, xem [cấu hình cookie cho HTTP/HTTPS](docs/login-deployment.md).
 Nếu cập nhật ảnh đại diện gặp lỗi 413, xem [cấu hình giới hạn tải lên của Nginx](docs/avatar-upload-413.md).
+Nếu API bệnh nhân báo lỗi Redis `NOAUTH`, xem [cấu hình Redis và cập nhật Docker Compose](docs/redis-deployment.md).
 
 ## Tài liệu chức năng
 
